@@ -1,4 +1,4 @@
-module sih/pallas
+module sih/pallass
 
 go 1.22.4
 

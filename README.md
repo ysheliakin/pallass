@@ -1,4 +1,4 @@
-# pallas
+# pallass
 
 ## Development Set Up
 
