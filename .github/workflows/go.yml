@@ -43,3 +43,14 @@ jobs:
         run: |
           cd server
           aws s3 cp pallass.zip s3://${{ secrets.AWS_S3_BUCKET }}/
+
+      - name: Deploy to Elastic Beanstalk
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name ${{ secrets.EB_APP_NAME }} \
+            --version-label ${{ github.sha }} \
+            --source-bundle S3Bucket=${{ secrets.AWS_S3_BUCKET }},S3Key=pallass.zip
+
+          aws elasticbeanstalk update-environment \
+            --environment-name ${{ secrets.EB_ENV_NAME }} \
+            --version-label ${{ github.sha }}
