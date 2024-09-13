@@ -1,6 +1,8 @@
 name: Client CI/CD
 
-on:
+on: 
+  workflow_dispatch:
+
   push:
     branches: [ "main" ]
     paths: 
@@ -23,18 +25,13 @@ jobs:
       working-directory: ./client 
 
     - name: Build React app
-      run: npm run build
-      working-directory: ./client
-
-    - name: Configure git for deployment
-      run: |
-        git config user.email ysheliakin@ufl.edu
-        git config user.name "github-actions"
+      run: npm run build-prod
       working-directory: ./client
 
     - name: Deploy to GitHub Pages
-      run: npm run deploy
+      run: | 
+        git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+        npm run deploy -- -u "github-actions-bot <support+actions@github.com>"
       working-directory: ./client
-
-    - name: Push to gh-pages branch
-      run: git push origin `git subtree split --prefix client build`:gh-pages --force
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

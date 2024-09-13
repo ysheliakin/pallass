@@ -1,12 +1,13 @@
 {
   "name": "pallass",
-  "homepage": "https://ysheliakin.github.io/pallass",
+  "homepage": "https://ysheliakin.github.io/",
   "private": true,
   "type": "module",
   "version": "0.0.1",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build-prod": "tsc && vite build --mode production",
     "deploy": "gh-pages -d dist",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
