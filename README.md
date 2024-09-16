@@ -36,7 +36,7 @@ air
 ```
 
 ## Wireframes
-Link to the wireframes:
+Links to the wireframes:
 
 https://whimsical.com/pallas-s-hub-LnWKcsU2XitfD4pW3dvw4t
 
