@@ -37,5 +37,7 @@ air
 
 ## Wireframes
 Link to the wireframes:
+
 https://whimsical.com/pallas-s-hub-LnWKcsU2XitfD4pW3dvw4t
+
 https://whimsical.com/wireframes-DXojwAJLUYZzp9LyYJf1Zq
