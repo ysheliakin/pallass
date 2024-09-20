@@ -157,3 +157,5 @@ go.work.sum
 tmp
 
 .gitconfig
+
+team-key.pem
