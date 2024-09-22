@@ -1,6 +1,10 @@
 package main
 
 import (
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"net/http"
+
 	"context"
 	"errors"
 	"fmt"
@@ -11,23 +15,20 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
-
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 )
 
-
 func main() {
+	// Echo instance
+	e := echo.New()
 
-	fmt.Print("inside of main.go")
-	host := "127.0.0.1:4201" 
-	if err := http.ListenAndServe(host, httpHandler()); err != nil {
-		fmt.Print("Failed to listen to " + host)
-		log.Fatalf("Failed to listen on %s: %v", host, err)
-	} else {
-		fmt.Print("Listening to " + host)
-	}
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
+	e.GET("/", hello)
+
+	// Start server
+	e.Logger.Fatal(e.Start(":5000"))
 }
 
 // httpHandler creates the backend HTTP router for queries, types, and serving the Angular frontend.
