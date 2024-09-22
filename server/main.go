@@ -1,20 +1,12 @@
 package main
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"net/http"
-
-	"context"
-	"errors"
-	"fmt"
-	"io"
-	"log"
-
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -27,226 +19,62 @@ func main() {
 
 	e.GET("/", hello)
 
+	// Post Handlers
+	e.POST("/user", func(c echo.Context) error {
+		return c.String(http.StatusOK, "User created")
+	})
+	e.POST("/post", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Post created")
+	})
+	e.POST("/comment", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Comment created")
+	})
+	e.POST("/flag", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Flag added")
+	})
+	e.POST("/upvote", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Upvoted")
+	})
+	e.POST("/downvote", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Downvoted")
+	})
+
+	// Get Handlers
+	e.GET("/playlist", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Here is the playlist")
+	})
+
+	// Put Handlers
+	e.PUT("/user", func(c echo.Context) error {
+		return c.String(http.StatusOK, "User updated")
+	})
+	e.PUT("/post", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Post updated")
+	})
+	e.PUT("/comment", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Comment updated")
+	})
+
+	// Delete Handlers
+	e.DELETE("/post", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Post deleted")
+	})
+	e.DELETE("/comment", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Comment deleted")
+	})
+
+	// Angular Reverse Proxy
+	e.GET("/*", echo.WrapHandler(AngularHandler))
+
 	// Start server
 	e.Logger.Fatal(e.Start(":5000"))
 }
 
-// httpHandler creates the backend HTTP router for queries, types, and serving the Angular frontend.
-func httpHandler() http.Handler {
-
-	fmt.Print("inside of httpHandler in Go")
-	router := mux.NewRouter()
-	
-	// Post Handlers
-	router.HandleFunc("/", createUser).Methods("POST")
-	router.HandleFunc("/", createPost).Methods("POST")
-	router.HandleFunc("/", createComment).Methods("POST")
-	router.HandleFunc("/", addFlag).Methods("POST")
-	router.HandleFunc("/", upVote).Methods("POST")
-	router.HandleFunc("/", downVote).Methods("POST")
-
-
-	// Get Handlers 
-	router.HandleFunc("/", getPlaylist).Methods("GET")
-
-	// Put Handlers 
-	router.HandleFunc("/", editUser).Methods("PUT")
-	router.HandleFunc("/", editPost).Methods("PUT")
-	router.HandleFunc("/", editComment).Methods("PUT")
-
-
-
-	// Delete Handlers
-	router.HandleFunc("/", deletePost).Methods("DELETE") 
-	router.HandleFunc("/", deleteComment).Methods("DELETE") 
-
-	
-	// WARNING: this route must be the last route defined.
-
-	router.PathPrefix("/").Handler(AngularHandler).Methods("GET")
-
-	 
-	return handlers.LoggingHandler(os.Stdout,
-		handlers.CORS(
-			handlers.AllowCredentials(),
-			handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization",
-				"DNT", "Keep-Alive", "User-Agent", "X-Requested-With", "If-Modified-Since",
-				"Cache-Control", "Content-Range", "Range"}),
-			handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}),
-			handlers.AllowedOrigins([]string{"http://localhost:4200"}), 
-			handlers.ExposedHeaders([]string{"DNT", "Kxeep-Alive", "User-Agent",
-				"X-Requested-With", "If-Modified-Since", "Cache-Control",
-				"Content-Type", "Content-Range", "Range", "Content-Disposition"}),
-			handlers.MaxAge(86400),
-		)(router))
+func hello(c echo.Context) error {
+	return c.String(http.StatusOK, "Hello World!")
 }
 
-func createUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userID := vars["userID"]
-	username := vars["username"]
-	name := vars["name"]
-	university := vars["university"]
-	email := vars["email"]
-
-	//connect to PostgreSQL on localhost port ?????
-	client, err := PostgreSQL.Connect(context.Background(), options.Client().ApplyURI("postgresql://localhost:?????"))
-	if err != nil {
-		return fmt.Errorf("Error connecting to PostgreSQL: %v", err)
-	}
-	defer client.Disconnect(context.Background())
-
-	fmt.Fprintf(w, "You've added the user: %s with the following id %s and username %s\n", userID, username)
-}
-
-func editUser(w http.ResponseWriter, r *http.Request) {
-	//connect to PostgreSQL on localhost port ?????
-	client, err := PostgreSQL.Connect(context.Background(), options.Client().ApplyURI("postgresql://localhost:?????"))
-	if err != nil {
-		return fmt.Errorf("Error connecting to PostgreSQL: %v", err)
-	}
-	defer client.Disconnect(context.Background())
-
-	fmt.Fprintf(w, "You've edited the user: %s with the following id %s and username %s\n", userID, username)
-
-}
-
-func createPost(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	postID := vars["postID"]
-	postDate := vars["postDate"]
-	editID := vars["editID"]
-	userID := vars["userID"]
-	title := vars["title"]
-	description := vars["description"]
-	rating := vars["rating"]
-
-	//connect to PostgreSQL on localhost port ?????
-	client, err := PostgreSQL.Connect(context.Background(), options.Client().ApplyURI("postgresql://localhost:?????"))
-	if err != nil {
-		return fmt.Errorf("Error connecting to PostgreSQL: %v", err)
-	}
-	defer client.Disconnect(context.Background())
-
-	fmt.Fprintf(w, "You've added the post: %s with the following title %s and description %s\n", postID, title, description)
-}
-
-func editPost(w http.ResponseWriter, r *http.Request) {
-	//connect to PostgreSQL on localhost port ?????
-	client, err := PostgreSQL.Connect(context.Background(), options.Client().ApplyURI("postgresql://localhost:?????"))
-	if err != nil {
-		return fmt.Errorf("Error connecting to PostgreSQL: %v", err)
-	}
-	defer client.Disconnect(context.Background())
-
-	fmt.Fprintf(w, "You've edited the post: %s with the following title %s and description %s\n", postID, title, description)
-}
-
-func deletePost(w http.ResponseWriter, r *http.Request) {
-	//connect to PostgreSQL on localhost port ?????
-	client, err := PostgreSQL.Connect(context.Background(), options.Client().ApplyURI("postgresql://localhost:?????"))
-	if err != nil {
-		return fmt.Errorf("Error connecting to PostgreSQL: %v", err)
-	}
-	defer client.Disconnect(context.Background())
-
-	fmt.Fprintf(w, "You've deleted the post: %s with the following title %s and description %s\n", postID, title, description)
-}
-
-func createComment(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	commentID := vars["commentID"]
-	body := vars["body"]
-	editID := vars["editID"]
-	sourceID := vars["sourceID"]
-	postDate := vars["postDate"]
-
-	//connect to PostgreSQL on localhost port ?????
-	client, err := PostgreSQL.Connect(context.Background(), options.Client().ApplyURI("postgresql://localhost:?????"))
-	if err != nil {
-		return fmt.Errorf("Error connecting to PostgreSQL: %v", err)
-	}
-	defer client.Disconnect(context.Background())
-
-	fmt.Fprintf(w, "You've added the comment: %s with the following body %s\n", commentID, body)
-}
-
-func editComment(w http.ResponseWriter, r *http.Request) {
-	//connect to PostgreSQL on localhost port ?????
-	client, err := PostgreSQL.Connect(context.Background(), options.Client().ApplyURI("postgresql://localhost:?????"))
-	if err != nil {
-		return fmt.Errorf("Error connecting to PostgreSQL: %v", err)
-	}
-	defer client.Disconnect(context.Background())
-
-	fmt.Fprintf(w, "You've edited the comment: %s with the following body %s\n", commentID, body)
-}
-
-func deleteComment(w http.ResponseWriter, r *http.Request) {
-	//connect to PostgreSQL on localhost port ?????
-	client, err := PostgreSQL.Connect(context.Background(), options.Client().ApplyURI("postgresql://localhost:?????"))
-	if err != nil {
-		return fmt.Errorf("Error connecting to PostgreSQL: %v", err)
-	}
-	defer client.Disconnect(context.Background())
-
-	fmt.Fprintf(w, "You've deleted the comment: %s with the following body %s\n", commentID, body)
-}
-
-func addFlag(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	flagID := vars["flagID"]
-	flagType := vars["flagType"]
-	creatorID := vars["creatorID"]
-	details := vars["details"]
-	creationDate := vars["creationDate"]
-
-	//connect to PostgreSQL on localhost port ?????
-	client, err := PostgreSQL.Connect(context.Background(), options.Client().ApplyURI("postgresql://localhost:?????"))
-	if err != nil {
-		return fmt.Errorf("Error connecting to PostgreSQL: %v", err)
-	}
-	defer client.Disconnect(context.Background())
-
-	fmt.Fprintf(w, "You've added the flag: %s with the following details %s\n", flagID, details)
-}
-
-func upVote(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	voteID := vars["voteID"]
-	voteType := vars["voteType"]
-	commentID := vars["commentID"]
-	userID := vars["userID"]
-
-	//connect to PostgreSQL on localhost port ?????
-	client, err := PostgreSQL.Connect(context.Background(), options.Client().ApplyURI("postgresql://localhost:?????"))
-	if err != nil {
-		return fmt.Errorf("Error connecting to PostgreSQL: %v", err)
-	}
-	defer client.Disconnect(context.Background())
-
-	fmt.Fprintf(w, "You've upvoted the comment ID: %s that was posted by the following userID %s\n", commentID, userID)
-}
-
-func downVote(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	voteID := vars["voteID"]
-	voteType := vars["voteType"]
-	commentID := vars["commentID"]
-	userID := vars["userID"]
-
-	//connect to PostgreSQL on localhost port ?????
-	client, err := PostgreSQL.Connect(context.Background(), options.Client().ApplyURI("postgresql://localhost:?????"))
-	if err != nil {
-		return fmt.Errorf("Error connecting to PostgreSQL: %v", err)
-	}
-	defer client.Disconnect(context.Background())
-
-	fmt.Fprintf(w, "You've downvoted the comment ID: %s that was posted by the following userID %s\n", commentID, userID)
-}
-
-
-
+// Reverse Proxy for Angular
 func getOrigin() *url.URL {
 	origin, _ := url.Parse("http://localhost:4200")
 	return origin
@@ -261,5 +89,5 @@ var director = func(req *http.Request) {
 	req.URL.Host = origin.Host
 }
 
-// AngularHandler loads angular assets
+// AngularHandler loads Angular assets
 var AngularHandler = &httputil.ReverseProxy{Director: director}
