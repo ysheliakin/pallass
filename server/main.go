@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"os"
 	queries "sih/pallass/generated"
 	"strconv"
@@ -12,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 )
 
 var e *echo.Echo
@@ -21,6 +20,7 @@ var sql *queries.Queries
 func main() {
 	// Echo instance
 	e = echo.New()
+	e.Logger.SetLevel(log.INFO)
 
 	// Postgres connection
 	dbc = context.Background()
@@ -82,9 +82,6 @@ func main() {
 		return c.String(http.StatusOK, "Comment deleted")
 	})
 
-	// Angular Reverse Proxy
-	e.GET("/*", echo.WrapHandler(AngularHandler))
-
 	// Start server
 	e.Logger.Fatal(e.Start(":5000"))
 }
@@ -96,26 +93,9 @@ func hello(c echo.Context) error {
 		e.Logger.Error(err)
 		return c.String(http.StatusInternalServerError, "Error happened :(")
 	}
+	e.Logger.Infof("retrieved %d rows", len(sampleValues))
 	for _, x := range sampleValues {
 		str = str + strconv.FormatInt(int64(x.Int32), 10) + " "
 	}
 	return c.String(http.StatusOK, str)
 }
-
-// Reverse Proxy for Angular
-func getOrigin() *url.URL {
-	origin, _ := url.Parse("http://localhost:4200")
-	return origin
-}
-
-var origin = getOrigin()
-
-var director = func(req *http.Request) {
-	req.Header.Add("X-Forwarded-Host", req.Host)
-	req.Header.Add("X-Origin-Host", origin.Host)
-	req.URL.Scheme = "http"
-	req.URL.Host = origin.Host
-}
-
-// AngularHandler loads Angular assets
-var AngularHandler = &httputil.ReverseProxy{Director: director}
