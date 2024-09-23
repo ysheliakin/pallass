@@ -110,7 +110,7 @@ func registerUser(c echo.Context) error {
 	var user User
 
 	// Save the new user to the database
-	_, err := dbPool.Exec(context.Background(), "INSERT INTO users (firstname, lastname, email, password, organization, fieldOfStudy, job) VALUES ($1, $2)", user.Firstname, user.Lastname, user.Email, user.Password, user.Organization, user.FieldOfStudy, user.JobTitle)
+	_, err := dbPool.Exec(context.Background(), "INSERT INTO users (firstname, lastname, email, password, organization, fieldOfStudy, job) VALUES ($1, $2, $3, $4, $5, $6, $7)", user.Firstname, user.Lastname, user.Email, user.Password, user.Organization, user.FieldOfStudy, user.JobTitle)
 
 	if err != nil {
 		response := RegisterResponse{Message: "Error creating an account"}
