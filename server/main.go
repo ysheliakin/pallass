@@ -1,17 +1,36 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
+	queries "sih/pallass/generated"
+	"strconv"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
+var e *echo.Echo
+var dbc context.Context
+var sql *queries.Queries
+
 func main() {
 	// Echo instance
-	e := echo.New()
+	e = echo.New()
+
+	// Postgres connection
+	dbc = context.Background()
+	conn, err := pgx.Connect(dbc, os.Getenv("DB"))
+	if err != nil {
+		e.Logger.Fatal(err)
+		return
+	}
+	defer conn.Close(dbc)
+	sql = queries.New(conn)
 
 	// Middleware
 	e.Use(middleware.Logger())
@@ -71,7 +90,16 @@ func main() {
 }
 
 func hello(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello World!")
+	str := "Hello world: "
+	sampleValues, err := sql.GetSample(dbc) // Sample query with code generated with sqlc
+	if err != nil {
+		e.Logger.Error(err)
+		return c.String(http.StatusInternalServerError, "Error happened :(")
+	}
+	for _, x := range sampleValues {
+		str = str + strconv.FormatInt(int64(x.Int32), 10) + " "
+	}
+	return c.String(http.StatusOK, str)
 }
 
 // Reverse Proxy for Angular
