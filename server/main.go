@@ -1,27 +1,36 @@
 package main
 
 import (
+	"context"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
+	"os"
+	queries "sih/pallass/generated"
+	"strconv"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 )
 
-type User struct {
-	Firstname string `json:"firstname"`
-	Lastname string `json:"lastname"`
-	Email string `json:"email"`
-	Password string `json:"password"`
-	Organization string `json:"organization"`
-	FieldOfStudy string `json:"fieldofstudy"`
-	JobTitle string `json:"jobtitle"`
-}
+var e *echo.Echo
+var dbc context.Context
+var sql *queries.Queries
 
 func main() {
 	// Echo instance
-	e := echo.New()
+	e = echo.New()
+	e.Logger.SetLevel(log.INFO)
+
+	// Postgres connection
+	dbc = context.Background()
+	conn, err := pgx.Connect(dbc, os.Getenv("DB"))
+	if err != nil {
+		e.Logger.Fatal(err)
+		return
+	}
+	defer conn.Close(dbc)
+	sql = queries.New(conn)
 
 	// Middleware
 	e.Use(middleware.Logger())
@@ -76,15 +85,22 @@ func main() {
 		return c.String(http.StatusOK, "Comment deleted")
 	})
 
-	// Angular Reverse Proxy
-	e.GET("/*", echo.WrapHandler(AngularHandler))
-
 	// Start server
 	e.Logger.Fatal(e.Start(":5000"))
 }
 
 func hello(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello World!")
+	str := "Hello world: "
+	sampleValues, err := sql.GetSample(dbc) // Sample query with code generated with sqlc
+	if err != nil {
+		e.Logger.Error(err)
+		return c.String(http.StatusInternalServerError, "Error happened :(")
+	}
+	e.Logger.Infof("retrieved %d rows", len(sampleValues))
+	for _, x := range sampleValues {
+		str = str + strconv.FormatInt(int64(x.Int32), 10) + " "
+	}
+	return c.String(http.StatusOK, str)
 }
 
 // Reverse Proxy for Angular
