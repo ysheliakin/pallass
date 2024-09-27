@@ -24,6 +24,8 @@ const Page: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState({ title: '', content: '' });
   const [newComment, setNewComment] = useState({ postId: '', content: '' });
+  const [title, setTitle] = useState('default Title');
+  const [description, setDescription] = useState('...');
 
   // Fetch posts from backend
   useEffect(() => {
@@ -63,8 +65,23 @@ const Page: React.FC = () => {
   };
 
   return (
-    <div>
-        Hello There
+    <div className="post">
+      <h2 className="post-title">
+      <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="title-input"
+        />
+      </h2>
+      <p className="post-content">
+        <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="description-textarea"
+          />
+      </p>
+      <button onClick={handleAddPost} className="create-post-button">Create Post</button>
     </div>
   );
 };
