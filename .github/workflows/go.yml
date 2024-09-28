@@ -2,7 +2,7 @@ name: Server CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "mvc-model" ]
     paths: 
       - 'server/**'
   pull_request:
