@@ -76,13 +76,13 @@ const CreateButton = styled.button`
   }
 `;
 
-const CircleButton = styled.button`
+const CircleButton = styled.button<{ isClicked: boolean }>`
   width: 40px;
   height: 40px;
   border-radius: 50%; /* Make it circular */
-  background-color: #007bff;
+  background-color: ${({ isClicked }) => (isClicked ? 'green' : 'red')};
   color: white;
-  border: none;
+  border: 3px solid #ddd;
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -90,7 +90,7 @@ const CircleButton = styled.button`
   margin-right: 10px; /* Space between button and text */
 
   &:hover {
-    background-color: #0056b3;
+    opacity: 0.8; /* Slightly reduce opacity on hover */
   }
 `;
 
@@ -110,6 +110,7 @@ const Page: React.FC = () => {
   const [newComment, setNewComment] = useState({ postId: '', content: '' });
   const [title, setTitle] = useState('Title');
   const [description, setDescription] = useState('Description');
+  const [isButtonClicked, setIsButtonClicked] = useState(false);
 
   // Fetch posts from backend
   useEffect(() => {
@@ -150,7 +151,7 @@ const Page: React.FC = () => {
 
   // Handle the circle button click
   const handleApprovalClick = () => {
-    alert("Approval process initiated!"); // Replace with actual logic
+    setIsButtonClicked(!isButtonClicked); // Toggle button state
   };
 
   return (
@@ -175,8 +176,8 @@ const Page: React.FC = () => {
             />
         </p>
         <ApprovalMessageContainer>
-          <CircleButton onClick={handleApprovalClick}>
-            ?
+          <CircleButton onClick={handleApprovalClick} isClicked={isButtonClicked}>
+            
           </CircleButton>
           <ApprovalMessage>A moderator must approve a post before it is posted.</ApprovalMessage>
         </ApprovalMessageContainer>
