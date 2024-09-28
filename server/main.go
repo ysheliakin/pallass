@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"os"
-	controller "sih/pallass/controller"
+
+	// controller "sih/pallass/controller"
 	queries "sih/pallass/generated"
-	router "sih/pallass/routes"
+	// router "sih/pallass/routes"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
@@ -32,8 +33,8 @@ func main() {
 	defer conn.Close(dbc)
 	sql = queries.New(conn)
 
-	controller.SetGlobalContext(e, sql, dbc)
-	router.Run(e)
+	// controller.SetGlobalContext(e, sql, dbc)
+	// router.Run(e)
 
 	// Middleware
 	e.Use(middleware.Logger())
