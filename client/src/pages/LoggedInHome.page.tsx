@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Title, Button, Group, Paper, Menu, ActionIcon, SimpleGrid } from '@mantine/core';
 import { IconUserCircle } from '@tabler/icons-react';
+import { Link } from 'react-router-dom';
 import { Layout, useStyles } from '../components/layout';
 
 export function LoggedInHomePage() {
@@ -32,8 +33,22 @@ export function LoggedInHomePage() {
         </SimpleGrid>
 
         <Group mb="xl">
-          <Button variant="outline" style={style.secondaryButton}>+ Create group</Button>
-          <Button variant="outline" style={style.secondaryButton}>+ Join group</Button>
+          <Button 
+            component={Link} 
+            to="/create-group" 
+            variant="outline" 
+            style={style.secondaryButton}
+          >
+            + Create group
+          </Button>
+          <Button 
+            component={Link} 
+            to="/join-group" 
+            variant="outline" 
+            style={style.secondaryButton}
+          >
+            + Join group
+          </Button>
         </Group>
 
         <Title order={3} mb="md" style={style.title}>Discussion Forum threads you follow</Title>
@@ -49,8 +64,20 @@ export function LoggedInHomePage() {
 
         <Title order={3} mb="md" style={style.title}>Expert Q&A Sessions</Title>
         <Group mb="xl">
-          <Button style={style.primaryButton}>Host Q&A session</Button>
-          <Button style={style.primaryButton}>Join Q&A session</Button>
+          <Button 
+            component={Link} 
+            to="/host-qa" 
+            style={style.primaryButton}
+          >
+            Host Q&A session
+          </Button>
+          <Button 
+            component={Link} 
+            to="/join-qa" 
+            style={style.primaryButton}
+          >
+            Join Q&A session
+          </Button>
         </Group>
 
         <Title order={3} mb="md" style={style.title}>Learn</Title>
