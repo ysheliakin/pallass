@@ -17,7 +17,7 @@ export function SignUpPage() {
   const [socialLinks, setSocialLinks] = useState(['']);
 
   const handleSignUp = () => {
-    // Here you would typically handle the sign-up logic
+    // Here you would handle the sign-up logic
     console.log('Sign up data:', { firstName, lastName, email, password, institution, fieldOfStudy, jobTitle, socialLinks });
     navigate('/dashboard');
   };
