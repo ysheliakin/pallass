@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	queries "sih/pallass/generated"
-	"strconv"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
@@ -62,7 +61,6 @@ func main() {
 	}))
 
 	// Get Handlers
-	e.GET("/", hello)
 	e.GET("/playlist", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Here is the playlist")
 	})
@@ -109,20 +107,6 @@ func main() {
 	e.Logger.Fatal(e.Start(":5000"))
 }
 
-func hello(c echo.Context) error {
-	str := "Hello world: "
-	sampleValues, err := sql.GetSample(dbc) // Sample query with code generated with sqlc
-	if err != nil {
-		e.Logger.Error(err)
-		return c.String(http.StatusInternalServerError, "Error happened :(")
-	}
-	e.Logger.Infof("retrieved %d rows", len(sampleValues))
-	for _, x := range sampleValues {
-		str = str + strconv.FormatInt(int64(x.Int32), 10) + " "
-	}
-	return c.String(http.StatusOK, str)
-}
-
 // Reverse Proxy for Angular
 func getOrigin() *url.URL {
 	origin, _ := url.Parse("http://localhost:4200")
@@ -145,10 +129,10 @@ var AngularHandler = &httputil.ReverseProxy{Director: director}
 func registerUser(c echo.Context) error {
     var user User
 
-    // Decode the incoming JSON
+    // Decode the incoming JSON request body
     err := c.Bind(&user); 
     if err != nil {
-        return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid input"})
+        return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid inputs"})
     }
 
 	// Hash the password
@@ -191,4 +175,29 @@ func registerUser(c echo.Context) error {
     }
 
     return c.JSON(http.StatusOK, RegisterResponse{Message: "Account successfully registered"})
+}
+
+// User login
+func loginUser(c echo.Context) error {
+	var user User
+
+    // Decode the incoming JSON request body
+	err := c.Bind(&user)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid inputs"})
+	}
+
+	// Retrieve the user from the database
+	dbUser, err := sql.GetUserByEmail(context.Background(), user.Email)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Wrong email/password"})
+	}
+
+	// Compare the password inputted by the user with the hashed password stored in the database
+	err = bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password))
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Wrong email/password"})
+	}
+
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful login"})
 }
