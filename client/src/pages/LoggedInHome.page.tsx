@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { Container, Title, Text, Button, Group, Paper, Menu, ActionIcon, SimpleGrid } from '@mantine/core';
+import { Container, Title, Button, Group, Paper, Menu, ActionIcon, SimpleGrid } from '@mantine/core';
 import { IconUserCircle } from '@tabler/icons-react';
-import { Layout } from '../components/layout';
+import { Layout, useStyles } from '../components/layout';
 
 export function LoggedInHomePage() {
+  const style = useStyles();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <Layout>
       <Container size="lg">
         <Group justify="space-between" align="center" mb="xl">
-          <Title order={2}>Your Groups</Title>
+          <Title order={2} style={style.title}>Your Groups</Title>
           <Menu opened={isMenuOpen} onChange={setIsMenuOpen}>
             <Menu.Target>
               <ActionIcon size="lg" variant="subtle" color="gray">
@@ -31,31 +32,31 @@ export function LoggedInHomePage() {
         </SimpleGrid>
 
         <Group mb="xl">
-          <Button variant="outline" color="brand">+ Create group</Button>
-          <Button variant="outline" color="brand">+ Join group</Button>
+          <Button variant="outline" style={style.secondaryButton}>+ Create group</Button>
+          <Button variant="outline" style={style.secondaryButton}>+ Join group</Button>
         </Group>
 
-        <Title order={3} mb="md">Discussion Forum threads you follow</Title>
+        <Title order={3} mb="md" style={style.title}>Discussion Forum threads you follow</Title>
         <SimpleGrid cols={2} spacing="md" mb="xl">
           <Paper p="md" withBorder>Discussion forum name 1</Paper>
           <Paper p="md" withBorder>Discussion forum name 2</Paper>
         </SimpleGrid>
 
         <Group mb="xl">
-          <Button variant="outline" color="brand">+ Create a thread</Button>
-          <Button variant="outline" color="brand">+ Discover threads</Button>
+          <Button variant="outline" style={style.secondaryButton}>+ Create a thread</Button>
+          <Button variant="outline" style={style.secondaryButton}>+ Discover threads</Button>
         </Group>
 
-        <Title order={3} mb="md">Expert Q&A Sessions</Title>
+        <Title order={3} mb="md" style={style.title}>Expert Q&A Sessions</Title>
         <Group mb="xl">
-          <Button color="brand">Host Q&A session</Button>
-          <Button color="brand">Join Q&A session</Button>
+          <Button style={style.primaryButton}>Host Q&A session</Button>
+          <Button style={style.primaryButton}>Join Q&A session</Button>
         </Group>
 
-        <Title order={3} mb="md">Learn</Title>
+        <Title order={3} mb="md" style={style.title}>Learn</Title>
         <Group>
-          <Button color="brand">Write about a topic</Button>
-          <Button color="brand">Learn about a topic</Button>
+          <Button style={style.primaryButton}>Write about a topic</Button>
+          <Button style={style.primaryButton}>Learn about a topic</Button>
         </Group>
       </Container>
     </Layout>

@@ -1,24 +1,14 @@
 import React from 'react';
-import { Container, Title, Text, Button, Group, Stack, Paper, Image } from '@mantine/core';
-import { Link } from 'react-router-dom';
-import { ColorSchemeToggle } from '../components/ColorSchemeToggle/ColorSchemeToggle';
-import { Layout } from '../components/layout';
+import { Container, Title, Stack, Paper, Image, Group } from '@mantine/core';
+import { Layout, useStyles } from '../components/layout';
 
 export function HomePage() {
-  return (
-    <Container size="xl" px={0}>
-      <Container size="xl" py="md">
-        <Group justify="space-between" align="center">
-          <Title order={1} c="red">Pallas's Hub</Title>
-          <Group>
-            <Button component={Link} to="/login" variant="outline">Log in</Button>
-            <Button component={Link} to="/signup">Sign up</Button>
-          </Group>
-        </Group>
-      </Container>
+  const styles = useStyles();
 
+  return (
+    <Layout>
       <Container size="lg">
-        <Title order={2} ta="center" mt="xl">Communicate with fellow researchers for free</Title>
+        <Title order={2} ta="center" mt="xl" style={styles.title}>Communicate with fellow researchers for free</Title>
         
         <Stack gap="xl" mt="xl">
           <Paper shadow="sm" p="md">
@@ -66,9 +56,7 @@ export function HomePage() {
             </Group>
           </Paper>
         </Stack>
-        
       </Container>
-
-    </Container>
+    </Layout>
   );
 }

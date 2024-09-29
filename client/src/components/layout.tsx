@@ -1,12 +1,69 @@
 import React from 'react';
-import { Container, Title, Box, MantineProvider, createTheme } from '@mantine/core';
+import { Container, Title, Box, MantineProvider, createTheme, MantineThemeOverride, Group, Button } from '@mantine/core';
 import { Link } from 'react-router-dom';
 
-const theme = createTheme({
+const theme: MantineThemeOverride = createTheme({
   colors: {
-    brand: ['#ff8447', '#ff8447', '#ff8447', '#ff8447', '#ff8447', '#ff8447', '#ff8447', '#ff8447', '#ff8447', '#ff8447'],
+    brand: ['#AB4D7C', '#793852', '#793852', '#793852', '#793852', '#793852', '#793852', '#793852', '#793852', '#793852'],
+    secondary: ['#37344b', '#37344b', '#37344b', '#37344b', '#37344b', '#37344b', '#37344b', '#37344b', '#37344b', '#37344b'],
+    accent: ['#d05572', '#d05572', '#d05572', '#d05572', '#d05572', '#d05572', '#d05572', '#d05572', '#d05572', '#d05572'],
+    background: ['#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1'],
+    light: ['#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1'],
   },
   primaryColor: 'brand',
+});
+
+export const useStyles = () => ({
+  pageContainer: {
+    backgroundColor: theme.colors?.light?.[0],
+    minHeight: '100vh',
+    color: theme.colors?.secondary?.[0],
+  },
+  header: {
+    backgroundColor: theme.colors?.secondary?.[0],
+    padding: '1rem',
+    position: 'fixed' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+  },
+  headerContent: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  title: {
+    color: theme.colors?.brand?.[0],
+    textDecoration: 'none',
+  },
+  content: {
+    paddingTop: 80,
+    paddingBottom: 20,
+  },
+  primaryButton: {
+    backgroundColor: theme.colors?.accent?.[0],
+    color: theme.colors?.light?.[0],
+    '&:hover': {
+      backgroundColor: theme.colors?.accent?.[1],
+    },
+  },
+  secondaryButton: {
+    color: theme.colors?.light?.[0],
+    borderColor: theme.colors?.light?.[0],
+    '&:hover': {
+      backgroundColor: theme.colors?.light?.[0],
+      color: theme.colors?.secondary?.[0],
+    },
+  },
+  input: {
+    backgroundColor: theme.colors?.light?.[0],
+    color: theme.colors?.secondary?.[0],
+    '&::placeholder': {
+      color: theme.colors?.secondary?.[2],
+    },
+  },
 });
 
 interface LayoutProps {
@@ -14,18 +71,23 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
+  const styles = useStyles();
   return (
     <MantineProvider theme={theme}>
-      <Box style={{ backgroundColor: '#111111', minHeight: '100vh', color: 'white' }}>
+      <Box style={styles.pageContainer}>
         <Container size="xl" px={0}>
-          <Box py="md" px="md" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, backgroundColor: '#111111' }}>
-            <Link to="/" style={{ textDecoration: 'none' }}>
-              <Title order={1} c="red">
-                Pallas's Hub
-              </Title>
-            </Link>
+          <Box style={styles.header}>
+            <div style={styles.headerContent}>
+              <Link to="/" style={styles.title}>
+                <Title order={1}>Pallas's Hub</Title>
+              </Link>
+              <Group>
+                <Button component={Link} to="/login" variant="outline" style={styles.secondaryButton}>Log in</Button>
+                <Button component={Link} to="/signup" style={styles.primaryButton}>Sign up</Button>
+              </Group>
+            </div>
           </Box>
-          <Box pt={80} pb={20}>  {/* Increased padding-top and added padding-bottom */}
+          <Box style={styles.content}>
             {children}
           </Box>
         </Container>
