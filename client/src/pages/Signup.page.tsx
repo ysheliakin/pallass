@@ -13,7 +13,7 @@ export function SignupPage() {
   const [jobTitle, setJobTitle] = useState('');
 
   const handleSubmit = async () => {
-    const response = await fetch('http://localhost:4020/registeruser', {
+    const response = await fetch('http://localhost:5000/registeruser', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

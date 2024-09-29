@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	queries "sih/pallass/generated"
 	"strconv"
@@ -10,12 +12,28 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"golang.org/x/crypto/bcrypt"
 	"github.com/labstack/gommon/log"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 var e *echo.Echo
 var dbc context.Context
 var sql *queries.Queries
+
+type User struct {
+    Firstname string `json:"firstname"`
+    Lastname string `json:"lastname"`
+    Email string `json:"email"`
+    Password string `json:"password"`
+    Organization string `json:"organization"`
+    Fieldofstudy string `json:"fieldofstudy"`
+    Jobtitle string `json:"jobtitle"`
+}
+
+type RegisterResponse struct {
+	Message string `json:"message"`
+}
 
 func main() {
 	// Echo instance
@@ -36,15 +54,22 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
+	// CORS configuration
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173"},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
+        AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAccept},
+	}))
+
+	// Get Handlers
 	e.GET("/", hello)
+	e.GET("/playlist", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Here is the playlist")
+	})
 
 	// Post Handlers
-	e.POST("/registeruser", func(c echo.Context) error {
-		return c.String(http.StatusOK, "User created")
-	})
-	e.POST("/loginuser", func(c echo.Context) error {
-		return c.String(http.StatusOK, "User logged in")
-	})
+	e.POST("/registeruser", registerUser)
+	e.POST("/loginuser", loginUser)
 	e.POST("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post created")
 	})
@@ -59,11 +84,6 @@ func main() {
 	})
 	e.POST("/downvote", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Downvoted")
-	})
-
-	// Get Handlers
-	e.GET("/playlist", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Here is the playlist")
 	})
 
 	// Put Handlers
@@ -123,17 +143,52 @@ var AngularHandler = &httputil.ReverseProxy{Director: director}
 
 // User registration
 func registerUser(c echo.Context) error {
-	var user User
+    var user User
 
-	// Save the new user to the database
-	_, err := dbPool.Exec(context.Background(), "INSERT INTO users (firstname, lastname, email, password, organization, fieldOfStudy, job) VALUES ($1, $2, $3, $4, $5, $6, $7)", user.Firstname, user.Lastname, user.Email, user.Password, user.Organization, user.FieldOfStudy, user.JobTitle)
+    // Decode the incoming JSON
+    err := c.Bind(&user); 
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid input"})
+    }
 
-	if err != nil {
-		response := RegisterResponse{Message: "Error creating an account"}
-		json.NewEncoder(w).Encode(response)
-		return
+	// Hash the password
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Error hashing password"})
+    }
+    user.Password = string(hashedPassword)
+
+	// Check if the user inputted an organization or not
+	var organizationParam pgtype.Text
+	if user.Organization != "" {
+		organizationParam = pgtype.Text{String: user.Organization, Valid: true}
+	} else {
+		organizationParam = pgtype.Text{Valid: false}
 	}
 
-	response := RegisterResponse{Message: "Account successfully registered"}
-	json.NewEncoder(w).Encode(response)
+	// Check if the user inputted a job title or not
+	var jobParam pgtype.Text
+	if user.Jobtitle != "" {
+		jobParam = pgtype.Text{String: user.Jobtitle, Valid: true}
+	} else {
+		jobParam = pgtype.Text{Valid: false}
+	}
+
+	params := queries.CreateUserParams{
+		Firstname: user.Firstname,
+		Lastname: user.Lastname,
+		Email: user.Email, 
+		Password: user.Password, 
+		Organization: organizationParam, 
+		Fieldofstudy: user.Fieldofstudy, 
+		Jobtitle: jobParam,
+	}
+
+    // Save the new user to the database using sqlc queries
+    err = sql.CreateUser(context.Background(), params) 
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Error creating an account"})
+    }
+
+    return c.JSON(http.StatusOK, RegisterResponse{Message: "Account successfully registered"})
 }
