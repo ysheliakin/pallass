@@ -17,7 +17,7 @@ func Run(e *echo.Echo) {
 
 	// Post Handlers
 	e.POST("/user", controller.UserController)
-	e.POST("/post", controller.PostController)
+	e.POST("/postThread", controller.ThreadController)
 	e.POST("/comment", controller.CommentController)
 	e.POST("/flag", controller.FlagController)
 	e.POST("/upvote", controller.UpvoteController)
@@ -25,13 +25,16 @@ func Run(e *echo.Echo) {
 
 	// Get Handlers
 	e.GET("/playlist", controller.PlaylistController)
+	e.GET("/thread", controller.GetThreadController)
+	e.GET("/comment", controller.GetCommentController)
+	e.GET("/user", controller.GetUserController)
 
 	// Put Handlers
 	e.PUT("/user", controller.UpdateUserController)
-	e.PUT("/post", controller.UpdatePostController)
+	e.PUT("/updateThread", controller.UpdateThreadController)
 	e.PUT("/comment", controller.UpdateCommentController)
 
 	// Delete Handlers
-	e.DELETE("/post", controller.DeletePostController)
+	e.DELETE("/deleteThread", controller.DeleteThreadController)
 	e.DELETE("/comment", controller.DeleteCommentController)
 }

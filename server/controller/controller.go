@@ -14,6 +14,80 @@ var e *echo.Echo
 var dbc context.Context
 var sql *queries.Queries
 
+// Mock user data
+var mockUsers = []struct {
+	FirstName   string `json:"firstname"`
+	LastName    string `json:"lastname"`
+	Institution string `json:"institution"`
+	Title       string `json:"title"`
+	Field       string `json:"field"`
+}{
+	{
+		FirstName:   "Alice",
+		LastName:    "Johnson",
+		Institution: "University A",
+		Title:       "Professor",
+		Field:       "Computer Science",
+	},
+	{
+		FirstName:   "Bob",
+		LastName:    "Smith",
+		Institution: "Institute B",
+		Title:       "Researcher",
+		Field:       "Mathematics",
+	},
+	{
+		FirstName:   "Charlie",
+		LastName:    "Brown",
+		Institution: "College C",
+		Title:       "Lecturer",
+		Field:       "Physics",
+	},
+}
+
+// Mock data for threads
+var mockThreads = []struct {
+	ID       int    `json:"id"`
+	Title    string `json:"title"`
+	Content  string `json:"content"`
+	Category string `json:"categoy"`
+}{
+	{ID: 1, Title: "First Thread", Content: "This is the first Thread.", Category: "Physics"},
+	{ID: 2, Title: "Second Thread", Content: "This is the second Thread.", Category: "Biology"},
+	{ID: 3, Title: "Third Thread", Content: "This is the Third Thread.", Category: "Chemistry"},
+}
+
+// Mock comments(probably pass in thread id when using)
+var mockComments = []struct {
+	ID        int    `json:"id"`
+	ThreadID  int    `json:"thread_id"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	Content   string `json:"content"`
+}{
+	{
+		ID:        1,
+		ThreadID:  1,
+		FirstName: "Alice",
+		LastName:  "Johnson",
+		Content:   "Great post!",
+	},
+	{
+		ID:        2,
+		ThreadID:  1,
+		FirstName: "Bob",
+		LastName:  "Smith",
+		Content:   "Thanks for sharing!",
+	},
+	{
+		ID:        3,
+		ThreadID:  1,
+		FirstName: "Charlie",
+		LastName:  "Brown",
+		Content:   "Nice job!",
+	},
+}
+
 func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries, dbContext context.Context) {
 	e = echoInstance
 	sql = queriesInstance
@@ -41,8 +115,8 @@ func UserController(c echo.Context) error {
 }
 
 // PostController handles post-related actions
-func PostController(c echo.Context) error {
-	return c.String(http.StatusOK, "Post created")
+func ThreadController(c echo.Context) error {
+	return c.String(http.StatusOK, "Thread created")
 }
 
 // CommentController handles comment-related actions
@@ -70,14 +144,26 @@ func PlaylistController(c echo.Context) error {
 	return c.String(http.StatusOK, "Here is the playlist")
 }
 
+func GetThreadController(c echo.Context) error {
+	return c.JSON(http.StatusOK, mockThreads)
+}
+
+func GetCommentController(c echo.Context) error {
+	return c.JSON(http.StatusOK, mockComments)
+}
+
+func GetUserController(c echo.Context) error {
+	return c.JSON(http.StatusOK, mockUsers)
+}
+
 // UpdateUserController handles user updates
 func UpdateUserController(c echo.Context) error {
 	return c.String(http.StatusOK, "User updated")
 }
 
 // UpdatePostController handles post updates
-func UpdatePostController(c echo.Context) error {
-	return c.String(http.StatusOK, "Post updated")
+func UpdateThreadController(c echo.Context) error {
+	return c.String(http.StatusOK, "Thread updated")
 }
 
 // UpdateCommentController handles comment updates
@@ -86,8 +172,8 @@ func UpdateCommentController(c echo.Context) error {
 }
 
 // DeletePostController handles post deletion
-func DeletePostController(c echo.Context) error {
-	return c.String(http.StatusOK, "Post deleted")
+func DeleteThreadController(c echo.Context) error {
+	return c.String(http.StatusOK, "Thread deleted")
 }
 
 // DeleteCommentController handles comment deletion
