@@ -130,25 +130,6 @@ const Page: React.FC = () => {
       .then(data => setPosts([...posts, data]));
   };
 
-  // Handle adding a new comment
-  const handleAddComment = (postID: number) => {
-    fetch(`http://localhost:5000/posts/${postID}/comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: newComment.content })
-    })
-      .then(response => response.json())
-      .then(comment => {
-        const updatedPosts = posts.map(post => {
-          if (post.postID === postID) {
-            post.comments.push(comment);
-          }
-          return post;
-        });
-        setPosts(updatedPosts);
-      });
-  };
-
   // Handle the circle button click
   const handleApprovalClick = () => {
     setIsButtonClicked(!isButtonClicked); // Toggle button state
@@ -190,39 +171,3 @@ const Page: React.FC = () => {
 };
 
 export default Page;
-/*
-<div>
-      <h1>Posts</h1>
-      <div>
-        <input
-          type="text"
-          placeholder="Title"
-          value={newPost.title}
-          onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-        />
-        <textarea
-          placeholder="Content"
-          value={newPost.content}
-          onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-        />
-        <button onClick={handleAddPost}>Add Post</button>
-      </div>
-
-      {posts.map(post => (
-        <div key={post.id}>
-          <h2>{post.title}</h2>
-          <p>{post.content}</p>
-          <h3>Comments</h3>
-          {post.comments.map(comment => (
-            <p key={comment.id}>{comment.content}</p>
-          ))}
-          <input
-            type="text"
-            placeholder="Add comment"
-            onChange={(e) => setNewComment({ ...newComment, content: e.target.value })}
-          />
-          <button onClick={() => handleAddComment(post.id)}>Add Comment</button>
-        </div>
-      ))}
-    </div>
-*/
