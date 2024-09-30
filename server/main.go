@@ -6,9 +6,6 @@ import (
 
 	controller "sih/pallass/controller"
 	queries "sih/pallass/generated"
-	router "sih/pallass/routes"
-
-	//new
 
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
@@ -36,11 +33,37 @@ func main() {
 	sql = queries.New(conn)
 
 	controller.SetGlobalContext(e, sql, dbc)
-	router.Run(e)
 
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	// e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+	// 	AllowOrigins: []string{"http://localhost:5137", "https://ysheliakin.github.io/pallass"},
+	// }))
+	e.Use(middleware.CORS()) // TODO: might want to make this stricter
+
+	e.GET("/", controller.HelloController)
+
+	e.GET("/thread", controller.GetThreadController)
+	e.POST("/postThread", controller.ThreadController)
+	e.POST("/post", controller.CreatePost)
+	e.PUT("/updateThread", controller.UpdateThreadController)
+	e.DELETE("/deleteThread", controller.DeleteThreadController)
+
+	e.GET("/comment", controller.GetCommentController)
+	e.POST("/comment", controller.CommentController)
+	e.PUT("/comment", controller.UpdateCommentController)
+	e.DELETE("/comment", controller.DeleteCommentController)
+
+	e.POST("/flag", controller.FlagController)
+	e.POST("/upvote", controller.UpvoteController)
+	e.POST("/downvote", controller.DownvoteController)
+
+	e.GET("/playlist", controller.PlaylistController)
+
+	e.GET("/user", controller.GetUserController)
+	e.POST("/user", controller.UserController)
+	e.PUT("/user", controller.UpdateUserController)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":5000"))

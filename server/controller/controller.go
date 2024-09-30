@@ -119,6 +119,10 @@ func ThreadController(c echo.Context) error {
 	return c.String(http.StatusOK, "Thread created")
 }
 
+func CreatePost(c echo.Context) error {
+	return c.JSON(http.StatusOK, "Thread created")
+}
+
 // CommentController handles comment-related actions
 func CommentController(c echo.Context) error {
 	return c.String(http.StatusOK, "Comment created")
