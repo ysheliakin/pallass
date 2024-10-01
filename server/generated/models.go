@@ -23,3 +23,10 @@ type User struct {
 	Jobtitle     pgtype.Text
 	CreatedAt    pgtype.Timestamp
 }
+
+type UserSocialLink struct {
+	ID         int32
+	UserEmail  string
+	SocialLink string
+	CreatedAt  pgtype.Timestamp
+}

@@ -71,3 +71,18 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 	)
 	return i, err
 }
+
+const insertUserSocialLink = `-- name: InsertUserSocialLink :exec
+INSERT INTO user_social_links(user_email, social_link)
+VALUES ($1, $2)
+`
+
+type InsertUserSocialLinkParams struct {
+	UserEmail  string
+	SocialLink string
+}
+
+func (q *Queries) InsertUserSocialLink(ctx context.Context, arg InsertUserSocialLinkParams) error {
+	_, err := q.db.Exec(ctx, insertUserSocialLink, arg.UserEmail, arg.SocialLink)
+	return err
+}

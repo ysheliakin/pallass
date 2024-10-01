@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Container, Title, TextInput, Button } from '@mantine/core';
+import { Container, Title, TextInput, PasswordInput, Button, Paper, Box } from '@mantine/core';
+import { Link, useNavigate } from 'react-router-dom';
+import { Layout, useStyles } from '../components/layout';
 
 export function LoginPage() {
-  const navigate = useNavigate();
+  const styles = useStyles();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = async () => {
+  const handleLogin = async () => {
     const response = await fetch('http://localhost:5000/loginuser', {
       method: 'POST',
       headers: {
@@ -25,13 +27,33 @@ export function LoginPage() {
   };
 
   return (
-    <Container>
-      <Title order={2} text-align="center">Log In</Title>
-
-      <TextInput label="Email" value={email} onChange={(e) => setEmail(e.currentTarget.value)} type="email"/>
-      <TextInput label="Password" value={password} onChange={(e) => setPassword(e.currentTarget.value)} type="password"/>
-
-      <Button onClick={handleSubmit}>Submit</Button>
-    </Container>
+    <Layout>
+      <Container size="xs" mt={60}>
+        <Title order={2} ta="center" mt="xl" style={styles.title}>Log in</Title>
+        
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+          <TextInput
+            label="Email address"
+            placeholder="hello@example.com"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.currentTarget.value)}
+            styles={{ input: styles.input }}
+          />
+          <PasswordInput
+            label="Password"
+            placeholder="Your password"
+            required
+            mt="md"
+            value={password}
+            onChange={(event) => setPassword(event.currentTarget.value)}
+            styles={{ input: styles.input }}
+          />
+          <Button fullWidth mt="xl" style={styles.primaryButton} onClick={handleLogin}>
+            Log In
+          </Button>
+        </Paper>
+      </Container>
+    </Layout>
   );
 }

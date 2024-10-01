@@ -28,6 +28,7 @@ type User struct {
     Organization string `json:"organization"`
     Fieldofstudy string `json:"fieldofstudy"`
     Jobtitle string `json:"jobtitle"`
+	SocialLinks []string `json:"sociallinks"`
 }
 
 type RegisterResponse struct {
@@ -158,7 +159,7 @@ func registerUser(c echo.Context) error {
 		jobParam = pgtype.Text{Valid: false}
 	}
 
-	params := queries.CreateUserParams{
+	userParams := queries.CreateUserParams{
 		Firstname: user.Firstname,
 		Lastname: user.Lastname,
 		Email: user.Email, 
@@ -169,10 +170,27 @@ func registerUser(c echo.Context) error {
 	}
 
     // Save the new user to the database using sqlc queries
-    err = sql.CreateUser(context.Background(), params) 
+    err = sql.CreateUser(context.Background(), userParams) 
     if err != nil {
         return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Error creating an account"})
     }
+
+	// Insert social links if the user inputted any
+	if len(user.SocialLinks) > 0 {
+		for _, socialLink := range user.SocialLinks {
+			if socialLink != "" {
+				userSocialLinksParams := queries.InsertUserSocialLinkParams{
+					UserEmail: user.Email,
+					SocialLink: socialLink,
+				}
+
+				err = sql.InsertUserSocialLink(context.Background(), userSocialLinksParams)
+				if err != nil {
+					return c.JSON(http.StatusInternalServerError, "Error inserting the social link")
+				}
+			}
+		}
+	} 
 
     return c.JSON(http.StatusOK, RegisterResponse{Message: "Account successfully registered"})
 }

@@ -1,74 +1,62 @@
-import { useNavigate } from 'react-router-dom';
-import { Container, Group, Title, Text, Grid, Button } from '@mantine/core';
+import React from 'react';
+import { Container, Title, Stack, Paper, Image, Group } from '@mantine/core';
+import { Layout, useStyles } from '../components/layout';
 
-export const HomePage = () => {
-  const navigate = useNavigate();
-
-  const handleSignUpClick = () => {
-    navigate("/signup");
-  }
-
-  const handleLoginClick = () => {
-    navigate("/login");
-  }
+export function HomePage() {
+  const styles = useStyles();
 
   return (
-    <Container>
-      <header  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <Title order={1}>Pallas's Hub</Title>
-
-        <Group>
-          <Button variant="filled" onClick={handleLoginClick}>Log In</Button>
-          <Button variant="outline" onClick={handleSignUpClick}>Sign Up</Button>
-        </Group>
-      </header>
-
-      <Title order={1}>Welcome to Pallas's Hub, a communication hub for researchers</Title>
-
-      <Grid>
-        <Grid.Col span={5}>
-          <Text>Create and join Groups to work on projects</Text>
-        </Grid.Col>
-        <Grid.Col span={5}>
-          <img src="" alt="Image of a group example" />
-        </Grid.Col>
-      </Grid>
-
-      <Grid>
-        <Grid.Col span={5}>
-          <img src="" alt="Image of a Discussion Thread example" />
-        </Grid.Col>
-        <Grid.Col span={5}>
-          <Text>Create and follow threads in the Discussion Forum</Text>
-        </Grid.Col>
-      </Grid>
-
-      <Grid>
-        <Grid.Col span={5}>
-          <Text>Join and host Expert Q&A sessions</Text>
-        </Grid.Col>
-        <Grid.Col span={5}>
-        <img src="" alt="Image of an Expert Q&A session example" />
-        </Grid.Col>
-      </Grid>
-
-      <Grid>
-        <Grid.Col span={5}>
-        <img src="" alt="Image of a Learn topic example" />
-        </Grid.Col>
-        <Grid.Col span={5}>
-          <Text>Learn about a topic written by an expert / Write about a topic you are an expert in</Text>
-        </Grid.Col>
-      </Grid>
-
-      <Grid>
-        <Grid.Col span={5}>
-          <Text>Send direct messages</Text>
-        </Grid.Col>
-        <Grid.Col span={5}>
-        <img src="" alt="Image of a direct message example" />
-        </Grid.Col>
-      </Grid>
-    </Container>
+    <Layout>
+      <Container size="lg">
+        <Title order={2} ta="center" mt="xl" style={styles.title}>Communicate with fellow researchers for free</Title>
+        
+        <Stack gap="xl" mt="xl">
+          <Paper shadow="sm" p="md">
+            <Group>
+              <div style={{ flex: 1 }}>
+                <Title order={3}>Create and join Groups to work on projects</Title>
+              </div>
+              <Image src="/api/placeholder/300/200" alt="Group example" width={300} height={200} />
+            </Group>
+          </Paper>
+          
+          <Paper shadow="sm" p="md">
+            <Group>
+              <Image src="/api/placeholder/300/200" alt="Discussion Forum thread example" width={300} height={200} />
+              <div style={{ flex: 1 }}>
+                <Title order={3}>Create and follow threads in the Discussion Forum</Title>
+              </div>
+            </Group>
+          </Paper>
+          
+          <Paper shadow="sm" p="md">
+            <Group>
+              <div style={{ flex: 1 }}>
+                <Title order={3}>Join and host Expert Q&A sessions</Title>
+              </div>
+              <Image src="/api/placeholder/300/200" alt="Expert Q&A session example" width={300} height={200} />
+            </Group>
+          </Paper>
+          
+          <Paper shadow="sm" p="md">
+            <Group>
+              <Image src="/api/placeholder/300/200" alt="Learn topic example" width={300} height={200} />
+              <div style={{ flex: 1 }}>
+                <Title order={3}>Learn about a topic written by an expert / write about a topic you're an expert in</Title>
+              </div>
+            </Group>
+          </Paper>
+          
+          <Paper shadow="sm" p="md">
+            <Group>
+              <div style={{ flex: 1 }}>
+                <Title order={3}>Send direct messages</Title>
+              </div>
+              <Image src="/api/placeholder/300/200" alt="Direct message example" width={300} height={200} />
+            </Group>
+          </Paper>
+        </Stack>
+      </Container>
+    </Layout>
   );
 }

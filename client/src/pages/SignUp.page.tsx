@@ -11,27 +11,15 @@ export function SignUpPage() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [organization, setOrganization] = useState('');
+  const [institution, setInstitution] = useState('');
   const [fieldOfStudy, setFieldOfStudy] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [socialLinks, setSocialLinks] = useState(['']);
 
-  const handleSignUp = async () => {
+  const handleSignUp = () => {
     // Here you would handle the sign-up logic
-    const response = await fetch('http://localhost:5000/registeruser', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ firstName, lastName, email, password, organization, fieldOfStudy, jobTitle, socialLinks }),
-    });
-
-    // Log the user in if it worked well, otherwise error
-    if (response.ok) {
-      navigate('/loginuser');
-    } else {
-      console.log("Error signing up");
-    }
+    console.log('Sign up data:', { firstName, lastName, email, password, institution, fieldOfStudy, jobTitle, socialLinks });
+    navigate('/dashboard');
   };
 
   const addSocialLink = () => {
@@ -90,8 +78,8 @@ export function SignUpPage() {
             label="Institution/organization you work at"
             placeholder='Institution name (or "Independent")'
             mt="md"
-            value={organization}
-            onChange={(event) => setOrganization(event.currentTarget.value)}
+            value={institution}
+            onChange={(event) => setInstitution(event.currentTarget.value)}
             styles={{ input: styles.input }}
           />
           <TextInput
