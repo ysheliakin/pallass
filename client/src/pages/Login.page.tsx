@@ -18,9 +18,25 @@ export function LoginPage() {
       body: JSON.stringify({ email, password }),
     });
 
-    // Log the user in if it worked well, otherwise error
+    // Log the user in if it succeeded, otherwise return an error
     if (response.ok) {
-      navigate('/loggedInHomepage');
+      const data = await response.json();
+      const token = data.token;
+
+      // Store the token in the local storage
+      localStorage.setItem('token', token);
+
+      const authenticationResponse = await fetch('http://localhost:5000/authenticate', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+      });
+
+      // If the response is successful, navigate to the logged-in homepage
+      if (authenticationResponse.ok) {
+        navigate('/dashboard');
+      }
     } else {
       console.log("Error logging in");
     }

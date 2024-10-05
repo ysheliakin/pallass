@@ -14,11 +14,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"github.com/labstack/gommon/log"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/golang-jwt/jwt/v4"
+	"time"
 )
 
 var e *echo.Echo
 var dbc context.Context
 var sql *queries.Queries
+var secretKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 
 type User struct {
     Firstname string `json:"firstname"`
@@ -56,15 +59,16 @@ func main() {
 
 	// CORS configuration
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:5173"},
-		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
-        AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAccept},
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+        AllowHeaders: []string{"*"},
 	}))
 
 	// Get Handlers
 	e.GET("/playlist", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Here is the playlist")
 	})
+	e.GET("/authenticate", authenticate)
 
 	// Post Handlers
 	e.POST("/registeruser", registerUser)
@@ -217,5 +221,44 @@ func loginUser(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Wrong email/password"})
 	}
 
-	return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful login"})
+	// Generate JWT token that expires in 1 hour
+	claims := jwt.RegisteredClaims{ ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)) }
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign the token
+	signedToken, err := token.SignedString(secretKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Return the signed token via a JSON response
+    return c.JSON(http.StatusOK, map[string]string{"token": signedToken})
+}
+
+
+func authenticate(c echo.Context) error {
+	// Get the bearer token
+	bearerToken := c.Request().Header.Get("Authorization")
+	if bearerToken == "" {
+		return c.JSON(http.StatusUnauthorized, "No token")
+	}
+
+	// Remove the Bearer scheme from the bearer token string to only retrieve the token itself
+	noBearerToken := bearerToken[len("Bearer "):]
+
+	// Validate the token
+	claims := &jwt.RegisteredClaims{}
+	token, err := jwt.ParseWithClaims(noBearerToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	
+	if (!token.Valid) {
+		log.Fatal("Invalid token")
+	}
+
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful authentication"})
 }
