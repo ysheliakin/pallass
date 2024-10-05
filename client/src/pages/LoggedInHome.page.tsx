@@ -1,30 +1,16 @@
 import React, { useState } from 'react';
-import { Container, Title, Button, Group, Paper, Menu, ActionIcon, SimpleGrid, Text } from '@mantine/core';
-import { IconUserCircle } from '@tabler/icons-react';
+import { Container, Title, Button, Group, Paper, SimpleGrid } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { Layout, useStyles } from '../components/layout';
 
 export function LoggedInHomePage() {
   const styles = useStyles();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <Layout>
       <Container size="lg">
         <Group justify="apart" mb="xl">
           <Title order={2} style={styles.title}>Your Groups</Title>
-          <Menu opened={isMenuOpen} onChange={setIsMenuOpen}>
-            <Menu.Target>
-              <ActionIcon size="lg" variant="subtle" color="gray">
-                <IconUserCircle size={24} />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item>Contacts</Menu.Item>
-              <Menu.Item>Edit profile</Menu.Item>
-              <Menu.Item>Log Out</Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
         </Group>
 
         <SimpleGrid cols={2} spacing="md" mb="xl">
