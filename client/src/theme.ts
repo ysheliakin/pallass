@@ -60,11 +60,7 @@ export const styles = {
     paddingTop: 80,
     paddingBottom: 20,
   },
-  primaryButton: {
-    '&:hover': {
-      backgroundColor: theme.colors.Accent[1], // FIXME
-    },
-  },
+  primaryButton: {},
   secondaryButton: {},
   input: {
   },
