@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"net/http"
 	"os"
+
+	controller "sih/pallass/controller"
 	queries "sih/pallass/generated"
-	"strconv"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
@@ -32,70 +32,39 @@ func main() {
 	defer conn.Close(dbc)
 	sql = queries.New(conn)
 
+	controller.SetGlobalContext(e, sql, dbc)
+
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	// e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+	// 	AllowOrigins: []string{"http://localhost:5137", "https://ysheliakin.github.io/pallass"},
+	// }))
+	e.Use(middleware.CORS()) // TODO: might want to make this stricter
 
-	e.GET("/", hello)
+	e.GET("/", controller.HelloController)
 
-	// Post Handlers
-	e.POST("/user", func(c echo.Context) error {
-		return c.String(http.StatusOK, "User created")
-	})
-	e.POST("/post", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Post created")
-	})
-	e.POST("/comment", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Comment created")
-	})
-	e.POST("/flag", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Flag added")
-	})
-	e.POST("/upvote", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Upvoted")
-	})
-	e.POST("/downvote", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Downvoted")
-	})
+	e.GET("/thread", controller.GetThreadController)
+	e.POST("/postThread", controller.ThreadController)
+	e.POST("/post", controller.CreatePost)
+	e.PUT("/updateThread", controller.UpdateThreadController)
+	e.DELETE("/deleteThread", controller.DeleteThreadController)
 
-	// Get Handlers
-	e.GET("/playlist", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Here is the playlist")
-	})
+	e.GET("/comment", controller.GetCommentController)
+	e.POST("/comment", controller.CommentController)
+	e.PUT("/comment", controller.UpdateCommentController)
+	e.DELETE("/comment", controller.DeleteCommentController)
 
-	// Put Handlers
-	e.PUT("/user", func(c echo.Context) error {
-		return c.String(http.StatusOK, "User updated")
-	})
-	e.PUT("/post", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Post updated")
-	})
-	e.PUT("/comment", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Comment updated")
-	})
+	e.POST("/flag", controller.FlagController)
+	e.POST("/upvote", controller.UpvoteController)
+	e.POST("/downvote", controller.DownvoteController)
 
-	// Delete Handlers
-	e.DELETE("/post", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Post deleted")
-	})
-	e.DELETE("/comment", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Comment deleted")
-	})
+	e.GET("/playlist", controller.PlaylistController)
+
+	e.GET("/user", controller.GetUserController)
+	e.POST("/user", controller.UserController)
+	e.PUT("/user", controller.UpdateUserController)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":5000"))
-}
-
-func hello(c echo.Context) error {
-	str := "Hello world: "
-	sampleValues, err := sql.GetSample(dbc) // Sample query with code generated with sqlc
-	if err != nil {
-		e.Logger.Error(err)
-		return c.String(http.StatusInternalServerError, "Error happened :(")
-	}
-	e.Logger.Infof("retrieved %d rows", len(sampleValues))
-	for _, x := range sampleValues {
-		str = str + strconv.FormatInt(int64(x.Int32), 10) + " "
-	}
-	return c.String(http.StatusOK, str)
 }

@@ -27,6 +27,8 @@ jobs:
     - name: Build React app
       run: npm run build-prod
       working-directory: ./client
+      env:
+        VITE_API_ENDPOINT: ${{ secrets.REACT_API_ENDPOINT }}
 
     - name: Deploy to GitHub Pages
       run: | 

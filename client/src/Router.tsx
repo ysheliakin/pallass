@@ -1,20 +1,37 @@
 import { createHashRouter, RouterProvider } from 'react-router-dom';
-import { HomePage } from './pages/Home.page';
-import { SignUpPage } from './pages/SignUp.page';
-import { LoginPage } from './pages/Login.page';
-import { LoggedInHomePage } from './pages/LoggedInHome.page';
-import { HostQASession } from './pages/HostQA.page';
-import { JoinQASession } from './pages/JoinQA.page';
+import { Layout } from './components/Layout/Layout';
 import { CreateGroup } from './pages/CreateGroup.page';
-import { JoinGroup } from './pages/JoinGroup.page'; // Import the new component
+import { CreatePostPage } from './pages/CreatePost.page';
 import { CreateThread } from './pages/CreateThread';
 import { DiscoverThreads } from './pages/DiscoverThreads';
+import { HomePage } from './pages/Home.page';
+import { HostQASession } from './pages/HostQA.page';
+import { JoinGroup } from './pages/JoinGroup.page'; // Import the new component
+import { JoinQASession } from './pages/JoinQA.page';
+import { LoggedInHomePage } from './pages/LoggedInHome.page';
+import { LoginPage } from './pages/Login.page';
+import { PostPage } from './pages/Post.page';
+import { SignUpPage } from './pages/SignUp.page';
 import { ThreadView } from './pages/ThreadView';
 
 const router = createHashRouter([
   {
     path: '/',
-    element: <HomePage />,
+    element: <Layout />,
+    children: [
+      {
+        path: '/',
+        element: <HomePage />,
+      },
+      {
+        path: '/post/create',
+        element: <CreatePostPage />,
+      },
+      {
+        path: '/post/:id',
+        element: <PostPage />,
+      },
+    ],
   },
   {
     path: '/signup',
@@ -56,7 +73,6 @@ const router = createHashRouter([
     path: '/thread/:threadId',
     element: <ThreadView />,
   },
-
 ]);
 
 export function Router() {
