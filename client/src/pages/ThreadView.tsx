@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Container, Title, Text, Paper, Button, Textarea, Group, Stack, Box } from '@mantine/core';
-import { Layout, useStyles } from '../components/layout';
 import { useParams } from 'react-router-dom';
+import { Box, Button, Container, Group, Paper, Stack, Text, Textarea, Title } from '@mantine/core';
+import { styles } from '@/theme';
 
 interface User {
   id: string;
@@ -21,7 +21,7 @@ interface Message extends Reply {
 
 const currentUser: User = {
   id: '2',
-  name: 'Jane Smith'
+  name: 'Jane Smith',
 };
 
 const mockThread = {
@@ -29,33 +29,33 @@ const mockThread = {
   title: 'Example Thread Title',
   description: 'This is an example thread description.',
   messages: [
-    { 
-      id: '1', 
-      author: { id: '1', name: 'John Doe' }, 
-      date: '2023-05-01', 
+    {
+      id: '1',
+      author: { id: '1', name: 'John Doe' },
+      date: '2023-05-01',
       content: 'This is the first message in the thread.',
-      replies: []
+      replies: [],
     },
-    { 
-      id: '2', 
-      author: { id: '2', name: 'Jane Smith' }, 
-      date: '2023-05-02', 
+    {
+      id: '2',
+      author: { id: '2', name: 'Jane Smith' },
+      date: '2023-05-02',
       content: 'This is a message in the thread that YOU posted.',
-      replies: []
+      replies: [],
     },
-    { 
-      id: '3', 
-      author: { id: '3', name: 'Alice Johnson' }, 
-      date: '2023-05-03', 
+    {
+      id: '3',
+      author: { id: '3', name: 'Alice Johnson' },
+      date: '2023-05-03',
       content: 'Another message in the thread.',
-      replies: []
+      replies: [],
     },
-  ] as Message[]
+  ] as Message[],
 };
 
 export function ThreadView() {
   const { threadId } = useParams<{ threadId: string }>();
-  const styles = useStyles();
+
   const [newMessage, setNewMessage] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState('');
@@ -70,7 +70,7 @@ export function ThreadView() {
         author: currentUser,
         date: new Date().toISOString().split('T')[0],
         content: newMessage,
-        replies: []
+        replies: [],
       };
       setMessages([...messages, newMsg]);
       setNewMessage('');
@@ -83,9 +83,9 @@ export function ThreadView() {
   };
 
   const handleSaveEdit = (messageId: string) => {
-    setMessages(messages.map(msg => 
-      msg.id === messageId ? { ...msg, content: editedContent } : msg
-    ));
+    setMessages(
+      messages.map((msg) => (msg.id === messageId ? { ...msg, content: editedContent } : msg))
+    );
     setEditingMessageId(null);
     setEditedContent('');
   };
@@ -100,13 +100,13 @@ export function ThreadView() {
         id: `${messageId}-reply-${Date.now()}`,
         author: currentUser,
         date: new Date().toISOString().split('T')[0],
-        content: replyContent
+        content: replyContent,
       };
-      setMessages(messages.map(msg => 
-        msg.id === messageId 
-          ? { ...msg, replies: [...msg.replies, newReply] } 
-          : msg
-      ));
+      setMessages(
+        messages.map((msg) =>
+          msg.id === messageId ? { ...msg, replies: [...msg.replies, newReply] } : msg
+        )
+      );
       setReplyingToId(null);
       setReplyContent('');
     }
@@ -116,7 +116,9 @@ export function ThreadView() {
     <Paper key={message.id} p="md" withBorder style={isReply ? { marginLeft: 20 } : {}}>
       <Group justify="space-between" mb="xs">
         <Text fw={500}>{message.author.name}</Text>
-        <Text size="sm" color="dimmed">{message.date}</Text>
+        <Text size="sm" color="dimmed">
+          {message.date}
+        </Text>
       </Group>
       {editingMessageId === message.id ? (
         <>
@@ -126,27 +128,29 @@ export function ThreadView() {
             minRows={3}
             mb="sm"
           />
-          <Button onClick={() => handleSaveEdit(message.id)} size="sm">Save</Button>
+          <Button onClick={() => handleSaveEdit(message.id)} size="sm">
+            Save
+          </Button>
         </>
       ) : (
         <>
           <Text mb="sm">{message.content}</Text>
           <Group>
             {message.author.id === currentUser.id && (
-              <Button 
+              <Button
                 onClick={() => handleEditMessage(message.id, message.content)}
-                variant="subtle" 
-                color="blue" 
+                variant="subtle"
+                color="blue"
                 size="sm"
               >
                 Edit
               </Button>
             )}
             {!isReply && (
-              <Button 
+              <Button
                 onClick={() => handleReply(message.id)}
-                variant="subtle" 
-                color="grape" 
+                variant="subtle"
+                color="grape"
                 size="sm"
               >
                 Reply
@@ -164,7 +168,9 @@ export function ThreadView() {
             minRows={2}
             mb="sm"
           />
-          <Button onClick={() => handlePostReply(message.id)} size="sm">Post Reply</Button>
+          <Button onClick={() => handlePostReply(message.id)} size="sm">
+            Post Reply
+          </Button>
         </Box>
       )}
       {'replies' in message && message.replies.map((reply) => renderMessage(reply, true))}
@@ -172,26 +178,24 @@ export function ThreadView() {
   );
 
   return (
-    <Layout>
-      <Container size="lg" mt={30}>
-        <Title order={2} style={styles.title}>{mockThread.title}</Title>
-        <Text mb="xl">{mockThread.description}</Text>
+    <Container size="lg" mt={30}>
+      <Title order={2} style={styles.title}>
+        {mockThread.title}
+      </Title>
+      <Text mb="xl">{mockThread.description}</Text>
 
-        <Stack gap="md">
-          {messages.map(message => renderMessage(message))}
-        </Stack>
+      <Stack gap="md">{messages.map((message) => renderMessage(message))}</Stack>
 
-        <Paper mt="xl" p="md" withBorder>
-          <Textarea
-            placeholder="Your message"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.currentTarget.value)}
-            minRows={3}
-            mb="sm"
-          />
-          <Button onClick={handlePostMessage}>Post Message</Button>
-        </Paper>
-      </Container>
-    </Layout>
+      <Paper mt="xl" p="md" withBorder>
+        <Textarea
+          placeholder="Your message"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.currentTarget.value)}
+          minRows={3}
+          mb="sm"
+        />
+        <Button onClick={handlePostMessage}>Post Message</Button>
+      </Paper>
+    </Container>
   );
 }
