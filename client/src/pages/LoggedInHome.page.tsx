@@ -1,11 +1,20 @@
 import React, { useState } from 'react';
 import { IconUserCircle } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { ActionIcon, Button, Container, Group, Menu, Paper, SimpleGrid, Text, Title } from '@mantine/core';
-import { useStyles } from '@/theme';
+import {
+  ActionIcon,
+  Button,
+  Container,
+  Group,
+  Menu,
+  Paper,
+  SimpleGrid,
+  Text,
+  Title,
+} from '@mantine/core';
+import { styles } from '@/theme';
 
 export function LoggedInHomePage() {
-  const styles = useStyles();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (

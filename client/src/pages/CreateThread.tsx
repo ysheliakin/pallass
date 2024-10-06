@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Button, Container, Group, Paper, Select, Text, Textarea, TextInput, Title } from '@mantine/core';
-import { useStyles } from '@/theme';
+import { styles } from '@/theme';
+
 
 export function CreateThread() {
-  const styles = useStyles();
+  
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<string | null>(null);
@@ -33,7 +34,13 @@ export function CreateThread() {
         Create a Thread
       </Title>
 
-      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+      <Paper
+        withBorder
+        shadow="md"
+        p={30}
+        mt={30}
+        radius="md"
+      >
         <TextInput
           label="Title"
           placeholder="Enter thread title"

@@ -1,9 +1,8 @@
 import React from 'react';
 import { Container, Group, Image, Paper, Stack, Title } from '@mantine/core';
-import { useStyles } from '@/theme';
+import { styles } from '@/theme';
 
 export function HomePage() {
-  const styles = useStyles();
   return (
     <Container size="lg">
       <Title order={2} ta="center" mt="xl" style={styles.title}>

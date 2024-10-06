@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Button, Container, Paper, PasswordInput, TextInput, Title } from '@mantine/core';
-import { useStyles } from '@/theme';
+import { styles } from '@/theme';
 
 export function JoinQASession() {
-  const styles = useStyles();
   const [sessionId, setSessionId] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
