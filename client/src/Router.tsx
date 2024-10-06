@@ -14,7 +14,6 @@ import { PostPage } from './pages/Post.page';
 import { SignUpPage } from './pages/SignUp.page';
 import { ThreadView } from './pages/ThreadView';
 
-
 const router = createHashRouter([
   {
     path: '/',
@@ -32,47 +31,47 @@ const router = createHashRouter([
         path: '/post/:id',
         element: <PostPage />,
       },
-      {
-        path: '/signup',
-        element: <SignUpPage />,
-      },
-      {
-        path: '/login',
-        element: <LoginPage />,
-      },
-      {
-        path: '/dashboard',
-        element: <LoggedInHomePage />,
-      },
-      {
-        path: '/host-qa',
-        element: <HostQASession />,
-      },
-      {
-        path: '/join-qa',
-        element: <JoinQASession />,
-      },
-      {
-        path: '/create-group', // Add this new route
-        element: <CreateGroup />,
-      },
-      {
-        path: '/join-group',
-        element: <JoinGroup />,
-      },
-      {
-        path: '/create-thread',
-        element: <CreateThread />,
-      },
-      {
-        path: '/discover-threads',
-        element: <DiscoverThreads />,
-      },
-      {
-        path: '/thread/:threadId',
-        element: <ThreadView />,
-      },
     ],
+  },
+  {
+    path: '/signup',
+    element: <SignUpPage />,
+  },
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/dashboard',
+    element: <LoggedInHomePage />,
+  },
+  {
+    path: '/host-qa',
+    element: <HostQASession />,
+  },
+  {
+    path: '/join-qa',
+    element: <JoinQASession />,
+  },
+  {
+    path: '/create-group', // Add this new route
+    element: <CreateGroup />,
+  },
+  {
+    path: '/join-group',
+    element: <JoinGroup />,
+  },
+  {
+    path: '/create-thread',
+    element: <CreateThread />,
+  },
+  {
+    path: '/discover-threads',
+    element: <DiscoverThreads />,
+  },
+  {
+    path: '/thread/:threadId',
+    element: <ThreadView />,
   },
 ]);
 
