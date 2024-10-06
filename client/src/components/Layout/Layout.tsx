@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { AppShell, Button, Group, Title } from '@mantine/core';
+import { AppShell, Button, ColorSchemeScript, Group, Title } from '@mantine/core';
 import { styles } from '@/theme';
+import { ColorSchemeToggle } from '../ColorSchemeToggle/ColorSchemeToggle';
 
 export function Layout() {
   return (
@@ -12,7 +13,8 @@ export function Layout() {
             <Title order={1}>Pallas's Hub</Title>
           </Link>
           <Group>
-            <Button component={Link} to="/login" variant="outline" style={styles.primaryButton}>
+            <ColorSchemeToggle />
+            <Button component={Link} to="/login" variant="default">
               Log in
             </Button>
             <Button component={Link} to="/signup" style={styles.primaryButton}>
