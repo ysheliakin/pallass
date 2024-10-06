@@ -7,6 +7,9 @@ import { HostQASession } from './pages/HostQA.page';
 import { JoinQASession } from './pages/JoinQA.page';
 import { CreateGroup } from './pages/CreateGroup.page';
 import { JoinGroup } from './pages/JoinGroup.page'; // Import the new component
+import { CreateThread } from './pages/CreateThread';
+import { DiscoverThreads } from './pages/DiscoverThreads';
+import { ThreadView } from './pages/ThreadView';
 
 const router = createHashRouter([
   {
@@ -41,6 +44,19 @@ const router = createHashRouter([
     path: '/join-group',
     element: <JoinGroup />,
   },
+  {
+    path: '/create-thread',
+    element: <CreateThread />,
+  },
+  {
+    path: '/discover-threads',
+    element: <DiscoverThreads />,
+  },
+  {
+    path: '/thread/:threadId',
+    element: <ThreadView />,
+  },
+
 ]);
 
 export function Router() {
