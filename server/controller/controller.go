@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
 
 	queries "sih/pallass/generated"
@@ -13,6 +14,15 @@ import (
 var e *echo.Echo
 var dbc context.Context
 var sql *queries.Queries
+
+type Thread struct {
+	Firstname string `json:"firstname"`
+	Lastname  string `json:"lastname"`
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	Category  string `json:"category"`
+	Upvotes   int    `json:"upvotes"` // defaults to 0
+}
 
 // Mock user data
 var mockUsers = []struct {
@@ -114,9 +124,38 @@ func UserController(c echo.Context) error {
 	return c.String(http.StatusOK, "User created")
 }
 
-// PostController handles post-related actions
+// ThreadController handles thread-related actions
 func ThreadController(c echo.Context) error {
-	return c.String(http.StatusOK, "Thread created")
+	var thread Thread
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&thread)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid inputs")
+	}
+
+	// Prepare parameters for the database insertion
+	var categoryParam pgtype.Text
+	if thread.Category != "" {
+		categoryParam = pgtype.Text{String: thread.Category, Valid: true}
+	} else {
+		categoryParam = pgtype.Text{Valid: false}
+	}
+
+	threadParams := queries.InsertThreadParams{
+		Firstname: thread.Firstname,
+		Lastname:  thread.Lastname,
+		Title:     thread.Title,
+		Content:   thread.Content,
+		Category:  categoryParam.String,
+	}
+
+	err = sql.InsertThread(context.Background(), threadParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Error creating thread")
+	}
+
+	return c.JSON(http.StatusOK, "Thread created")
 }
 
 func CreatePost(c echo.Context) error {
