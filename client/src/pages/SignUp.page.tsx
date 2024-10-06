@@ -1,19 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Container,
-  Group,
-  Paper,
-  PasswordInput,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
-import { styles } from '@/theme';
+import { Box, Button, Container, Group, Paper, PasswordInput, Text, TextInput, Title } from '@mantine/core';
+import { useStyles } from '@/theme';
 
 export function SignUpPage() {
+  const styles = useStyles();
   const navigate = useNavigate();
 
   const [firstName, setFirstName] = useState('');

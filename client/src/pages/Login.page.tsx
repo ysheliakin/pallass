@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Box, Button, Container, Paper, PasswordInput, TextInput, Title } from '@mantine/core';
-import { styles } from '@/theme';
+import { useStyles } from '@/theme';
 
 export function LoginPage() {
+  const styles = useStyles();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();

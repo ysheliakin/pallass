@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Button, Container, Group, Paper, Stack, Text, Textarea, Title } from '@mantine/core';
-import { styles } from '@/theme';
+import { useStyles } from '@/theme';
 
 interface User {
   id: string;
@@ -54,6 +54,7 @@ const mockThread = {
 };
 
 export function ThreadView() {
+  const styles = useStyles();
   const { threadId } = useParams<{ threadId: string }>();
 
   const [newMessage, setNewMessage] = useState('');

@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { AppShell, Button, ColorSchemeScript, Group, Title } from '@mantine/core';
-import { styles } from '@/theme';
+import { AppShell, Button, Group, Title } from '@mantine/core';
+import { useStyles } from '@/theme';
 import { ColorSchemeToggle } from '../ColorSchemeToggle/ColorSchemeToggle';
 
 export function Layout() {
+  const styles = useStyles();
+
   return (
     <AppShell padding="md">
       <AppShell.Header style={styles.header}>

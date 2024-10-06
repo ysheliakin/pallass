@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Button, Container, Paper, Textarea, TextInput, Title } from '@mantine/core';
-import { styles } from '@/theme';
+import { useStyles } from '@/theme';
 
 export function HostQASession() {
+  const styles = useStyles();
   const [title, setTitle] = useState('');
   const [time, setTime] = useState('');
   const [topic, setTopic] = useState('');

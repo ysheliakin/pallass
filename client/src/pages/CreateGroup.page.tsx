@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
-import { Box, Button, Container, Group, Paper, Radio, Select, Stack, Textarea, TextInput, Title } from '@mantine/core';
-import { styles } from '@/theme';
-
+import {
+  Box,
+  Button,
+  Container,
+  Group,
+  Paper,
+  Radio,
+  Stack,
+  Textarea,
+  TextInput,
+  Title,
+} from '@mantine/core';
+import { useStyles } from '@/theme';
 
 export function CreateGroup() {
+  const styles = useStyles();
   const [name, setName] = useState('');
   const [users, setUsers] = useState<string[]>([]);
   const [newUser, setNewUser] = useState('');
@@ -29,13 +40,7 @@ export function CreateGroup() {
         Create Group
       </Title>
 
-      <Paper
-        withBorder
-        shadow="md"
-        p={30}
-        mt={30}
-        radius="md"
-      >
+      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
         <TextInput
           label="Name"
           placeholder="Enter group name"

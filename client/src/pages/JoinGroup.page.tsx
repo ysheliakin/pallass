@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Button, Container, Paper, Radio, Stack, TextInput, Title } from '@mantine/core';
-import { styles } from '@/theme';
-
+import { useStyles } from '@/theme';
 
 export function JoinGroup() {
+  const styles = useStyles();
   const [groupId, setGroupId] = useState('');
   const [notifications, setNotifications] = useState('on');
 

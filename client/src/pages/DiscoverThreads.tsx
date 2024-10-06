@@ -12,7 +12,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
-import { styles } from '@/theme';
+import { useStyles } from '@/theme';
 
 // Mock data for threads (unchanged)
 const mockThreads = Array(12)
@@ -25,6 +25,7 @@ const mockThreads = Array(12)
   }));
 
 export function DiscoverThreads() {
+  const styles = useStyles();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [threadName, setThreadName] = useState('');
   const [sortBy, setSortBy] = useState('mostRecentlyActive');
