@@ -44,14 +44,15 @@ func main() {
 
 	e.GET("/", controller.HelloController)
 
-	e.GET("/thread", controller.GetThreadController)
+	e.GET("/threads/:id", controller.GetThreadController)
 	e.POST("/postThread", controller.ThreadController)
+	e.GET("/threads/:id/comments", controller.GetCommentController)
+	e.POST("/comment", controller.CommentController)
+
 	e.POST("/post", controller.CreatePost)
 	e.PUT("/updateThread", controller.UpdateThreadController)
 	e.DELETE("/deleteThread", controller.DeleteThreadController)
 
-	e.GET("/comment", controller.GetCommentController)
-	e.POST("/comment", controller.CommentController)
 	e.PUT("/comment", controller.UpdateCommentController)
 	e.DELETE("/comment", controller.DeleteCommentController)
 

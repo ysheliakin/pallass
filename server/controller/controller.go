@@ -24,78 +24,11 @@ type Thread struct {
 	Upvotes   int    `json:"upvotes"` // defaults to 0
 }
 
-// Mock user data
-var mockUsers = []struct {
-	FirstName   string `json:"firstname"`
-	LastName    string `json:"lastname"`
-	Institution string `json:"institution"`
-	Title       string `json:"title"`
-	Field       string `json:"field"`
-}{
-	{
-		FirstName:   "Alice",
-		LastName:    "Johnson",
-		Institution: "University A",
-		Title:       "Professor",
-		Field:       "Computer Science",
-	},
-	{
-		FirstName:   "Bob",
-		LastName:    "Smith",
-		Institution: "Institute B",
-		Title:       "Researcher",
-		Field:       "Mathematics",
-	},
-	{
-		FirstName:   "Charlie",
-		LastName:    "Brown",
-		Institution: "College C",
-		Title:       "Lecturer",
-		Field:       "Physics",
-	},
-}
-
-// Mock data for threads
-var mockThreads = []struct {
-	ID       int    `json:"id"`
-	Title    string `json:"title"`
-	Content  string `json:"content"`
-	Category string `json:"categoy"`
-}{
-	{ID: 1, Title: "First Thread", Content: "This is the first Thread.", Category: "Physics"},
-	{ID: 2, Title: "Second Thread", Content: "This is the second Thread.", Category: "Biology"},
-	{ID: 3, Title: "Third Thread", Content: "This is the Third Thread.", Category: "Chemistry"},
-}
-
-// Mock comments(probably pass in thread id when using)
-var mockComments = []struct {
-	ID        int    `json:"id"`
-	ThreadID  int    `json:"thread_id"`
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
+type Comment struct {
+	Firstname string `json:"firstname"`
+	Lastname  string `json:"lastname"`
+	ThreadID  int32  `json:"thread_id"` // Ensure this matches your JSON request
 	Content   string `json:"content"`
-}{
-	{
-		ID:        1,
-		ThreadID:  1,
-		FirstName: "Alice",
-		LastName:  "Johnson",
-		Content:   "Great post!",
-	},
-	{
-		ID:        2,
-		ThreadID:  1,
-		FirstName: "Bob",
-		LastName:  "Smith",
-		Content:   "Thanks for sharing!",
-	},
-	{
-		ID:        3,
-		ThreadID:  1,
-		FirstName: "Charlie",
-		LastName:  "Brown",
-		Content:   "Nice job!",
-	},
 }
 
 func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries, dbContext context.Context) {
@@ -128,13 +61,12 @@ func UserController(c echo.Context) error {
 func ThreadController(c echo.Context) error {
 	var thread Thread
 
-	// Decode the incoming JSON request body
 	err := c.Bind(&thread)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid inputs")
 	}
 
-	// Prepare parameters for the database insertion
+	//parameters for the database insertion
 	var categoryParam pgtype.Text
 	if thread.Category != "" {
 		categoryParam = pgtype.Text{String: thread.Category, Valid: true}
@@ -164,7 +96,26 @@ func CreatePost(c echo.Context) error {
 
 // CommentController handles comment-related actions
 func CommentController(c echo.Context) error {
-	return c.String(http.StatusOK, "Comment created")
+	var comment Comment
+
+	err := c.Bind(&comment)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid inputs")
+	}
+
+	commentParams := queries.InsertCommentParams{
+		Firstname: comment.Firstname,
+		Lastname:  comment.Lastname,
+		ThreadID:  comment.ThreadID,
+		Content:   comment.Content,
+	}
+
+	err = sql.InsertComment(context.Background(), commentParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Error creating comment")
+	}
+
+	return c.JSON(http.StatusOK, "Comment created")
 }
 
 // FlagController handles flag-related actions
@@ -188,15 +139,47 @@ func PlaylistController(c echo.Context) error {
 }
 
 func GetThreadController(c echo.Context) error {
-	return c.JSON(http.StatusOK, mockThreads)
+	threadIDStr := c.Param("id")
+	threadID, err := strconv.ParseInt(threadIDStr, 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid thread ID")
+	}
+	threadIDInt32 := int32(threadID)
+
+	// Query the database
+	thread, err := sql.GetThreadByID(context.Background(), threadIDInt32) // Pass as int32
+	if err != nil {
+		if err.Error() == "no rows in result set" {
+			return c.JSON(http.StatusNotFound, "Thread not found")
+		}
+		return c.JSON(http.StatusInternalServerError, "Error retrieving thread")
+	}
+	return c.JSON(http.StatusOK, thread)
 }
 
 func GetCommentController(c echo.Context) error {
-	return c.JSON(http.StatusOK, mockComments)
+	threadID := c.Param("id")
+
+	// Convert threadID to int (assuming it's an integer type)
+	id, err := strconv.Atoi(threadID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid thread ID")
+	}
+
+	comments, err := sql.GetCommentsByThreadID(context.Background(), int32(id)) // Pass as int32
+	if err != nil {
+		if err.Error() == "no rows in result set" {
+			return c.JSON(http.StatusNotFound, "No comments found for this thread")
+		}
+		return c.JSON(http.StatusInternalServerError, "Error retrieving comments")
+	}
+
+	// Return the retrieved comments as a JSON response
+	return c.JSON(http.StatusOK, comments)
 }
 
 func GetUserController(c echo.Context) error {
-	return c.JSON(http.StatusOK, mockUsers)
+	return c.JSON(http.StatusOK, "Flag added")
 }
 
 // UpdateUserController handles user updates
