@@ -90,7 +90,7 @@ func ThreadController(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Thread created")
 }
 
-func CreatePost(c echo.Context) error {
+func CreateGroup(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Thread created")
 }
 
@@ -188,7 +188,7 @@ func UpdateUserController(c echo.Context) error {
 }
 
 // UpdatePostController handles post updates
-func UpdateThreadController(c echo.Context) error {
+func GetGroupController(c echo.Context) error {
 	return c.String(http.StatusOK, "Thread updated")
 }
 

@@ -48,9 +48,10 @@ func main() {
 	e.POST("/postThread", controller.ThreadController)
 	e.GET("/threads/:id/comments", controller.GetCommentController)
 	e.POST("/comment", controller.CommentController)
+	e.POST("/newgroup", controller.CreateGroup)
 
-	e.POST("/post", controller.CreatePost)
-	e.PUT("/updateThread", controller.UpdateThreadController)
+	e.GET("/group/:id", controller.GetGroupController)
+
 	e.DELETE("/deleteThread", controller.DeleteThreadController)
 
 	e.PUT("/comment", controller.UpdateCommentController)

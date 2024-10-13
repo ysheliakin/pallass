@@ -27,6 +27,22 @@ type FundingOpportunity struct {
 	DeadlineDate pgtype.Date
 }
 
+type Group struct {
+	ID          int32
+	Name        string
+	Description pgtype.Text
+	CreatedAt   pgtype.Timestamp
+	CreatedBy   int32
+}
+
+type GroupMember struct {
+	ID       int32
+	GroupID  int32
+	UserID   int32
+	Role     string
+	JoinedAt pgtype.Timestamp
+}
+
 type SampleTable struct {
 	ID pgtype.Int4
 }
