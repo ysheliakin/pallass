@@ -104,7 +104,6 @@ export function Layout({ children }: LayoutProps) {
                   <Title order={1}>Pallas's Hub</Title>
                 </Link>
                 <Button component={Link} to="/dashboard" variant="subtle" style={styles.navButton}>Home</Button>
-                <Button component={Link} to="/" variant="subtle" style={styles.navButton}>Welcome</Button>
                 <Button component={Link} to="/discover-threads" variant="subtle" style={styles.navButton}>Threads</Button>
                 <Button component={Link} to="/join-qa" variant="subtle" style={styles.navButton}>Q&A</Button>
                 <Button component={Link} to="/join-group" variant="subtle" style={styles.navButton}>Groups</Button>
