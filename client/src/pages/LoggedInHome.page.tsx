@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Container, Title, Button, Group, Paper, Menu, ActionIcon, SimpleGrid, Text, Box, Modal } from '@mantine/core';
-import { IconUserCircle, IconX } from '@tabler/icons-react';
+import { Container, Title, Button, Group, Paper, ActionIcon, SimpleGrid, Text, Box, Modal } from '@mantine/core';
+import { IconX } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import { Layout, useStyles } from '../components/layout';
 
@@ -11,7 +11,6 @@ interface Group {
 
 export function LoggedInHomePage() {
   const styles = useStyles();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [groups, setGroups] = useState<Group[]>([
     { id: '1', name: 'Group name 1' },
     { id: '2', name: 'Group name 2' },
@@ -32,21 +31,6 @@ export function LoggedInHomePage() {
   return (
     <Layout>
       <Container size="lg">
-        <Group justify="flex-end" mb="xl">
-          <Menu opened={isMenuOpen} onChange={setIsMenuOpen}>
-            <Menu.Target>
-              <ActionIcon size="lg" variant="subtle" color="gray">
-                <IconUserCircle size={24} />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item>Contacts</Menu.Item>
-              <Menu.Item>Edit profile</Menu.Item>
-              <Menu.Item>Log Out</Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-        </Group>
-
         <Box mb="xl">
           <Title order={2} style={styles.title} mb="md">Your Groups</Title>
           <SimpleGrid cols={2} spacing="md" mb="md">

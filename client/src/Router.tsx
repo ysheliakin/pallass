@@ -6,7 +6,7 @@ import { CreateThread } from './pages/CreateThread';
 import { DiscoverThreads } from './pages/DiscoverThreads';
 import { HomePage } from './pages/Home.page';
 import { HostQASession } from './pages/HostQA.page';
-import { JoinGroup } from './pages/JoinGroup.page'; // Import the new component
+import { JoinGroup } from './pages/JoinGroup.page';
 import { JoinQASession } from './pages/JoinQA.page';
 import { LoggedInHomePage } from './pages/LoggedInHome.page';
 import { LoginPage } from './pages/Login.page';
@@ -24,12 +24,44 @@ const router = createHashRouter([
         element: <HomePage />,
       },
       {
+        path: '/dashboard',
+        element: <LoggedInHomePage />,
+      },
+      {
         path: '/post/create',
         element: <CreatePostPage />,
       },
       {
         path: '/post/:id',
         element: <PostPage />,
+      },
+      {
+        path: '/host-qa',
+        element: <HostQASession />,
+      },
+      {
+        path: '/join-qa',
+        element: <JoinQASession />,
+      },
+      {
+        path: '/create-group',
+        element: <CreateGroup />,
+      },
+      {
+        path: '/join-group',
+        element: <JoinGroup />,
+      },
+      {
+        path: '/create-thread',
+        element: <CreateThread />,
+      },
+      {
+        path: '/discover-threads',
+        element: <DiscoverThreads />,
+      },
+      {
+        path: '/thread/:threadId',
+        element: <ThreadView />,
       },
     ],
   },
@@ -40,38 +72,6 @@ const router = createHashRouter([
   {
     path: '/login',
     element: <LoginPage />,
-  },
-  {
-    path: '/dashboard',
-    element: <LoggedInHomePage />,
-  },
-  {
-    path: '/host-qa',
-    element: <HostQASession />,
-  },
-  {
-    path: '/join-qa',
-    element: <JoinQASession />,
-  },
-  {
-    path: '/create-group', // Add this new route
-    element: <CreateGroup />,
-  },
-  {
-    path: '/join-group',
-    element: <JoinGroup />,
-  },
-  {
-    path: '/create-thread',
-    element: <CreateThread />,
-  },
-  {
-    path: '/discover-threads',
-    element: <DiscoverThreads />,
-  },
-  {
-    path: '/thread/:threadId',
-    element: <ThreadView />,
   },
 ]);
 
