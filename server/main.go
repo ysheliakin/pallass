@@ -15,7 +15,10 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/golang-jwt/jwt/v4"
+	"gopkg.in/gomail.v2"
+	"fmt"
 	"time"
+	"math/rand"
 )
 
 var e *echo.Echo
@@ -32,6 +35,7 @@ type User struct {
     Fieldofstudy string `json:"fieldofstudy"`
     Jobtitle string `json:"jobtitle"`
 	SocialLinks []string `json:"sociallinks"`
+	TempCode string `json:"tempcode"`
 }
 
 type RegisterResponse struct {
@@ -76,6 +80,13 @@ func main() {
 	e.POST("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post created")
 	})
+	e.POST("/checkemail", checkEmail)
+	// Modify line
+	e.POST("/request-reset", requestPasswordReset)
+	// Modify line
+	e.POST("/reset-password", resetPassword)
+	e.POST("/validate-code", validateResetCode)
+
 	e.POST("/comment", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Comment created")
 	})
@@ -261,4 +272,190 @@ func authenticate(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful authentication"})
+}
+
+func checkEmail(c echo.Context) error {
+	var user User
+
+    // Decode the incoming JSON request body
+	err := c.Bind(&user)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid email"})
+	}
+
+	// Retrieve the user from the database
+	_, err = sql.GetUserByEmail(context.Background(), user.Email)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Wrong email"})
+	}
+
+	// Return the signed token via a JSON response
+    return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful email verification"})
+}
+
+// Send email containing the code to reset the password
+func sendResetEmail(to, resetCode string) error {
+    m := gomail.NewMessage()
+    m.SetHeader("From", "example@gmail.com")
+    m.SetHeader("To", to)
+    m.SetHeader("Subject", "Password Reset Request")
+	body := "Verification code: <strong>" + resetCode + "</strong>"
+    m.SetBody("text/html", body)
+
+    d := gomail.NewDialer("smtp.gmail.com", 587, "example@gmail.com", "example")
+    err := d.DialAndSend(m)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+// Generate a code to reset the password
+func GenerateResetCode(length int) string {
+    // Create a random number generator
+    randomNumberGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))
+	// Give the range of possible values for each digit
+    digitRange := "0123456789"
+
+	// Create the code that will contain the digits
+    code := make([]byte, length)
+
+
+    for i := 0; i < len(code); i++ {
+        code[i] = digitRange[randomNumberGenerator.Intn(len(digitRange))]
+    }
+
+    return string(code)
+}
+
+// Request password reset
+func requestPasswordReset(c echo.Context) error {
+	var user User
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&user)
+	if err != nil {
+		fmt.Println("Invalid inputs")
+		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid inputs"})
+	}
+
+	fmt.Println("Email 0: ", user.Email)
+
+    _, err =  sql.GetUserByEmail(context.Background(), user.Email)
+    if err != nil {
+		fmt.Println("User not found")
+		return c.JSON(http.StatusNotFound, RegisterResponse{Message: "User not found"})
+    }
+
+	resetCode := GenerateResetCode(6)
+    if len(resetCode) == 0 {
+		fmt.Println("Unable to generate code")
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Unable to generate code"})
+    }
+
+	storedResetCode := storeResetCode(resetCode)
+	
+	fmt.Println("resetCode: ", resetCode)
+	fmt.Println("storedResetCode: ", storedResetCode)
+	
+	if storedResetCode == resetCode || storedResetCode == "" {
+		fmt.Println("Error storing the code")
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Error storing the code"})
+	}
+
+    if err := sendResetEmail(user.Email, resetCode); err != nil {
+		fmt.Printf("Could not send email: %v\n", err)
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Could not send email"})
+	}
+	
+    return c.JSON(http.StatusOK, map[string]string{"code": resetCode})
+}
+
+// Store the code
+func storeResetCode(code string) string {
+	var user User
+
+	// Hash the code
+	hashedCode, err := bcrypt.GenerateFromPassword([]byte(code), bcrypt.DefaultCost)
+	if err != nil {
+		return "Could not retrieve the generated code";
+	}
+	user.TempCode = string(hashedCode)
+
+	var tempCodeParam = pgtype.Text{String: user.TempCode, Valid: true}
+
+	userParams := queries.UpdateUserCodeByEmailParams{
+		TempCode: tempCodeParam,
+		Email: user.Email,
+	}
+
+	// Add a temporary code to the user table where the email address equals that of a user row
+	err = sql.UpdateUserCodeByEmail(context.Background(), userParams); 
+	if err != nil {
+		return "Error creating an account"
+	}
+
+	tempCodeStr := tempCodeParam.String;
+
+	return tempCodeStr;
+}
+
+// Reset the password
+func resetPassword(c echo.Context) error {
+    var user User
+
+    // Decode the incoming JSON request body
+    err := c.Bind(&user); 
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid inputs"})
+    }
+
+	// Hash the password
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Error hashing password"})
+    }
+    user.Password = string(hashedPassword)
+
+	userParams := queries.UpdateUserPasswordByEmailParams{
+		Password: user.Password,
+		Email: user.Email,
+	}
+
+	fmt.Println("Email (resetPassword): ", user.Email)
+
+    // Update the user's password in the database
+    err = sql.UpdateUserPasswordByEmail(context.Background(), userParams);
+	if err != nil {
+        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Could not reset password"})
+    }
+
+    return c.JSON(http.StatusOK, RegisterResponse{Message: "Password reset successfully"})
+}
+
+func validateResetCode(c echo.Context) error {
+	var user User
+
+    // Decode the incoming JSON request body
+	err := c.Bind(&user)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid code"})
+	}
+
+	// Retrieve the user from the database
+	dbUser, err := sql.GetUserByEmail(context.Background(), user.Email)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Wrong email"})
+	}
+
+	tempCodeStr := (dbUser.TempCode).String
+
+	// Compare the code inputted by the user with the hashed code in the database
+	err = bcrypt.CompareHashAndPassword([]byte(tempCodeStr), []byte(user.TempCode))
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Wrong code"})
+	}
+
+	// Return the signed token via a JSON response
+    return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful code verification"})
 }

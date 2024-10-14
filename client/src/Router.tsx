@@ -7,6 +7,8 @@ import { HostQASession } from './pages/HostQA.page';
 import { JoinQASession } from './pages/JoinQA.page';
 import { CreateGroup } from './pages/CreateGroup.page';
 import { JoinGroup } from './pages/JoinGroup.page'; // Import the new component
+import { ForgotPasswordPage } from './pages/ForgotPassword.page';
+import { ResetPasswordPage } from './pages/ResetPassword.page';
 
 const router = createHashRouter([
   {
@@ -40,6 +42,14 @@ const router = createHashRouter([
   {
     path: '/join-group',
     element: <JoinGroup />,
+  },
+  {
+    path: `/forgot-password`,
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: `/reset-password`,
+    element: <ResetPasswordPage />,
   },
 ]);
 

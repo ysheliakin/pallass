@@ -28,7 +28,7 @@ export function SignUpPage() {
 
     // Log the user in if it worked well, otherwise error
     if (response.ok) {
-      navigate('/dashboard');
+      navigate('/');
     } else {
       console.log("Error signing up");
     }

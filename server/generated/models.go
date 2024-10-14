@@ -22,6 +22,7 @@ type User struct {
 	Fieldofstudy string
 	Jobtitle     pgtype.Text
 	CreatedAt    pgtype.Timestamp
+	TempCode     pgtype.Text
 }
 
 type UserSocialLink struct {

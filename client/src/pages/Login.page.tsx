@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Container, Title, TextInput, PasswordInput, Button, Paper, Box } from '@mantine/core';
-import { Link, useNavigate } from 'react-router-dom';
+import { Container, Title, TextInput, PasswordInput, Button, Paper } from '@mantine/core';
+import { useNavigate } from 'react-router-dom';
 import { Layout, useStyles } from '../components/layout';
 
 export function LoginPage() {
   const styles = useStyles();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -42,6 +43,10 @@ export function LoginPage() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    navigate('/forgot-password');
+  };
+
   return (
     <Layout>
       <Container size="xs" mt={60}>
@@ -69,6 +74,8 @@ export function LoginPage() {
             Log In
           </Button>
         </Paper>
+
+        <Button onClick={handleForgotPassword}>Forgot password</Button>
       </Container>
     </Layout>
   );

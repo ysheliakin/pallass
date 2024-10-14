@@ -40,7 +40,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, firstname, lastname, email, password, organization, fieldOfStudy, jobTitle
+SELECT id, firstname, lastname, email, password, organization, fieldOfStudy, jobTitle, temp_code
 FROM users
 WHERE email = $1
 `
@@ -54,6 +54,7 @@ type GetUserByEmailRow struct {
 	Organization pgtype.Text
 	Fieldofstudy string
 	Jobtitle     pgtype.Text
+	TempCode     pgtype.Text
 }
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
@@ -68,8 +69,20 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 		&i.Organization,
 		&i.Fieldofstudy,
 		&i.Jobtitle,
+		&i.TempCode,
 	)
 	return i, err
+}
+
+const getUserEmailByCode = `-- name: GetUserEmailByCode :exec
+SELECT email
+FROM users
+WHERE temp_code = $1
+`
+
+func (q *Queries) GetUserEmailByCode(ctx context.Context, tempCode pgtype.Text) error {
+	_, err := q.db.Exec(ctx, getUserEmailByCode, tempCode)
+	return err
 }
 
 const insertUserSocialLink = `-- name: InsertUserSocialLink :exec
@@ -84,5 +97,37 @@ type InsertUserSocialLinkParams struct {
 
 func (q *Queries) InsertUserSocialLink(ctx context.Context, arg InsertUserSocialLinkParams) error {
 	_, err := q.db.Exec(ctx, insertUserSocialLink, arg.UserEmail, arg.SocialLink)
+	return err
+}
+
+const updateUserCodeByEmail = `-- name: UpdateUserCodeByEmail :exec
+UPDATE users
+SET temp_code = $1
+WHERE email = $2
+`
+
+type UpdateUserCodeByEmailParams struct {
+	TempCode pgtype.Text
+	Email    string
+}
+
+func (q *Queries) UpdateUserCodeByEmail(ctx context.Context, arg UpdateUserCodeByEmailParams) error {
+	_, err := q.db.Exec(ctx, updateUserCodeByEmail, arg.TempCode, arg.Email)
+	return err
+}
+
+const updateUserPasswordByEmail = `-- name: UpdateUserPasswordByEmail :exec
+UPDATE users
+SET password = $1
+WHERE email = $2
+`
+
+type UpdateUserPasswordByEmailParams struct {
+	Password string
+	Email    string
+}
+
+func (q *Queries) UpdateUserPasswordByEmail(ctx context.Context, arg UpdateUserPasswordByEmailParams) error {
+	_, err := q.db.Exec(ctx, updateUserPasswordByEmail, arg.Password, arg.Email)
 	return err
 }
