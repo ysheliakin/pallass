@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Title, TextInput, Select, Radio, Textarea, Button, Paper, Group, Stack, Box } from '@mantine/core';
+import { Container, Title, TextInput, Radio, Textarea, Button, Paper, Group, Stack, Box } from '@mantine/core';
 import { Layout, useStyles } from '../components/layout';
 
 export function CreateGroup() {
@@ -46,16 +46,16 @@ export function CreateGroup() {
           />
 
           <Box mt="md">
-            <TextInput
-              label="Add Users"
-              placeholder="Enter user email"
-              value={newUser}
-              onChange={(event) => setNewUser(event.currentTarget.value)}
-              styles={{ input: styles.input }}
-              rightSection={
-                <Button onClick={handleAddUser} size="xs">Add</Button>
-              }
-            />
+            <Group align="flex-end" gap="sm">
+              <TextInput
+                label="Add Users"
+                placeholder="Enter user email"
+                value={newUser}
+                onChange={(event) => setNewUser(event.currentTarget.value)}
+                styles={{ input: styles.input, root: { flexGrow: 1 } }}
+              />
+              <Button onClick={handleAddUser} style={styles.primaryButton}>Add</Button>
+            </Group>
             {users.length > 0 && (
               <Box mt="xs">
                 <Title order={6}>Added Users:</Title>
@@ -66,8 +66,8 @@ export function CreateGroup() {
             )}
           </Box>
 
-          <Group grow mt="md">
-            <Stack>
+          <Group grow mt="md" align="flex-start">
+            <Stack gap="xs">
               <Title order={6}>Privacy:</Title>
               <Radio.Group
                 value={privacy}
@@ -78,7 +78,7 @@ export function CreateGroup() {
               </Radio.Group>
             </Stack>
 
-            <Stack>
+            <Stack gap="xs">
               <Title order={6}>Notifications:</Title>
               <Radio.Group
                 value={notifications}
