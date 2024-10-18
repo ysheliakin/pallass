@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Title, TextInput, PasswordInput, Button, Paper } from '@mantine/core';
+import { Container, Title, TextInput, PasswordInput, Button, Paper, Text, Anchor } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { Layout, useStyles } from '../components/layout';
 
@@ -7,6 +7,8 @@ export function LoginPage() {
   const styles = useStyles();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  var message = null
 
   const navigate = useNavigate();
 
@@ -23,6 +25,7 @@ export function LoginPage() {
     if (response.ok) {
       const data = await response.json();
       const token = data.token;
+      setError('');
 
       // Store the token in the local storage
       localStorage.setItem('token', token);
@@ -37,9 +40,12 @@ export function LoginPage() {
       // If the response is successful, navigate to the logged-in homepage
       if (authenticationResponse.ok) {
         navigate('/dashboard');
+      } else {
+        setError("Authentication failed. Please try again.")
       }
     } else {
-      console.log("Error logging in");
+      const errorData = await response.json();
+      setError(errorData.message)
     }
   };
 
@@ -73,9 +79,15 @@ export function LoginPage() {
           <Button fullWidth mt="xl" style={styles.primaryButton} onClick={handleLogin}>
             Log In
           </Button>
+
+          <Text size="sm" mt="xs">
+            <Anchor style={{ color: 'darkblue'}} onClick={handleForgotPassword}>
+              Forgot password
+            </Anchor>
+          </Text>
         </Paper>
 
-        <Button onClick={handleForgotPassword}>Forgot password</Button>
+        {error && <p style={{ color: "red" }}>{error}</p>}
       </Container>
     </Layout>
   );

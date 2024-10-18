@@ -11,6 +11,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkUserExistsByEmail = `-- name: CheckUserExistsByEmail :one
+SELECT 1
+FROM users
+WHERE email = $1
+`
+
+func (q *Queries) CheckUserExistsByEmail(ctx context.Context, email string) (int32, error) {
+	row := q.db.QueryRow(ctx, checkUserExistsByEmail, email)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const createUser = `-- name: CreateUser :exec
 INSERT INTO users (firstname, lastname, email, password, organization, fieldOfStudy, jobTitle)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -97,6 +110,17 @@ type InsertUserSocialLinkParams struct {
 
 func (q *Queries) InsertUserSocialLink(ctx context.Context, arg InsertUserSocialLinkParams) error {
 	_, err := q.db.Exec(ctx, insertUserSocialLink, arg.UserEmail, arg.SocialLink)
+	return err
+}
+
+const removeCodeByEmail = `-- name: RemoveCodeByEmail :exec
+UPDATE users
+SET temp_code = NULL
+WHERE email = $1
+`
+
+func (q *Queries) RemoveCodeByEmail(ctx context.Context, email string) error {
+	_, err := q.db.Exec(ctx, removeCodeByEmail, email)
 	return err
 }
 

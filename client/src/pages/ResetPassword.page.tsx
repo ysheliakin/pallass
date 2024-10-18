@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { TextInput, PasswordInput, Container, Title, Paper, Button } from '@mantine/core';
+import { Layout, useStyles } from '../components/layout';
 
 export function ResetPasswordPage() {
-  const [tempCode, setTempCode] = useState('');
-  const [display, setDisplay] = useState<'tempCode' | 'password'>('tempCode');
-  const [newPassword, setNewPassword] = useState('');
+  const styles = useStyles();
+  const [tempcode, setTempcode] = useState('');
+  const [display, setDisplay] = useState<'tempcode' | 'password'>('tempcode');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const email = localStorage.getItem('email');
 
@@ -13,15 +16,18 @@ export function ResetPasswordPage() {
     return
   }
 
-  const handleCodeSubmit = async () => {
+  const handleCodeSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
     console.log("Email (handleCodeSubmit): ", email)
+    console.log("tempCode (handleCodeSubmit): ", tempcode)
 
     const response = await fetch('http://localhost:5000/validate-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, tempCode }),
+        body: JSON.stringify({ email, tempcode }),
     });
     
     if (response.ok) {
@@ -32,13 +38,17 @@ export function ResetPasswordPage() {
     }
   }
 
-  const handlePasswordSubmit = async () => {
+  const handlePasswordSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    console.log("Email (handlePasswordSubmit): ", email)
+
     const response = await fetch('http://localhost:5000/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ newPassword }),
+        body: JSON.stringify({ email, password }),
     });
     
     if (response.ok) {
@@ -49,19 +59,39 @@ export function ResetPasswordPage() {
 
 
   return (
-    <div>
-    {display === 'tempCode' ? (
-      <form onSubmit={handleCodeSubmit}>
-          <input type="hidden" value={email} name="email" />
-          <input type="tempCode" placeholder="Enter Code" required />
-          <button type="submit">Submit</button>
-      </form>
+    <Layout>
+    {display === 'tempcode' ? (
+      <Container size="xs" mt={60}>
+        <Title order={2} ta="center" mt="xl" style={styles.title}>Enter your verification code</Title>
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md"> 
+            <input type="hidden" value={email} name="email" />
+            <TextInput
+              label="Verfication code"
+              placeholder="Your verification code"
+              required
+              value={tempcode}
+              onChange={(event) => setTempcode(event.currentTarget.value)}
+            />
+            <Button fullWidth mt="xl" style={styles.primaryButton} onClick={handleCodeSubmit}>Submit</Button>
+        </Paper> 
+      </Container>
     ) : (
-      <form onSubmit={handlePasswordSubmit}>
-          <input type="password" placeholder="New Password" required />
-          <button type="submit">Change Password</button>
-      </form>
+      <Container size="xs" mt={60}>
+        <Title order={2} ta="center" mt="xl" style={styles.title}>Reset your password</Title>
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md"> 
+            <input type="hidden" value={email} name="email" />
+            <PasswordInput
+              label="New password"
+              placeholder="Your new password"
+              required
+              mt="md"
+              value={password}
+              onChange={(event) => setPassword(event.currentTarget.value)}
+            />
+            <Button fullWidth mt="xl" style={styles.primaryButton} onClick={handlePasswordSubmit}>Change password</Button>
+        </Paper> 
+      </Container>
     )}
-    </div>
+    </Layout>
   );
 }
