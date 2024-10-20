@@ -212,12 +212,21 @@ func DeleteCommentController(c echo.Context) error {
 }
 
 func AddFundingOpportunity(c echo.Context) error {
-	var params queries.AddFundingOpportunityParams 
-	if err := c.Bind(params); err != nil {
-		return c.JSON(http.StatusBadRequest, ErrorPayload{Error: err.Error()})
+	payload := GetBody(c)
+	if payload == nil {
+		e.Logger.Error("body is nil")
+		return c.JSON(http.StatusBadRequest, ErrorPayload{Error: "could not parse body"})
+	}
+	params := queries.AddFundingOpportunityParams{
+		Title:        payload["title"].(string),
+		Description:  payload["description"].(string),
+		TargetAmount: Numeric(payload["target_amount"].(float64)),
+		Link:         Text(payload["link"].(string)),
+		DeadlineDate: Date(payload["deadline_date"].(string)),
 	}
 	result, err := sql.AddFundingOpportunity(dbc, params)
 	if err != nil {
+		e.Logger.Error(err)
 		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
 	}
 	return c.JSON(http.StatusCreated, result)

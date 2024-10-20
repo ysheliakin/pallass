@@ -1,5 +1,6 @@
 import { createHashRouter, RouterProvider } from 'react-router-dom';
 import { Layout } from './components/Layout/Layout';
+import { CreateFunding } from './pages/CreateFunding.page';
 import { CreateGroup } from './pages/CreateGroup.page';
 import { CreatePostPage } from './pages/CreatePost.page';
 import { CreateThread } from './pages/CreateThread';
@@ -72,6 +73,14 @@ const router = createHashRouter([
   {
     path: '/thread/:threadId',
     element: <ThreadView />,
+  },
+  // {
+  //   path: '/funding-opportunities',
+  //   element: <FudningOpportunities />,
+  // },
+  {
+    path: '/funding-opportunities/create',
+    element: <CreateFunding />,
   },
 ]);
 
