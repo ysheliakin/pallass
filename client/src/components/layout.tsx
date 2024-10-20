@@ -129,7 +129,7 @@ export function Layout({ children }: LayoutProps) {
                     </ActionIcon>
                   </Menu.Target>
                   <Menu.Dropdown>
-                    <Menu.Item component={Link} to="/profile">Profile</Menu.Item>
+                    <Menu.Item component={Link} to="/user-profile">Profile</Menu.Item>
                     <Menu.Item component={Link} to="/settings">Settings</Menu.Item>
                     <Menu.Item onClick={handleLogout}>Log Out</Menu.Item>
                   </Menu.Dropdown>
