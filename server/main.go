@@ -73,6 +73,9 @@ func main() {
 	e.POST("/user", controller.UserController)
 	e.PUT("/user", controller.UpdateUserController)
 
+	e.GET("/funding", controller.GetFundingOpportunities)
+	e.POST("/funding", controller.AddFundingOpportunity)
+
 	// Start server
 	e.Logger.Fatal(e.Start(":5000"))
 }
