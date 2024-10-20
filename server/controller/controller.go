@@ -37,6 +37,10 @@ func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries,
 	dbc = dbContext
 }
 
+type ErrorPayload struct {
+	Error string `json:"error"`
+}
+
 // HelloController handles the root endpoint
 func HelloController(c echo.Context) error {
 	str := "Hello world: "
@@ -90,7 +94,7 @@ func ThreadController(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Thread created")
 }
 
-func CreatePost(c echo.Context) error {
+func CreateGroup(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Thread created")
 }
 
@@ -188,7 +192,7 @@ func UpdateUserController(c echo.Context) error {
 }
 
 // UpdatePostController handles post updates
-func UpdateThreadController(c echo.Context) error {
+func GetGroupController(c echo.Context) error {
 	return c.String(http.StatusOK, "Thread updated")
 }
 
@@ -205,4 +209,24 @@ func DeleteThreadController(c echo.Context) error {
 // DeleteCommentController handles comment deletion
 func DeleteCommentController(c echo.Context) error {
 	return c.String(http.StatusOK, "Comment deleted")
+}
+
+func AddFundingOpportunity(c echo.Context) error {
+	var params queries.AddFundingOpportunityParams 
+	if err := c.Bind(params); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorPayload{Error: err.Error()})
+	}
+	result, err := sql.AddFundingOpportunity(dbc, params)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
+	}
+	return c.JSON(http.StatusCreated, result)
+}
+
+func GetFundingOpportunities(c echo.Context) error {
+	results, err := sql.GetAllFundingOpportunities(dbc)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
+	}
+	return c.JSON(http.StatusOK, results)
 }
