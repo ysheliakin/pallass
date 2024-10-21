@@ -5,6 +5,7 @@ import { CreateGroup } from './pages/CreateGroup.page';
 import { CreatePostPage } from './pages/CreatePost.page';
 import { CreateThread } from './pages/CreateThread';
 import { DiscoverThreads } from './pages/DiscoverThreads';
+import { FundingOpportunities } from './pages/FundingOpportunities.page';
 import { HomePage } from './pages/Home.page';
 import { HostQASession } from './pages/HostQA.page';
 import { JoinGroup } from './pages/JoinGroup.page'; // Import the new component
@@ -74,10 +75,10 @@ const router = createHashRouter([
     path: '/thread/:threadId',
     element: <ThreadView />,
   },
-  // {
-  //   path: '/funding-opportunities',
-  //   element: <FudningOpportunities />,
-  // },
+  {
+    path: '/funding-opportunities',
+    element: <FundingOpportunities />,
+  },
   {
     path: '/funding-opportunities/create',
     element: <CreateFunding />,
