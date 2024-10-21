@@ -31,6 +31,12 @@ Then, connect in your database client on localhost:5432 using the credentials.
 goose -dir migrations postgres [MIGRATION_NAME] sql
 ```
 
+For Windows users, use this command instead:
+
+```bash
+goose -dir migrations create [MIGRATION_NAME] sql
+```
+
 In the 'up' portion of the file add the queries (usually DDL statements). Do not use the 'down' portion to undo changes in 'up' Instead, simply create another migration. This will ensure an easy trail of changes to the database (since we're always connecting directly to the production instance via SSH).
 
 ##### To apply new schema changes
