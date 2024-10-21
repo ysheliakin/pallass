@@ -63,6 +63,7 @@ export function ThreadView() {
   const [replyContent, setReplyContent] = useState('');
   const [messages, setMessages] = useState<Message[]>(mockThread.messages);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
 
   const handlePostMessage = () => {
     if (newMessage.trim()) {
@@ -121,6 +122,14 @@ export function ThreadView() {
     }
   };
 
+  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      setAudioFile(files[0]);
+      // You can also handle the upload process here if needed
+    }
+  };
+
   const renderMessage = (message: Message | Reply, isReply = false) => (
     <Paper key={message.id} p="md" withBorder style={isReply ? { marginLeft: 20 } : {}}>
       <Group justify="space-between" mb="xs">
@@ -174,8 +183,20 @@ export function ThreadView() {
             mb="sm"
           />
           <Button onClick={() => handlePostReply(message.id)} size="sm">Post Reply</Button>
+          <label htmlFor="video-upload">
+            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
+              <i className="fas fa-upload"></i> Upload Video
+            </Button>
+          </label>
+
+          <label htmlFor="video-upload">
+            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
+              <i className="fas fa-upload"></i> Upload Audio
+            </Button>
+          </label>
         </Box>
       )}
+      
       {'replies' in message && message.replies.map((reply) => renderMessage(reply, true))}
     </Paper>
   );
@@ -210,6 +231,12 @@ export function ThreadView() {
           <label htmlFor="video-upload">
             <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
               <i className="fas fa-upload"></i> Upload Video
+            </Button>
+          </label>
+
+          <label htmlFor="video-upload">
+            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
+              <i className="fas fa-upload"></i> Upload Audio
             </Button>
           </label>
 
