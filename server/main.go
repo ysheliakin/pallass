@@ -89,7 +89,6 @@ func main() {
 	e.POST("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post created")
 	})
-	e.POST("/checkemail", checkEmail)
 	e.POST("/request-reset", requestPasswordReset)
 	e.POST("/reset-password", resetPassword)
 	e.POST("/validate-code", validateResetCode)
@@ -155,19 +154,25 @@ func registerUser(c echo.Context) error {
     // Decode the incoming JSON request body
     err := c.Bind(&user); 
     if err != nil {
-		log.Fatal("Invalid inputs")
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Invalid inputs. Please enter valid inputs."})
     }
 
-    _, err = sql.CheckUserExistsByEmail(context.Background(), user.Email) 
-    if err != nil {
-        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Error creating an account"})
-    }
+	if user.Firstname == "" || user.Lastname == "" || user.Email == "" || user.Password == "" || user.Fieldofstudy == "" {
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to create your account. Please fill out every required field."})
+	}
+
+	// Check if the email inputted by the user is already stored in the database
+    result, err := sql.CheckUserExistsByEmail(context.Background(), user.Email)
+	fmt.Println("result: ", result)
+	if err == nil && result == 1 {
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An account with this email address already exists."})
+	}
 
 	// Hash the password
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
     if err != nil {
 		log.Fatal("Error hashing password")
-        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Error creating an account"})
+        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to create your account. Please check your information and try again."})
     }
     user.Password = string(hashedPassword)
 
@@ -193,14 +198,14 @@ func registerUser(c echo.Context) error {
 		Email: user.Email, 
 		Password: user.Password, 
 		Organization: organizationParam, 
-		Fieldofstudy: user.Fieldofstudy, 
-		Jobtitle: jobParam,
+		FieldOfStudy: user.Fieldofstudy, 
+		JobTitle: jobParam,
 	}
 
     // Save the new user to the database using sqlc queries
     err = sql.CreateUser(context.Background(), userParams) 
     if err != nil {
-        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Error creating an account"})
+        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to create your account. Please check your information and try again."})
     }
 
 	// Insert social links if the user inputted any
@@ -214,11 +219,11 @@ func registerUser(c echo.Context) error {
 
 				err = sql.InsertUserSocialLink(context.Background(), userSocialLinksParams)
 				if err != nil {
-					return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Error inserting the social link(s)"})
+					return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "There was an issue adding your link(s). Please verify your link(s) and try again."})
 				}
 			}
 		}
-	} 
+	}
 
     return c.JSON(http.StatusOK, RegisterResponse{Message: "Account successfully registered"})
 }
@@ -245,7 +250,7 @@ func loginUser(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Incorrect email or password."})
 	}
 
-	// Generate JWT token that expires in 1 hour
+	// Generate JWT token that expires in 24 hours
 	claims := jwt.RegisteredClaims{ ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)) }
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
@@ -286,30 +291,8 @@ func authenticate(c echo.Context) error {
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful authentication"})
 }
 
-func checkEmail(c echo.Context) error {
-	var user User
-
-    // Decode the incoming JSON request body
-	err := c.Bind(&user)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid email"})
-	}
-
-	// Retrieve the user from the database
-	accountExists, err := sql.GetUserByEmail(context.Background(), user.Email)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Wrong email"})
-	}
-	if accountExists.Email == "" {
-		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "An account with this email address already exists."})
-	}
-
-	// Return the signed token via a JSON response
-    return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful email verification"})
-}
-
 // Send email containing the code to reset the password
-func sendResetEmail(to, resetCode string) error {
+func sendPasswordResetEmail(to, resetCode string) error {
 	email := os.Getenv("GMAIL_USERNAME")
     password := os.Getenv("GMAIL_PASSWORD")
 
@@ -321,7 +304,7 @@ func sendResetEmail(to, resetCode string) error {
     m.SetHeader("From", email)
     m.SetHeader("To", to)
     m.SetHeader("Subject", "Password Reset Request")
-	body := "Verification code: <strong>" + resetCode + "</strong>"
+	body := "Password reset code: <strong>" + resetCode + "</strong>"
     m.SetBody("text/html", body)
 
     d := gomail.NewDialer("smtp.gmail.com", 587, email, password)
@@ -333,7 +316,7 @@ func sendResetEmail(to, resetCode string) error {
 }
 
 // Generate a code to reset the password
-func GenerateResetCode(length int) string {
+func GenerateCode(length int) string {
     // Create a random number generator
     randomNumberGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))
 	// Give the range of possible values for each digit
@@ -358,21 +341,20 @@ func requestPasswordReset(c echo.Context) error {
 	err := c.Bind(&user)
 	if err != nil {
 		fmt.Println("Invalid inputs")
-		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid inputs"})
+		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid inputs."})
 	}
 
 	fmt.Println("Email 0: ", user.Email)
 
     _, err =  sql.GetUserByEmail(context.Background(), user.Email)
     if err != nil {
-		fmt.Println("User not found")
-		return c.JSON(http.StatusNotFound, RegisterResponse{Message: "User not found"})
+		return c.JSON(http.StatusNotFound, RegisterResponse{Message: "The email you entered is not associated with an account."})
     }
 
-	resetCode := GenerateResetCode(6)
+	resetCode := GenerateCode(6)
     if len(resetCode) == 0 {
 		fmt.Println("Unable to generate code")
-		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Unable to generate code"})
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred trying to generate the password reset code."})
     }
 
 	storedResetCode := storeResetCode(resetCode, user.Email)
@@ -382,12 +364,12 @@ func requestPasswordReset(c echo.Context) error {
 	
 	if storedResetCode == resetCode || storedResetCode == "" {
 		fmt.Println("Error storing the code")
-		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Error storing the code"})
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred trying to store the code."})
 	}
 
-    if err := sendResetEmail(user.Email, resetCode); err != nil {
+    if err := sendPasswordResetEmail(user.Email, resetCode); err != nil {
 		fmt.Printf("Could not send email: %v\n", err)
-		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Could not send email"})
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred trying to send the email."})
 	}
 	
     return c.JSON(http.StatusOK, map[string]string{"code": resetCode})
@@ -415,7 +397,7 @@ func storeResetCode(code string, email string) string {
 	user.Email = email
 
 	fmt.Println("tempCodeParam: ", tempCodeParam)
-	fmt.Println("user.Email: ", user.Email) // Doesn't get the email
+	fmt.Println("user.Email: ", user.Email)
 
 	userParams := queries.UpdateUserCodeByEmailParams{
 		TempCode: tempCodeParam,
@@ -442,7 +424,7 @@ func resetPassword(c echo.Context) error {
     // Decode the incoming JSON request body
     err := c.Bind(&user); 
     if err != nil {
-        return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid inputs"})
+        return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid password."})
     }
 
 	fmt.Println("Password (resetPassword): ", user.Password)
@@ -450,7 +432,7 @@ func resetPassword(c echo.Context) error {
 	// Hash the password
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
     if err != nil {
-        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Error hashing password"})
+        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred tryin to reset your password."})
     }
     user.Password = string(hashedPassword)
 
@@ -464,13 +446,13 @@ func resetPassword(c echo.Context) error {
     // Update the user's password in the database
     err = sql.UpdateUserPasswordByEmail(context.Background(), userParams);
 	if err != nil {
-        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Could not reset password"})
+        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred tryin to reset your password."})
     }
 
 	err = sql.RemoveCodeByEmail(context.Background(), user.Email);
 	if err != nil {
 		fmt.Println("Could not remove the reset code")
-        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Could not remove the reset code"})
+        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Your password was reset. But an error occurred trying to remove the password reset code associated with your email address."})
     }
 
     return c.JSON(http.StatusOK, RegisterResponse{Message: "Password reset successfully"})
@@ -486,7 +468,7 @@ func validateResetCode(c echo.Context) error {
 	err := c.Bind(&user)
 	if err != nil {
 		fmt.Println("Invalid code")
-		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid code"})
+		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid code."})
 	}
 
 	fmt.Println("Email: ", user.Email)
@@ -496,7 +478,7 @@ func validateResetCode(c echo.Context) error {
 	dbUser, err := sql.GetUserByEmail(context.Background(), user.Email)
 	if err != nil {
 		fmt.Println("Wrong email")
-		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Wrong email"})
+		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "An error occurred while verifying the code you entered."})
 	}
 
 	fmt.Println("dbUser.TempCode: ", dbUser.TempCode)
@@ -509,7 +491,7 @@ func validateResetCode(c echo.Context) error {
 	err = bcrypt.CompareHashAndPassword([]byte(tempCodeStr), []byte(user.TempCode))
 	if err != nil {
 		fmt.Println("Wrong code")
-		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Wrong code"})
+		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "The code you entered is incorrect."})
 	}
 
 	fmt.Println("Successful code verification")

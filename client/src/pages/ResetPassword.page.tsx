@@ -8,6 +8,7 @@ export function ResetPasswordPage() {
   const [tempcode, setTempcode] = useState('');
   const [display, setDisplay] = useState<'tempcode' | 'password'>('tempcode');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const email = localStorage.getItem('email');
 
@@ -31,10 +32,11 @@ export function ResetPasswordPage() {
     });
     
     if (response.ok) {
-        console.log("Correct code")
+        setError('');
         setDisplay('password');
     } else {
-        console.log("Invalid code");
+        const errorData = await response.json();
+        setError(errorData.message)
     }
   }
 
@@ -52,18 +54,23 @@ export function ResetPasswordPage() {
     });
     
     if (response.ok) {
-        console.log("You successfully reset your password")
+        setError('');
         navigate('/login');
+    } else {
+        const errorData = await response.json();
+        setError(errorData.message)
     }
   }
-
 
   return (
     <Layout>
     {display === 'tempcode' ? (
       <Container size="xs" mt={60}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>Enter your verification code</Title>
-        <Paper withBorder shadow="md" p={30} mt={30} radius="md"> 
+
+        {error && <p style={{ color: "red" }}>{error}</p>}
+
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md">          
             <input type="hidden" value={email} name="email" />
             <TextInput
               label="Verfication code"
@@ -78,6 +85,9 @@ export function ResetPasswordPage() {
     ) : (
       <Container size="xs" mt={60}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>Reset your password</Title>
+
+        {error && <p style={{ color: "red" }}>{error}</p>}
+
         <Paper withBorder shadow="md" p={30} mt={30} radius="md"> 
             <input type="hidden" value={email} name="email" />
             <PasswordInput

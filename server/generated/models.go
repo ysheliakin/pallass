@@ -8,6 +8,12 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type AccountVerificationCode struct {
+	ID                      int32
+	AccountVerificationCode string
+	CreatedAt               pgtype.Timestamp
+}
+
 type SampleTable struct {
 	ID pgtype.Int4
 }
@@ -19,8 +25,8 @@ type User struct {
 	Email        string
 	Password     string
 	Organization pgtype.Text
-	Fieldofstudy string
-	Jobtitle     pgtype.Text
+	FieldOfStudy string
+	JobTitle     pgtype.Text
 	CreatedAt    pgtype.Timestamp
 	TempCode     pgtype.Text
 }

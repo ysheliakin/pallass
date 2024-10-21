@@ -8,7 +8,6 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  var message = null
 
   const navigate = useNavigate();
 
@@ -58,6 +57,8 @@ export function LoginPage() {
       <Container size="xs" mt={60}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>Log in</Title>
         
+        {error && <p style={{ color: "red" }}>{error}</p>}
+
         <Paper withBorder shadow="md" p={30} mt={30} radius="md">
           <TextInput
             label="Email address"
@@ -86,8 +87,6 @@ export function LoginPage() {
             </Anchor>
           </Text>
         </Paper>
-
-        {error && <p style={{ color: "red" }}>{error}</p>}
       </Container>
     </Layout>
   );

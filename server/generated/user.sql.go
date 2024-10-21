@@ -24,8 +24,18 @@ func (q *Queries) CheckUserExistsByEmail(ctx context.Context, email string) (int
 	return column_1, err
 }
 
+const createAccountVerificationCode = `-- name: CreateAccountVerificationCode :exec
+INSERT INTO account_verification_codes (account_verification_code)
+VALUES ($1)
+`
+
+func (q *Queries) CreateAccountVerificationCode(ctx context.Context, accountVerificationCode string) error {
+	_, err := q.db.Exec(ctx, createAccountVerificationCode, accountVerificationCode)
+	return err
+}
+
 const createUser = `-- name: CreateUser :exec
-INSERT INTO users (firstname, lastname, email, password, organization, fieldOfStudy, jobTitle)
+INSERT INTO users (firstname, lastname, email, password, organization, field_of_study, job_title)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
@@ -35,8 +45,8 @@ type CreateUserParams struct {
 	Email        string
 	Password     string
 	Organization pgtype.Text
-	Fieldofstudy string
-	Jobtitle     pgtype.Text
+	FieldOfStudy string
+	JobTitle     pgtype.Text
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
@@ -46,14 +56,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 		arg.Email,
 		arg.Password,
 		arg.Organization,
-		arg.Fieldofstudy,
-		arg.Jobtitle,
+		arg.FieldOfStudy,
+		arg.JobTitle,
 	)
 	return err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, firstname, lastname, email, password, organization, fieldOfStudy, jobTitle, temp_code
+SELECT id, firstname, lastname, email, password, organization, field_of_study, job_title, temp_code
 FROM users
 WHERE email = $1
 `
@@ -65,8 +75,8 @@ type GetUserByEmailRow struct {
 	Email        string
 	Password     string
 	Organization pgtype.Text
-	Fieldofstudy string
-	Jobtitle     pgtype.Text
+	FieldOfStudy string
+	JobTitle     pgtype.Text
 	TempCode     pgtype.Text
 }
 
@@ -80,8 +90,8 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 		&i.Email,
 		&i.Password,
 		&i.Organization,
-		&i.Fieldofstudy,
-		&i.Jobtitle,
+		&i.FieldOfStudy,
+		&i.JobTitle,
 		&i.TempCode,
 	)
 	return i, err

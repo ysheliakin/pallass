@@ -1,9 +1,9 @@
 -- name: CreateUser :exec
-INSERT INTO users (firstname, lastname, email, password, organization, fieldOfStudy, jobTitle)
+INSERT INTO users (firstname, lastname, email, password, organization, field_of_study, job_title)
 VALUES ($1, $2, $3, $4, $5, $6, $7);
 
 -- name: GetUserByEmail :one
-SELECT id, firstname, lastname, email, password, organization, fieldOfStudy, jobTitle, temp_code
+SELECT id, firstname, lastname, email, password, organization, field_of_study, job_title, temp_code
 FROM users
 WHERE email = $1;
 

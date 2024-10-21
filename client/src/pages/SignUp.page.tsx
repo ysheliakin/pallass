@@ -15,6 +15,7 @@ export function SignUpPage() {
   const [fieldOfStudy, setFieldOfStudy] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [socialLinks, setSocialLinks] = useState(['']);
+  const [error, setError] = useState('');
 
   const handleSignUp = async () => {
     // Here you would handle the sign-up logic
@@ -28,9 +29,10 @@ export function SignUpPage() {
 
     // Log the user in if it worked well, otherwise error
     if (response.ok) {
-      navigate('/');
+      navigate('/dashboard');
     } else {
-      console.log("Error signing up");
+      const errorData = await response.json();
+      setError(errorData.message)
     }
   };
 
@@ -48,6 +50,8 @@ export function SignUpPage() {
     <Layout>
       <Container size="sm" mt={30}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>Sign up for free</Title>
+
+        {error && <p style={{ color: "red" }}>{error}</p>}
         
         <Paper withBorder shadow="md" p={30} mt={30} radius="md" style={{ backgroundColor: "#fff" }}>
           <Group grow mb="md">
