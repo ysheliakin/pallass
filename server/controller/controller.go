@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -86,12 +87,16 @@ func ThreadController(c echo.Context) error {
 		Category:  categoryParam.String,
 	}
 
-	err = sql.InsertThread(context.Background(), threadParams)
+	threadID, err := sql.InsertThread(context.Background(), threadParams)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Error creating thread")
 	}
 
-	return c.JSON(http.StatusOK, "Thread created")
+	link := "http://localhost:5000/threads/" + fmt.Sprint(threadID)
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"link": link,
+	})
 }
 
 func CreateGroup(c echo.Context) error {
