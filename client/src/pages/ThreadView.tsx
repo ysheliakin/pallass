@@ -64,6 +64,7 @@ export function ThreadView() {
   const [messages, setMessages] = useState<Message[]>(mockThread.messages);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const handlePostMessage = () => {
     if (newMessage.trim()) {
@@ -126,6 +127,14 @@ export function ThreadView() {
     const files = event.target.files;
     if (files && files.length > 0) {
       setAudioFile(files[0]);
+      // You can also handle the upload process here if needed
+    }
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      setImageFile(files[0]);
       // You can also handle the upload process here if needed
     }
   };
@@ -194,6 +203,12 @@ export function ThreadView() {
               <i className="fas fa-upload"></i> Upload Audio
             </Button>
           </label>
+
+          <label htmlFor="video-upload">
+            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
+              <i className="fas fa-upload"></i> Upload Image
+            </Button>
+          </label>
         </Box>
       )}
       
@@ -234,12 +249,33 @@ export function ThreadView() {
             </Button>
           </label>
 
-          <label htmlFor="video-upload">
+          <input
+            type="file"
+            accept="audio/*"
+            onChange={handleAudioUpload}
+            id="audio-upload"
+            style={{ display: 'none' }}  // Hide the default file input
+          />
+
+          <label htmlFor="audio-upload">
             <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
               <i className="fas fa-upload"></i> Upload Audio
             </Button>
           </label>
 
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            id="image-upload"
+            style={{ display: 'none' }}  // Hide the default file input
+          />
+
+          <label htmlFor="image-upload">
+            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
+              <i className="fas fa-upload"></i> Upload Image
+            </Button>
+          </label>
         </Paper>
       </Container>
     </Layout>
