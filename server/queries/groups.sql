@@ -1,4 +1,4 @@
--- name: InsertGroup :exec
+-- name: InsertGroup :one
 INSERT INTO groups (name, description, created_at, created_by)
 VALUES ($1, $2, CURRENT_TIMESTAMP, $3)
 RETURNING id;
