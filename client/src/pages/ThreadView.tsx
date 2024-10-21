@@ -62,6 +62,7 @@ export function ThreadView() {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [messages, setMessages] = useState<Message[]>(mockThread.messages);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
 
   const handlePostMessage = () => {
     if (newMessage.trim()) {
@@ -109,6 +110,14 @@ export function ThreadView() {
       ));
       setReplyingToId(null);
       setReplyContent('');
+    }
+  };
+
+  const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      setVideoFile(files[0]);
+      // You can also handle the upload process here if needed
     }
   };
 
@@ -190,6 +199,20 @@ export function ThreadView() {
             mb="sm"
           />
           <Button onClick={handlePostMessage}>Post Message</Button>
+          <input
+            type="file"
+            accept="video/*"
+            onChange={handleVideoUpload}
+            id="video-upload"
+            style={{ display: 'none' }}  // Hide the default file input
+          />
+          
+          <label htmlFor="video-upload">
+            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
+              <i className="fas fa-upload"></i> Upload Video
+            </Button>
+          </label>
+
         </Paper>
       </Container>
     </Layout>
