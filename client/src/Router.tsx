@@ -13,7 +13,7 @@ import { LoginPage } from './pages/Login.page';
 import { PostPage } from './pages/Post.page';
 import { SignUpPage } from './pages/SignUp.page';
 import { ThreadView } from './pages/ThreadView';
-// import { SettingsPage } from './pages/Settings.page';
+import { SettingsPage } from './pages/Settings.page';
 import { UserProfilePage } from './pages/UserProfile.page'; // Add this new import
 
 const router = createHashRouter([
@@ -64,6 +64,10 @@ const router = createHashRouter([
       {
         path: '/thread/:threadId',
         element: <ThreadView />,
+      },
+      {
+        path: '/settings',
+        element: <SettingsPage />,
       },
       {
         path: '/user-profile', // Add this new route
