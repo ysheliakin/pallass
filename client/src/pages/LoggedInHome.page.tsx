@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Layout, useStyles } from '../components/layout';
 
 export function LoggedInHomePage() {
-  const styles = useStyles();
+  const styles = useStyles();    
 
   return (
     <Layout>
@@ -39,8 +39,10 @@ export function LoggedInHomePage() {
 
         <Title order={3} mb="md" style={styles.title}>Discussion Forum threads you follow</Title>
         <SimpleGrid cols={2} spacing="md" mb="xl">
-          <Paper p="md" withBorder>Discussion forum name 1</Paper>
-          <Paper p="md" withBorder>Discussion forum name 2</Paper>
+          {/*<Paper p="md" withBorder to="/signup">Discussion forum name 1</Paper>
+          <Paper p="md" withBorder>Discussion forum name 2</Paper>*/}
+          <Button component={Link} to="/discussion" style={styles.primaryButton}>Discussion forum name 1</Button>
+          <Button style={styles.primaryButton}>Discussion forum name 2</Button>
         </SimpleGrid>
 
         <Group mb="xl">

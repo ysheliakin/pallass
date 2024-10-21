@@ -9,6 +9,7 @@ import { CreateGroup } from './pages/CreateGroup.page';
 import { JoinGroup } from './pages/JoinGroup.page'; // Import the new component
 import { ForgotPasswordPage } from './pages/ForgotPassword.page';
 import { ResetPasswordPage } from './pages/ResetPassword.page';
+import { DiscussionForumPage } from './pages/DiscussionForum.page';
 
 const router = createHashRouter([
   {
@@ -50,6 +51,10 @@ const router = createHashRouter([
   {
     path: `/reset-password`,
     element: <ResetPasswordPage />,
+  },
+  {
+    path: `/discussion`,
+    element: <DiscussionForumPage />,
   },
 ]);
 

@@ -38,6 +38,7 @@ export function LoginPage() {
 
       // If the response is successful, navigate to the logged-in homepage
       if (authenticationResponse.ok) {
+        localStorage.setItem('email', email)
         navigate('/dashboard');
       } else {
         setError("Authentication failed. Please try again.")

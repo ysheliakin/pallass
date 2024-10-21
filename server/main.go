@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/joho/godotenv"
+	"github.com/gorilla/websocket"
 	"gopkg.in/gomail.v2"
 	"fmt"
 	"time"
@@ -26,6 +27,11 @@ var e *echo.Echo
 var dbc context.Context
 var sql *queries.Queries
 var secretKey = []byte(os.Getenv("JWT_SECRET_KEY"))
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	}, 
+}
 
 type User struct {
     Firstname string `json:"firstname"`
@@ -82,6 +88,7 @@ func main() {
 		return c.String(http.StatusOK, "Here is the playlist")
 	})
 	e.GET("/authenticate", authenticate)
+	e.GET("/ws/:email", webSocket)
 
 	// Post Handlers
 	e.POST("/registeruser", registerUser)
@@ -498,4 +505,16 @@ func validateResetCode(c echo.Context) error {
 
 	// Return the signed token via a JSON response
     return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful code verification"})
+}
+
+func webSocket(c echo.Context) error {
+	fmt.Println("WebSocket")
+
+	conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	
+	return nil
 }
