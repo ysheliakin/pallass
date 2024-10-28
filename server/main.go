@@ -3,26 +3,25 @@ package main
 import (
 	"context"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 
 	controller "sih/pallass/controller"
 	queries "sih/pallass/generated"
 
+	"fmt"
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"golang.org/x/crypto/bcrypt"
 	"github.com/labstack/gommon/log"
-	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/joho/godotenv"
-	"github.com/gorilla/websocket"
+	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/gomail.v2"
-	"fmt"
-	"time"
 	"math/rand"
+	"time"
 )
 
 // TODO: Define the Comment struct
@@ -38,19 +37,19 @@ var secretKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
-	}, 
+	},
 }
 
 type User struct {
-    Firstname string `json:"firstname"`
-    Lastname string `json:"lastname"`
-    Email string `json:"email"`
-    Password string `json:"password"`
-    Organization string `json:"organization"`
-    Fieldofstudy string `json:"fieldofstudy"`
-    Jobtitle string `json:"jobtitle"`
-	SocialLinks []string `json:"sociallinks"`
-	TempCode string `json:"tempcode"`
+	Firstname    string   `json:"firstname"`
+	Lastname     string   `json:"lastname"`
+	Email        string   `json:"email"`
+	Password     string   `json:"password"`
+	Organization string   `json:"organization"`
+	Fieldofstudy string   `json:"fieldofstudy"`
+	Jobtitle     string   `json:"jobtitle"`
+	SocialLinks  []string `json:"sociallinks"`
+	TempCode     string   `json:"tempcode"`
 }
 
 type RegisterResponse struct {
@@ -58,10 +57,13 @@ type RegisterResponse struct {
 }
 
 func init() {
-	// Load the environment variables
-	err := godotenv.Load()
-	if err != nil {
-		e.Logger.Fatal(err)
+	// Load the environment variables from .env file in dev
+	// (in prod they are set in AWS)
+	if os.Getenv("env") == "prod" {
+		err := godotenv.Load()
+		if err != nil {
+			e.Logger.Fatal(err)
+		}
 	}
 }
 
@@ -115,7 +117,7 @@ func main() {
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
-        AllowHeaders: []string{"*"},
+		AllowHeaders: []string{"*"},
 	}))
 
 	// Get Handlers
@@ -181,46 +183,34 @@ func getOrigin() *url.URL {
 	return origin
 }
 
-var origin = getOrigin()
-
-var director = func(req *http.Request) {
-	req.Header.Add("X-Forwarded-Host", req.Host)
-	req.Header.Add("X-Origin-Host", origin.Host)
-	req.URL.Scheme = "http"
-	req.URL.Host = origin.Host
-}
-
-// AngularHandler loads Angular assets
-var AngularHandler = &httputil.ReverseProxy{Director: director}
-
 // User registration
 func registerUser(c echo.Context) error {
-    var user User
+	var user User
 
-    // Decode the incoming JSON request body
-    err := c.Bind(&user); 
-    if err != nil {
+	// Decode the incoming JSON request body
+	err := c.Bind(&user)
+	if err != nil {
 		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Invalid inputs. Please enter valid inputs."})
-    }
+	}
 
 	if user.Firstname == "" || user.Lastname == "" || user.Email == "" || user.Password == "" || user.Fieldofstudy == "" {
 		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to create your account. Please fill out every required field."})
 	}
 
 	// Check if the email inputted by the user is already stored in the database
-    result, err := sql.CheckUserExistsByEmail(context.Background(), user.Email)
+	result, err := sql.CheckUserExistsByEmail(context.Background(), user.Email)
 	fmt.Println("result: ", result)
 	if err == nil && result == 1 {
 		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An account with this email address already exists."})
 	}
 
 	// Hash the password
-    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-    if err != nil {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
 		log.Fatal("Error hashing password")
-        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to create your account. Please check your information and try again."})
-    }
-    user.Password = string(hashedPassword)
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to create your account. Please check your information and try again."})
+	}
+	user.Password = string(hashedPassword)
 
 	// Check if the user inputted an organization or not
 	var organizationParam pgtype.Text
@@ -239,27 +229,27 @@ func registerUser(c echo.Context) error {
 	}
 
 	userParams := queries.CreateUserParams{
-		Firstname: user.Firstname,
-		Lastname: user.Lastname,
-		Email: user.Email, 
-		Password: user.Password, 
-		Organization: organizationParam, 
-		FieldOfStudy: user.Fieldofstudy, 
-		JobTitle: jobParam,
+		Firstname:    user.Firstname,
+		Lastname:     user.Lastname,
+		Email:        user.Email,
+		Password:     user.Password,
+		Organization: organizationParam,
+		FieldOfStudy: user.Fieldofstudy,
+		JobTitle:     jobParam,
 	}
 
-    // Save the new user to the database using sqlc queries
-    err = sql.CreateUser(context.Background(), userParams) 
-    if err != nil {
-        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to create your account. Please check your information and try again."})
-    }
+	// Save the new user to the database using sqlc queries
+	err = sql.CreateUser(context.Background(), userParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to create your account. Please check your information and try again."})
+	}
 
 	// Insert social links if the user inputted any
 	if len(user.SocialLinks) > 0 {
 		for _, socialLink := range user.SocialLinks {
 			if socialLink != "" {
 				userSocialLinksParams := queries.InsertUserSocialLinkParams{
-					UserEmail: user.Email,
+					UserEmail:  user.Email,
 					SocialLink: socialLink,
 				}
 
@@ -271,14 +261,14 @@ func registerUser(c echo.Context) error {
 		}
 	}
 
-    return c.JSON(http.StatusOK, RegisterResponse{Message: "Account successfully registered"})
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Account successfully registered"})
 }
 
 // User login
 func loginUser(c echo.Context) error {
 	var user User
 
-    // Decode the incoming JSON request body
+	// Decode the incoming JSON request body
 	err := c.Bind(&user)
 	if err != nil {
 		log.Fatal("Invalid inputs")
@@ -297,7 +287,7 @@ func loginUser(c echo.Context) error {
 	}
 
 	// Generate JWT token that expires in 24 hours
-	claims := jwt.RegisteredClaims{ ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)) }
+	claims := jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour))}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Sign the token
@@ -307,7 +297,7 @@ func loginUser(c echo.Context) error {
 	}
 
 	// Return the signed token via a JSON response
-    return c.JSON(http.StatusOK, map[string]string{"token": signedToken})
+	return c.JSON(http.StatusOK, map[string]string{"token": signedToken})
 }
 
 func authenticate(c echo.Context) error {
@@ -329,8 +319,8 @@ func authenticate(c echo.Context) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
-	if (!token.Valid) {
+
+	if !token.Valid {
 		log.Fatal("Invalid token")
 	}
 
@@ -340,43 +330,42 @@ func authenticate(c echo.Context) error {
 // Send email containing the code to reset the password
 func sendPasswordResetEmail(to, resetCode string) error {
 	email := os.Getenv("GMAIL_USERNAME")
-    password := os.Getenv("GMAIL_PASSWORD")
+	password := os.Getenv("GMAIL_PASSWORD")
 
 	if email == "" || password == "" {
-        return fmt.Errorf("email credentials not set")
-    }
+		return fmt.Errorf("email credentials not set")
+	}
 
-    m := gomail.NewMessage()
-    m.SetHeader("From", email)
-    m.SetHeader("To", to)
-    m.SetHeader("Subject", "Password Reset Request")
+	m := gomail.NewMessage()
+	m.SetHeader("From", email)
+	m.SetHeader("To", to)
+	m.SetHeader("Subject", "Password Reset Request")
 	body := "Password reset code: <strong>" + resetCode + "</strong>"
-    m.SetBody("text/html", body)
+	m.SetBody("text/html", body)
 
-    d := gomail.NewDialer("smtp.gmail.com", 587, email, password)
-    err := d.DialAndSend(m)
-    if err != nil {
-        return err
-    }
-    return nil
+	d := gomail.NewDialer("smtp.gmail.com", 587, email, password)
+	err := d.DialAndSend(m)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Generate a code to reset the password
 func GenerateCode(length int) string {
-    // Create a random number generator
-    randomNumberGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))
+	// Create a random number generator
+	randomNumberGenerator := rand.New(rand.NewSource(time.Now().UnixNano()))
 	// Give the range of possible values for each digit
-    digitRange := "0123456789"
+	digitRange := "0123456789"
 
 	// Create the code that will contain the digits
-    code := make([]byte, length)
+	code := make([]byte, length)
 
+	for i := 0; i < len(code); i++ {
+		code[i] = digitRange[randomNumberGenerator.Intn(len(digitRange))]
+	}
 
-    for i := 0; i < len(code); i++ {
-        code[i] = digitRange[randomNumberGenerator.Intn(len(digitRange))]
-    }
-
-    return string(code)
+	return string(code)
 }
 
 // Request password reset
@@ -392,33 +381,33 @@ func requestPasswordReset(c echo.Context) error {
 
 	fmt.Println("Email 0: ", user.Email)
 
-    _, err =  sql.GetUserByEmail(context.Background(), user.Email)
-    if err != nil {
+	_, err = sql.GetUserByEmail(context.Background(), user.Email)
+	if err != nil {
 		return c.JSON(http.StatusNotFound, RegisterResponse{Message: "The email you entered is not associated with an account."})
-    }
+	}
 
 	resetCode := GenerateCode(6)
-    if len(resetCode) == 0 {
+	if len(resetCode) == 0 {
 		fmt.Println("Unable to generate code")
 		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred trying to generate the password reset code."})
-    }
+	}
 
 	storedResetCode := storeResetCode(resetCode, user.Email)
-	
+
 	fmt.Println("resetCode: ", resetCode)
 	fmt.Println("storedResetCode: ", storedResetCode)
-	
+
 	if storedResetCode == resetCode || storedResetCode == "" {
 		fmt.Println("Error storing the code")
 		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred trying to store the code."})
 	}
 
-    if err := sendPasswordResetEmail(user.Email, resetCode); err != nil {
+	if err := sendPasswordResetEmail(user.Email, resetCode); err != nil {
 		fmt.Printf("Could not send email: %v\n", err)
 		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred trying to send the email."})
 	}
-	
-    return c.JSON(http.StatusOK, map[string]string{"code": resetCode})
+
+	return c.JSON(http.StatusOK, map[string]string{"code": resetCode})
 }
 
 // Store the code
@@ -432,7 +421,7 @@ func storeResetCode(code string, email string) string {
 	// Hash the code
 	hashedCode, err := bcrypt.GenerateFromPassword([]byte(code), bcrypt.DefaultCost)
 	if err != nil {
-		return "Could not retrieve the generated code";
+		return "Could not retrieve the generated code"
 	}
 	user.TempCode = string(hashedCode)
 
@@ -447,61 +436,61 @@ func storeResetCode(code string, email string) string {
 
 	userParams := queries.UpdateUserCodeByEmailParams{
 		TempCode: tempCodeParam,
-		Email: user.Email,
+		Email:    user.Email,
 	}
 
 	fmt.Println("userParams: ", userParams)
 
 	// Add a temporary code to the user table where the email address equals that of a user row
-	err = sql.UpdateUserCodeByEmail(context.Background(), userParams); 
+	err = sql.UpdateUserCodeByEmail(context.Background(), userParams)
 	if err != nil {
 		return "Error creating an account"
 	}
 
-	tempCodeStr := tempCodeParam.String;
+	tempCodeStr := tempCodeParam.String
 
-	return tempCodeStr;
+	return tempCodeStr
 }
 
 // Reset the password
 func resetPassword(c echo.Context) error {
-    var user User
+	var user User
 
-    // Decode the incoming JSON request body
-    err := c.Bind(&user); 
-    if err != nil {
-        return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid password."})
-    }
+	// Decode the incoming JSON request body
+	err := c.Bind(&user)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid password."})
+	}
 
 	fmt.Println("Password (resetPassword): ", user.Password)
 
 	// Hash the password
-    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-    if err != nil {
-        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred tryin to reset your password."})
-    }
-    user.Password = string(hashedPassword)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred tryin to reset your password."})
+	}
+	user.Password = string(hashedPassword)
 
 	userParams := queries.UpdateUserPasswordByEmailParams{
 		Password: user.Password,
-		Email: user.Email,
+		Email:    user.Email,
 	}
 
 	fmt.Println("Email (resetPassword): ", user.Email)
 
-    // Update the user's password in the database
-    err = sql.UpdateUserPasswordByEmail(context.Background(), userParams);
+	// Update the user's password in the database
+	err = sql.UpdateUserPasswordByEmail(context.Background(), userParams)
 	if err != nil {
-        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred tryin to reset your password."})
-    }
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred tryin to reset your password."})
+	}
 
-	err = sql.RemoveCodeByEmail(context.Background(), user.Email);
+	err = sql.RemoveCodeByEmail(context.Background(), user.Email)
 	if err != nil {
 		fmt.Println("Could not remove the reset code")
-        return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Your password was reset. But an error occurred trying to remove the password reset code associated with your email address."})
-    }
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Your password was reset. But an error occurred trying to remove the password reset code associated with your email address."})
+	}
 
-    return c.JSON(http.StatusOK, RegisterResponse{Message: "Password reset successfully"})
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Password reset successfully"})
 }
 
 func validateResetCode(c echo.Context) error {
@@ -510,7 +499,7 @@ func validateResetCode(c echo.Context) error {
 	fmt.Println("")
 	fmt.Println("validateResetCode()")
 
-    // Decode the incoming JSON request body
+	// Decode the incoming JSON request body
 	err := c.Bind(&user)
 	if err != nil {
 		fmt.Println("Invalid code")
@@ -543,7 +532,7 @@ func validateResetCode(c echo.Context) error {
 	fmt.Println("Successful code verification")
 
 	// Return the signed token via a JSON response
-    return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful code verification"})
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful code verification"})
 }
 
 func webSocket(c echo.Context) error {
@@ -554,7 +543,7 @@ func webSocket(c echo.Context) error {
 		return err
 	}
 	defer conn.Close()
-	
+
 	return nil
 }
 
@@ -599,4 +588,3 @@ func webSocket(c echo.Context) error {
 
 // 	return c.JSON(http.StatusOK, notifications)
 // }
-
