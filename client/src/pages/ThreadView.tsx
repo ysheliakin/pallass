@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Title, Text, Paper, Button, Textarea, Group, Stack, Box } from '@mantine/core';
 import { Layout, useStyles } from '../components/layout';
 import { useParams } from 'react-router-dom';
+import { IconVideo } from '@mantine/icons';
 
 interface User {
   id: string;
@@ -245,7 +246,7 @@ export function ThreadView() {
           
           <label htmlFor="video-upload">
             <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-              <i className="fas fa-upload"></i> Upload Video
+              <IconVideo size={20} /> Upload Video
             </Button>
           </label>
 
