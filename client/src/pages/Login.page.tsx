@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
-import { Container, Title, TextInput, PasswordInput, Button, Paper, Text, Anchor } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
+import {
+  Anchor,
+  Button,
+  Container,
+  Paper,
+  PasswordInput,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
+import { login } from '@/api/user';
 import { Layout, useStyles } from '../components/layout';
 
 export function LoginPage() {
@@ -12,40 +22,20 @@ export function LoginPage() {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    const response = await fetch('http://localhost:5000/loginuser', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
+    const response = await login(email, password);
     // Log the user in if it succeeded, otherwise return an error
     if (response.ok) {
-      const data = await response.json();
-      const token = data.token;
       setError('');
 
       // Store the token in the local storage
-      localStorage.setItem('token', token);
+      localStorage.setItem('token', response.token);
 
-      const authenticationResponse = await fetch('http://localhost:5000/authenticate', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-      });
+      // TODO: set user in context
+      localStorage.setItem('email', email);
 
-      // If the response is successful, navigate to the logged-in homepage
-      if (authenticationResponse.ok) {
-        localStorage.setItem('email', email)
-        navigate('/dashboard');
-      } else {
-        setError("Authentication failed. Please try again.")
-      }
+      navigate('/dashboard');
     } else {
-      const errorData = await response.json();
-      setError(errorData.message)
+      setError(response.message);
     }
   };
 
@@ -56,9 +46,11 @@ export function LoginPage() {
   return (
     <Layout>
       <Container size="xs" mt={60}>
-        <Title order={2} ta="center" mt="xl" style={styles.title}>Log in</Title>
-        
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        <Title order={2} ta="center" mt="xl" style={styles.title}>
+          Log in
+        </Title>
+
+        {error && <p style={{ color: 'red' }}>{error}</p>}
 
         <Paper withBorder shadow="md" p={30} mt={30} radius="md">
           <TextInput
@@ -83,7 +75,7 @@ export function LoginPage() {
           </Button>
 
           <Text size="sm" mt="xs">
-            <Anchor style={{ color: 'darkblue'}} onClick={handleForgotPassword}>
+            <Anchor style={{ color: 'darkblue' }} onClick={handleForgotPassword}>
               Forgot password
             </Anchor>
           </Text>

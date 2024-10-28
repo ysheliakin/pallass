@@ -224,10 +224,6 @@ func GetCommentController(c echo.Context) error {
 	return c.JSON(http.StatusOK, comments)
 }
 
-func GetUserController(c echo.Context) error {
-	return c.JSON(http.StatusOK, "Flag added")
-}
-
 // UpdateUserController handles user updates
 func UpdateUserController(c echo.Context) error {
 	return c.String(http.StatusOK, "User updated")
