@@ -98,10 +98,10 @@ func ThreadController(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "Error creating thread")
 	}
 
-	link := "http://localhost:5000/threads/" + fmt.Sprint(threadID)
+	// link := "http://localhost:5000/threads/" + fmt.Sprint(threadID)
 
-	return c.JSON(http.StatusOK, map[string]string{
-		"link": link,
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"threadID": threadID,
 	})
 }
 

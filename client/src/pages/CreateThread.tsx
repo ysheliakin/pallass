@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Title, TextInput, Textarea, Select, Text, Button, Paper, Group } from '@mantine/core';
 import { Layout, useStyles } from '../components/layout';
+import { useNavigate } from 'react-router-dom';
 
 export function CreateThread() {
   const styles = useStyles();
@@ -8,6 +9,7 @@ export function CreateThread() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<string | null>(null);
   const [newCategory, setNewCategory] = useState('');
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([
     { value: 'general', label: 'General' },
     { value: 'tech', label: 'Technology' },
@@ -43,7 +45,9 @@ export function CreateThread() {
       // Get the response data
       const data = await response.json();
       console.log('Response from server:', data);
-      window.location.href = data.link;
+      navigate(`/thread/${data.threadID}`);
+      // navigate(`/funding-opportunities`);
+
 
 
     } catch (error) {
