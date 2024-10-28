@@ -74,10 +74,18 @@ npm run dev
 
 ### Server
 
+#### Set environment variables
+
+```bash
+export DB="<get the database connection string from a peer>"
+export GMAL_USERNAME="<get the credential from a peer>"
+export GMAIL_PASSWORD="[<get the credential from a peer>"
+export JWT_SECRET_KEY="[<get the key from a peer>"
+```
+
 #### To run dev server
 
 ```bash
-export DB="[DB_CONNECTION_STRING]"
 cd server
 go run .
 ```
@@ -85,7 +93,6 @@ go run .
 Alternatively, run live reload dev server using Air:
 
 ```bash
-export DB="[DB_CONNECTION_STRING]"
 cd server
 air
 ```

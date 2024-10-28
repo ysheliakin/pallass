@@ -47,6 +47,32 @@ type SampleTable struct {
 	ID pgtype.Int4
 }
 
+type AccountVerificationCode struct {
+	ID                      int32
+	AccountVerificationCode string
+	CreatedAt               pgtype.Timestamp
+}
+
+type User struct {
+	ID           int32
+	Firstname    string
+	Lastname     string
+	Email        string
+	Password     string
+	Organization pgtype.Text
+	FieldOfStudy string
+	JobTitle     pgtype.Text
+	CreatedAt    pgtype.Timestamp
+	TempCode     pgtype.Text
+}
+
+type UserSocialLink struct {
+	ID         int32
+	UserEmail  string
+	SocialLink string
+	CreatedAt  pgtype.Timestamp
+}
+
 type Thread struct {
 	ID        int32
 	Firstname string
