@@ -33,6 +33,7 @@ type Group struct {
 	Description pgtype.Text
 	CreatedAt   pgtype.Timestamp
 	CreatedBy   int32
+	Uuid        pgtype.UUID
 }
 
 type GroupMember struct {
@@ -47,10 +48,16 @@ type SampleTable struct {
 	ID pgtype.Int4
 }
 
-type AccountVerificationCode struct {
-	ID                      int32
-	AccountVerificationCode string
-	CreatedAt               pgtype.Timestamp
+type Thread struct {
+	ID        int32
+	Firstname string
+	Lastname  string
+	Title     string
+	Content   string
+	Category  string
+	Upvotes   pgtype.Int4
+	CreatedAt pgtype.Timestamp
+	Uuid      pgtype.UUID
 }
 
 type User struct {
@@ -71,15 +78,4 @@ type UserSocialLink struct {
 	UserEmail  string
 	SocialLink string
 	CreatedAt  pgtype.Timestamp
-}
-
-type Thread struct {
-	ID        int32
-	Firstname string
-	Lastname  string
-	Title     string
-	Content   string
-	Category  string
-	Upvotes   pgtype.Int4
-	CreatedAt pgtype.Timestamp
 }

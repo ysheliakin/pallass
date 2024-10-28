@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Container, Title, Text, Paper, Button, Textarea, Group, Stack, Box } from '@mantine/core';
-import { Layout, useStyles } from '../components/layout';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Title as MantineTitle, Text, Paper, Button, Textarea, Group, Stack, Box } from '@mantine/core';
+import { Layout, useStyles } from '@/components/layout';
 import { useParams } from 'react-router-dom';
 
 interface User {
@@ -19,66 +19,111 @@ interface Message extends Reply {
   replies: Reply[];
 }
 
+interface Message {
+  sender: string;
+  content: string;
+}
+
+interface Thread {
+  ID: number, 
+  Firstname: string, 
+  Lastname: string, 
+  Title: string, 
+  Content: string, 
+  Category: string, 
+  Upvotes: number, 
+  Uuid: number
+}
+
 const currentUser: User = {
   id: '2',
   name: 'Jane Smith'
 };
 
-const mockThread = {
-  id: '1',
-  title: 'Example Thread Title',
-  description: 'This is an example thread description.',
-  messages: [
-    { 
-      id: '1', 
-      author: { id: '1', name: 'John Doe' }, 
-      date: '2023-05-01', 
-      content: 'This is the first message in the thread.',
-      replies: []
-    },
-    { 
-      id: '2', 
-      author: { id: '2', name: 'Jane Smith' }, 
-      date: '2023-05-02', 
-      content: 'This is a message in the thread that YOU posted.',
-      replies: []
-    },
-    { 
-      id: '3', 
-      author: { id: '3', name: 'Alice Johnson' }, 
-      date: '2023-05-03', 
-      content: 'Another message in the thread.',
-      replies: []
-    },
-  ] as Message[]
-};
-
 export function ThreadView() {
-  const { threadId } = useParams<{ threadId: string }>();
   const styles = useStyles();
   const [newMessage, setNewMessage] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState('');
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
-  const [messages, setMessages] = useState<Message[]>(mockThread.messages);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [threadData, setThreadData] = useState<Thread | null>(null);
 
-  const handlePostMessage = () => {
-    if (newMessage.trim()) {
-      const newMsg: Message = {
-        id: String(messages.length + 1),
-        author: currentUser,
-        date: new Date().toISOString().split('T')[0],
-        content: newMessage,
-        replies: []
+  const senderEmail = localStorage.getItem('email');
+  const ws = useRef<WebSocket | null>(null);
+  const threadID = localStorage.getItem("threadID");
+
+  useEffect(() => {
+      console.log("threadID: ", threadID)
+
+      const fetchThreadData = async () => {
+          const response = await fetch(`http://localhost:5000/threads/${threadID}`, {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+              }
+          });
+      
+          // Check if the response is ok (status code 200-299)
+          if (!response.ok) {
+              throw new Error('Network response was not ok');
+          }
+
+          const data: Thread = await response.json();
+          console.log("data: ", data)
+          setThreadData(data);
+          console.log("threadData: ", threadData)
+      }
+
+      fetchThreadData();
+
+      // Websocket connection
+      console.log("senderEmail: ", senderEmail)
+      ws.current = new WebSocket(`ws://localhost:5000/ws/${senderEmail}`)
+
+      ws.current.onopen = () => {
+          console.log("Websocket connected");
+      }
+
+      ws.current.onmessage = (event) => {
+          const message = JSON.parse(event.data);
+          setMessages((prevMessages) => [...prevMessages, message]);
       };
-      setMessages([...messages, newMsg]);
-      setNewMessage('');
-    }
+
+      ws.current.onerror = (event) => {
+          console.error("WebSocket error observed:", event);
+      };
+
+      return () => {
+          ws.current?.close();
+      };
+  }, [senderEmail, threadID])
+
+  const sendMessage = () => {
+      const message = { sender: senderEmail, content: newMessage };
+      
+      if (ws.current) {
+          ws.current.send(JSON.stringify(message));
+          setNewMessage('');
+      } else {
+          console.error("The WebSocket is uninitialized.");
+      }
   };
+
+  // Handle the loading state
+  if (!threadData) {
+    return <div>Loading...</div>;
+  }
+
+  // Access the title and content of the thread
+  const { Title, Content } = threadData;
+
+  console.log("Title: ", threadData.Title)
+  console.log("Content: ", threadData.Content)
 
   const handleEditMessage = (messageId: string, content: string) => {
     setEditingMessageId(messageId);
@@ -219,11 +264,15 @@ export function ThreadView() {
   return (
     <Layout>
       <Container size="lg" mt={30}>
-        <Title order={2} style={styles.title}>{mockThread.title}</Title>
-        <Text mb="xl">{mockThread.description}</Text>
+        <MantineTitle order={2} style={styles.title}>{Title}</MantineTitle>
+        <Text mb="xl">{Content}</Text>
 
         <Stack gap="md">
-          {messages.map(message => renderMessage(message))}
+          {messages.map((msg, index) => (
+            <div key={index}>
+                <strong>{msg.sender}:</strong> {msg.content}
+            </div>
+          ))}
         </Stack>
 
         <Paper mt="xl" p="md" withBorder>
@@ -234,7 +283,7 @@ export function ThreadView() {
             minRows={3}
             mb="sm"
           />
-          <Button onClick={handlePostMessage}>Post Message</Button>
+          <Button onClick={sendMessage}>Post Message</Button>
           <input
             type="file"
             accept="video/*"

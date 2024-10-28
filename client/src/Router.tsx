@@ -17,7 +17,7 @@ import { SignUpPage } from './pages/SignUp.page';
 import { ThreadView } from './pages/ThreadView';
 import { ForgotPasswordPage } from './pages/ForgotPassword.page';
 import { ResetPasswordPage } from './pages/ResetPassword.page';
-import { DiscussionForumPage } from './pages/DiscussionForum.page';
+import { ThreadPage } from './pages/Thread.page';
 
 const router = createHashRouter([
   {
@@ -75,7 +75,7 @@ const router = createHashRouter([
     element: <DiscoverThreads />,
   },
   {
-    path: '/thread/:threadId',
+    path: '/thread/:threadUuid',
     element: <ThreadView />,
   },
   {
@@ -95,8 +95,8 @@ const router = createHashRouter([
     element: <ResetPasswordPage />,
   },
   {
-    path: `/discussion`,
-    element: <DiscussionForumPage />,
+    path: `/thread`,
+    element: <ThreadPage />,
   },
 ]);
 

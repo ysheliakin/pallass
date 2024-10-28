@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextInput, PasswordInput, Container, Title, Paper, Button } from '@mantine/core';
-import { Layout, useStyles } from '../components/layout';
+import { Layout, useStyles } from '@/components/layout';
 
 export function ResetPasswordPage() {
   const styles = useStyles();

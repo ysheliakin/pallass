@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
+	//"github.com/google/uuid"
 
 	queries "sih/pallass/generated"
 )
@@ -93,15 +94,17 @@ func ThreadController(c echo.Context) error {
 		Category:  categoryParam.String,
 	}
 
-	threadID, err := sql.InsertThread(context.Background(), threadParams)
+	threadUUID, err := sql.InsertThread(context.Background(), threadParams)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Error creating thread")
 	}
 
-	link := "http://localhost:5000/threads/" + fmt.Sprint(threadID)
+	threadIDStr := strconv.FormatInt(int64(threadUUID.ID), 10)
+	threadUUIDStr := fmt.Sprintf("%x-%x-%x-%x-%x", threadUUID.Uuid.Bytes[0:4], threadUUID.Uuid.Bytes[4:6], threadUUID.Uuid.Bytes[6:8], threadUUID.Uuid.Bytes[8:10], threadUUID.Uuid.Bytes[10:16])
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"link": link,
+		"id": threadIDStr,
+		"uuid": threadUUIDStr,
 	})
 }
 
@@ -184,7 +187,23 @@ func PlaylistController(c echo.Context) error {
 	return c.String(http.StatusOK, "Here is the playlist")
 }
 
+func GetThreadsController(c echo.Context) error {
+	fmt.Println("GetThreadsController")
+
+	// Query the database
+	threads, err := sql.GetThreads(context.Background())
+	if err != nil {
+		if err.Error() == "no rows in result set" {
+			return c.JSON(http.StatusNotFound, "Thread not found")
+		}
+		return c.JSON(http.StatusInternalServerError, "Error retrieving thread")
+	}
+	return c.JSON(http.StatusOK, threads)
+}
+
 func GetThreadController(c echo.Context) error {
+	fmt.Println("GetThreadController")
+
 	threadIDStr := c.Param("id")
 	threadID, err := strconv.ParseInt(threadIDStr, 10, 32)
 	if err != nil {

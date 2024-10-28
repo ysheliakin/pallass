@@ -7,17 +7,31 @@ package queries
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getThreadByID = `-- name: GetThreadByID :one
-SELECT id, firstname, lastname, title, content, category, upvotes, created_at
+SELECT id, firstname, lastname, title, content, category, upvotes, uuid, created_at
 FROM threads
 WHERE id = $1
 `
 
-func (q *Queries) GetThreadByID(ctx context.Context, id int32) (Thread, error) {
+type GetThreadByIDRow struct {
+	ID        int32
+	Firstname string
+	Lastname  string
+	Title     string
+	Content   string
+	Category  string
+	Upvotes   pgtype.Int4
+	Uuid      pgtype.UUID
+	CreatedAt pgtype.Timestamp
+}
+
+func (q *Queries) GetThreadByID(ctx context.Context, id int32) (GetThreadByIDRow, error) {
 	row := q.db.QueryRow(ctx, getThreadByID, id)
-	var i Thread
+	var i GetThreadByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.Firstname,
@@ -26,15 +40,64 @@ func (q *Queries) GetThreadByID(ctx context.Context, id int32) (Thread, error) {
 		&i.Content,
 		&i.Category,
 		&i.Upvotes,
+		&i.Uuid,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
+const getThreads = `-- name: GetThreads :many
+SELECT id, firstname, lastname, title, content, category, upvotes, uuid, created_at
+FROM threads
+ORDER BY created_at DESC
+`
+
+type GetThreadsRow struct {
+	ID        int32
+	Firstname string
+	Lastname  string
+	Title     string
+	Content   string
+	Category  string
+	Upvotes   pgtype.Int4
+	Uuid      pgtype.UUID
+	CreatedAt pgtype.Timestamp
+}
+
+func (q *Queries) GetThreads(ctx context.Context) ([]GetThreadsRow, error) {
+	rows, err := q.db.Query(ctx, getThreads)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetThreadsRow
+	for rows.Next() {
+		var i GetThreadsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Firstname,
+			&i.Lastname,
+			&i.Title,
+			&i.Content,
+			&i.Category,
+			&i.Upvotes,
+			&i.Uuid,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertThread = `-- name: InsertThread :one
 INSERT INTO threads (firstname, lastname, title, content, category, upvotes, created_at)
 VALUES ($1, $2, $3, $4, $5, 0, CURRENT_TIMESTAMP)
-RETURNING id
+RETURNING id, uuid
 `
 
 type InsertThreadParams struct {
@@ -45,7 +108,12 @@ type InsertThreadParams struct {
 	Category  string
 }
 
-func (q *Queries) InsertThread(ctx context.Context, arg InsertThreadParams) (int32, error) {
+type InsertThreadRow struct {
+	ID   int32
+	Uuid pgtype.UUID
+}
+
+func (q *Queries) InsertThread(ctx context.Context, arg InsertThreadParams) (InsertThreadRow, error) {
 	row := q.db.QueryRow(ctx, insertThread,
 		arg.Firstname,
 		arg.Lastname,
@@ -53,7 +121,7 @@ func (q *Queries) InsertThread(ctx context.Context, arg InsertThreadParams) (int
 		arg.Content,
 		arg.Category,
 	)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
+	var i InsertThreadRow
+	err := row.Scan(&i.ID, &i.Uuid)
+	return i, err
 }

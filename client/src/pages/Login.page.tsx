@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Title, TextInput, PasswordInput, Button, Paper, Text, Anchor } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
-import { Layout, useStyles } from '../components/layout';
+import { Layout, useStyles } from '@/components/layout';
 
 export function LoginPage() {
   const styles = useStyles();

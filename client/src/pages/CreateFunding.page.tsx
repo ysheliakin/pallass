@@ -12,8 +12,8 @@ import {
   Title,
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
-import { createFundingOpportunity } from '../api/funding';
-import { Layout, useStyles } from '../components/layout';
+import { createFundingOpportunity } from '@/api/funding';
+import { Layout, useStyles } from '@/components/layout';
 
 export function CreateFunding() {
   const styles = useStyles();

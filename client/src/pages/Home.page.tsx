@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Group, Image, Paper, Stack, Title } from '@mantine/core';
-import { Layout, useStyles } from '../components/layout';
-import { Welcome } from '../components/Welcome/Welcome';
+import { Layout, useStyles } from '@/components/layout';
+import { Welcome } from '@/components/Welcome/Welcome';
 
 export function HomePage() {
   const styles = useStyles();

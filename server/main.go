@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"time"
 	"math/rand"
+	"sync"
 )
 
 // TODO: Define the Comment struct
@@ -39,6 +40,16 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	}, 
+}
+
+var clients = make(map[*websocket.Conn]bool)
+// Broadcast messages
+var broadcast = make(chan Message)
+var mu sync.Mutex
+
+type Message struct {
+	Sender  string `json:"sender"`
+	Content string `json:"content"`
 }
 
 type User struct {
@@ -126,6 +137,7 @@ func main() {
 	e.GET("/ws/:email", webSocket)
 	e.GET("/user", controller.GetUserController)
 	e.GET("/funding", controller.GetFundingOpportunities)
+	e.GET("/getThreads", controller.GetThreadsController)
 
 	// Post Handlers
 	e.POST("/registeruser", registerUser)
@@ -170,6 +182,9 @@ func main() {
 	e.DELETE("/comment", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Comment deleted")
 	})
+
+	// Message handling
+	go handleMessages()
 
 	// Start server
 	e.Logger.Fatal(e.Start(":5000"))
@@ -555,7 +570,42 @@ func webSocket(c echo.Context) error {
 	}
 	defer conn.Close()
 	
+	// Lock the mutex
+	mu.Lock()
+	clients[conn] = true
+	// Unlock the mutex
+	mu.Unlock()
+
+	for {
+		var msg Message
+
+		err := conn.ReadJSON(&msg)
+		if err != nil {
+			mu.Lock()
+			delete(clients, conn)
+			mu.Unlock()
+			break
+		}
+
+		broadcast <- msg
+	}
+
 	return nil
+}
+
+func handleMessages() {
+	for {
+		msg := <-broadcast
+		mu.Lock()
+		for client := range clients {
+			err := client.WriteJSON(msg)
+			if err != nil {
+				client.Close()
+				delete(clients, client)
+			}
+		}
+		mu.Unlock()
+	}
 }
 
 // func addComment(c echo.Context) error {
