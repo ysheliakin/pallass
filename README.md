@@ -79,7 +79,8 @@ npm run dev
 ```bash
 export DB="<get the database connection string from a peer>"
 export GMAL_USERNAME="<get the credential from a peer>"
-export DB="[<get the credential from a peer>"
+export GMAIL_PASSWORD="[<get the credential from a peer>"
+export JWT_SECRET_KEY="[<get the key from a peer>"
 ```
 
 #### To run dev server
