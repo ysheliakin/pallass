@@ -11,15 +11,29 @@ export function SignUpPage() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [institution, setInstitution] = useState('');
+  const [organization, setOrganization] = useState('');
   const [fieldOfStudy, setFieldOfStudy] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [socialLinks, setSocialLinks] = useState(['']);
+  const [error, setError] = useState('');
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     // Here you would handle the sign-up logic
-    console.log('Sign up data:', { firstName, lastName, email, password, institution, fieldOfStudy, jobTitle, socialLinks });
-    navigate('/dashboard');
+    const response = await fetch('http://localhost:5000/registeruser', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ firstName, lastName, email, password, organization, fieldOfStudy, jobTitle, socialLinks }),
+    });
+
+    // Log the user in if it worked well, otherwise error
+    if (response.ok) {
+      navigate('/dashboard');
+    } else {
+      const errorData = await response.json();
+      setError(errorData.message)
+    }
   };
 
   const addSocialLink = () => {
@@ -36,6 +50,8 @@ export function SignUpPage() {
     <Layout>
       <Container size="sm" mt={30}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>Sign up for free</Title>
+
+        {error && <p style={{ color: "red" }}>{error}</p>}
         
         <Paper withBorder shadow="md" p={30} mt={30} radius="md" style={{ backgroundColor: "#fff" }}>
           <Group grow mb="md">
@@ -78,8 +94,8 @@ export function SignUpPage() {
             label="Institution/organization you work at"
             placeholder='Institution name (or "Independent")'
             mt="md"
-            value={institution}
-            onChange={(event) => setInstitution(event.currentTarget.value)}
+            value={organization}
+            onChange={(event) => setOrganization(event.currentTarget.value)}
             styles={{ input: styles.input }}
           />
           <TextInput

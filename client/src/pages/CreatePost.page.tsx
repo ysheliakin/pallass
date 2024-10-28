@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Button, Center, TextInput, Title } from '@mantine/core';
-import { createPost } from '@/api/post';
-import { createEditor } from '@/components/TextEditor/editor';
-import { TextEditor } from '@/components/TextEditor/TextEditor';
+import { createPost } from '../api/post';
+import { createEditor } from '../components/TextEditor/editor';
+import { TextEditor } from '../components/TextEditor/TextEditor';
 
 export function CreatePostPage() {
   const [title, setTitle] = useState('');
