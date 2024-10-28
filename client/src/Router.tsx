@@ -15,6 +15,9 @@ import { LoginPage } from './pages/Login.page';
 import { PostPage } from './pages/Post.page';
 import { SignUpPage } from './pages/SignUp.page';
 import { ThreadView } from './pages/ThreadView';
+import { ForgotPasswordPage } from './pages/ForgotPassword.page';
+import { ResetPasswordPage } from './pages/ResetPassword.page';
+import { DiscussionForumPage } from './pages/DiscussionForum.page';
 
 const router = createHashRouter([
   {
@@ -82,6 +85,18 @@ const router = createHashRouter([
   {
     path: '/funding-opportunities/create',
     element: <CreateFunding />,
+  },
+  {
+    path: `/forgot-password`,
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: `/reset-password`,
+    element: <ResetPasswordPage />,
+  },
+  {
+    path: `/discussion`,
+    element: <DiscussionForumPage />,
   },
 ]);
 

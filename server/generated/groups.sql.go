@@ -38,7 +38,7 @@ func (q *Queries) GetGroupByID(ctx context.Context, id int32) (GetGroupByIDRow, 
 	return i, err
 }
 
-const insertGroup = `-- name: InsertGroup :exec
+const insertGroup = `-- name: InsertGroup :one
 INSERT INTO groups (name, description, created_at, created_by)
 VALUES ($1, $2, CURRENT_TIMESTAMP, $3)
 RETURNING id
@@ -50,9 +50,11 @@ type InsertGroupParams struct {
 	CreatedBy   int32
 }
 
-func (q *Queries) InsertGroup(ctx context.Context, arg InsertGroupParams) error {
-	_, err := q.db.Exec(ctx, insertGroup, arg.Name, arg.Description, arg.CreatedBy)
-	return err
+func (q *Queries) InsertGroup(ctx context.Context, arg InsertGroupParams) (int32, error) {
+	row := q.db.QueryRow(ctx, insertGroup, arg.Name, arg.Description, arg.CreatedBy)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
 }
 
 const insertGroupMember = `-- name: InsertGroupMember :exec

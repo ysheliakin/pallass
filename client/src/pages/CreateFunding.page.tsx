@@ -12,7 +12,7 @@ import {
   Title,
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
-import { createFundingOpportunity } from '@/api/funding';
+import { createFundingOpportunity } from '../api/funding';
 import { Layout, useStyles } from '../components/layout';
 
 export function CreateFunding() {

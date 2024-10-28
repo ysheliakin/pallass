@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Title, TextInput, Textarea, Select, Text, Button, Paper, Group } from '@mantine/core';
 import { Layout, useStyles } from '../components/layout';
+import { useNavigate } from 'react-router-dom';
 
 export function CreateThread() {
   const styles = useStyles();
@@ -8,15 +9,51 @@ export function CreateThread() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<string | null>(null);
   const [newCategory, setNewCategory] = useState('');
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([
     { value: 'general', label: 'General' },
     { value: 'tech', label: 'Technology' },
     // Add more predefined categories as needed
   ]);
 
-  const handleCreateThread = () => {
+  const handleCreateThread =  async () => {
     console.log('Thread data:', { title, description, category });
     // Handle thread creation logic here
+    const threadData = {
+      Firstname: "Guest",
+      Lastname: "Guest",
+      Title: title,
+      Content: description,
+      Category: category,
+    };
+  
+    try {
+      // Send a POST request to the backend
+      const response = await fetch('http://localhost:5000/postThread', {
+        method: 'POST', // Specify the request method
+        headers: {
+          'Content-Type': 'application/json', // Specify content type as JSON
+        },
+        body: JSON.stringify(threadData), // Convert thread data to JSON
+      });
+  
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      // Get the response data
+      const data = await response.json();
+      console.log('Response from server:', data);
+      navigate(`/thread/${data.threadID}`);
+      // navigate(`/funding-opportunities`);
+
+
+
+    } catch (error) {
+      console.error('Error creating thread:', error);
+      alert('Failed to create thread. Please try again.');
+    }
   };
 
   const handleAddCategory = () => {

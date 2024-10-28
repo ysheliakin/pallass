@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
-import { Container, Title, TextInput, PasswordInput, Button, Paper, Group, Text, Box } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Container,
+  Group,
+  Paper,
+  PasswordInput,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
+import { register } from '@/api/user';
 import { Layout, useStyles } from '../components/layout';
 
 export function SignUpPage() {
@@ -11,15 +22,32 @@ export function SignUpPage() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [institution, setInstitution] = useState('');
+  const [organization, setOrganization] = useState('');
   const [fieldOfStudy, setFieldOfStudy] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [socialLinks, setSocialLinks] = useState(['']);
+  const [error, setError] = useState('');
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     // Here you would handle the sign-up logic
-    console.log('Sign up data:', { firstName, lastName, email, password, institution, fieldOfStudy, jobTitle, socialLinks });
-    navigate('/dashboard');
+    const response = await register(
+      firstName,
+      lastName,
+      email,
+      password,
+      organization,
+      fieldOfStudy,
+      jobTitle,
+      socialLinks
+    );
+
+    // Log the user in if it worked well, otherwise error
+    if (response.ok) {
+      navigate('/dashboard');
+    } else {
+      const errorData = await response.json();
+      setError(errorData.message);
+    }
   };
 
   const addSocialLink = () => {
@@ -35,9 +63,20 @@ export function SignUpPage() {
   return (
     <Layout>
       <Container size="sm" mt={30}>
-        <Title order={2} ta="center" mt="xl" style={styles.title}>Sign up for free</Title>
-        
-        <Paper withBorder shadow="md" p={30} mt={30} radius="md" style={{ backgroundColor: "#fff" }}>
+        <Title order={2} ta="center" mt="xl" style={styles.title}>
+          Sign up for free
+        </Title>
+
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+
+        <Paper
+          withBorder
+          shadow="md"
+          p={30}
+          mt={30}
+          radius="md"
+          style={{ backgroundColor: '#fff' }}
+        >
           <Group grow mb="md">
             <TextInput
               label="First name"
@@ -78,8 +117,8 @@ export function SignUpPage() {
             label="Institution/organization you work at"
             placeholder='Institution name (or "Independent")'
             mt="md"
-            value={institution}
-            onChange={(event) => setInstitution(event.currentTarget.value)}
+            value={organization}
+            onChange={(event) => setOrganization(event.currentTarget.value)}
             styles={{ input: styles.input }}
           />
           <TextInput
@@ -101,7 +140,9 @@ export function SignUpPage() {
           />
 
           <Box mt="md">
-            <Text size="sm" style={{ marginBottom: 5 }}>Social media accounts</Text>
+            <Text size="sm" style={{ marginBottom: 5 }}>
+              Social media accounts
+            </Text>
             {socialLinks.map((link, index) => (
               <TextInput
                 key={index}
@@ -112,7 +153,13 @@ export function SignUpPage() {
                 mt={5}
               />
             ))}
-            <Button onClick={addSocialLink} variant="outline" size="xs" mt={5} style={styles.secondaryButton}>
+            <Button
+              onClick={addSocialLink}
+              variant="outline"
+              size="xs"
+              mt={5}
+              style={styles.secondaryButton}
+            >
               + Add link
             </Button>
           </Box>

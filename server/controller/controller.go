@@ -32,6 +32,12 @@ type Comment struct {
 	Content   string `json:"content"`
 }
 
+type Group struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	CreatedBy   int32  `json:"created_by"`
+}
+
 func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries, dbContext context.Context) {
 	e = echoInstance
 	sql = queriesInstance
@@ -92,15 +98,46 @@ func ThreadController(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "Error creating thread")
 	}
 
-	link := "http://localhost:5000/threads/" + fmt.Sprint(threadID)
+	// link := "http://localhost:5000/threads/" + fmt.Sprint(threadID)
 
-	return c.JSON(http.StatusOK, map[string]string{
-		"link": link,
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"threadID": threadID,
 	})
 }
 
 func CreateGroup(c echo.Context) error {
-	return c.JSON(http.StatusOK, "Thread created")
+	var group Group
+
+	err := c.Bind(&group)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid inputs")
+	}
+
+	var descriptionParam pgtype.Text
+	if group.Description != "" {
+		descriptionParam = pgtype.Text{String: group.Description, Valid: true}
+	} else {
+		descriptionParam = pgtype.Text{Valid: false}
+	}
+
+	groupParams := queries.InsertGroupParams{
+		Name:        group.Name,
+		Description: descriptionParam,
+		CreatedBy:   group.CreatedBy,
+	}
+
+	groupID, err := sql.InsertGroup(context.Background(), groupParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Error creating group")
+	}
+
+	// Construct a link to the newly created group
+	id := fmt.Sprint(groupID)
+
+	// Return the link to the client
+	return c.JSON(http.StatusOK, map[string]string{
+		"id": id,
+	})
 }
 
 // CommentController handles comment-related actions
@@ -185,10 +222,6 @@ func GetCommentController(c echo.Context) error {
 
 	// Return the retrieved comments as a JSON response
 	return c.JSON(http.StatusOK, comments)
-}
-
-func GetUserController(c echo.Context) error {
-	return c.JSON(http.StatusOK, "Flag added")
 }
 
 // UpdateUserController handles user updates
