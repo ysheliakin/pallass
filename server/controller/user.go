@@ -65,7 +65,7 @@ func RegisterUser(c echo.Context) error {
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Fatal("Error hashing password")
+		log.Error("Error hashing password")
 		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to create your account. Please check your information and try again."})
 	}
 	user.Password = string(hashedPassword)
@@ -152,7 +152,8 @@ func LoginUser(c echo.Context) error {
 	// Sign the token
 	signedToken, err := token.SignedString(secretKey)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Invalid token"})
 	}
 
 	// Return the signed token via a JSON response
@@ -175,11 +176,10 @@ func Authenticate(next echo.HandlerFunc) echo.HandlerFunc {
 		token, err := jwt.ParseWithClaims(noBearerToken, claims, func(token *jwt.Token) (interface{}, error) {
 			return secretKey, nil
 		})
-		if err != nil {
-			log.Fatal(err)
-		}
-		if !token.Valid {
-			log.Fatal("Invalid token")
+		if err != nil || !token.Valid {
+			log.Error(err)
+			log.Error("Or the token is invalid")
+			return c.JSON(http.StatusUnauthorized, "Invalid token")
 		}
 
 		return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful authentication"})
