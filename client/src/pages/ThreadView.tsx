@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Title, Text, Paper, Button, Textarea, Group, Stack } from '@mantine/core';
 import { Layout, useStyles } from '../components/layout';
 import { useParams } from 'react-router-dom';
-import { IconVideo } from '@mantine/icons';
+import { IconVideo, IconMusic, IconPhoto } from '@tabler/icons-react'; // Import relevant icons
 
 interface User {
   id: string;
@@ -196,7 +196,7 @@ export function ThreadView() {
 
           <label htmlFor="audio-upload">
             <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-              <i className="fas fa-upload"></i> Upload Audio
+            <IconMusic size={20} /> Upload Audio
             </Button>
           </label>
 
@@ -210,7 +210,7 @@ export function ThreadView() {
 
           <label htmlFor="image-upload">
             <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-              <i className="fas fa-upload"></i> Upload Image
+            <IconPhoto size={20} /> Upload Image
             </Button>
           </label>
         </Paper>
