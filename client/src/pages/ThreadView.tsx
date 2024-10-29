@@ -32,7 +32,8 @@ interface Thread {
   Content: string, 
   Category: string, 
   Upvotes: number, 
-  Uuid: number
+  Uuid: number,
+  CreatedAt: string, 
 }
 
 const currentUser: User = {
@@ -138,7 +139,7 @@ export function ThreadView() {
   }
 
   // Access the title and content of the thread
-  const { Title, Content } = threadData;
+  const { Title, Content, Upvotes, CreatedAt } = threadData;
 
   console.log("Title: ", threadData.Title)
   console.log("Content: ", threadData.Content)
@@ -282,8 +283,31 @@ export function ThreadView() {
   return (
     <Layout>
       <Container size="lg" mt={30}>
-        <MantineTitle order={2} style={styles.title}>{Title}</MantineTitle>
-        <Text mb="xl">{Content}</Text>
+      <Paper p="md" shadow="sm" radius="md" withBorder>
+        <MantineTitle order={2} style={styles.title} mb="xs">
+          {Title}
+        </MantineTitle>
+        
+        <Group justify="space-between" align="center">
+          <Text size="sm" color="dimmed">
+            Created on: <strong>{new Date(CreatedAt).toLocaleDateString()}</strong>
+          </Text>
+          <Text size="sm" color="dimmed">
+            Upvotes: <strong>{Upvotes}</strong>
+          </Text>
+        </Group>
+
+        <Text mb="lg" size="md" style={{ lineHeight: 1.6 }}>
+          {Content}
+        </Text>
+
+        {/* Call to Action or Stats */}
+        <Group align="right">
+          <Button variant="outline" color="blue" onClick={() => alert("Upvote feature in development!")}>
+            👍 Upvote
+          </Button>
+        </Group>
+      </Paper>
 
         <Stack gap="md">
           {messages.map((msg, index) => (
