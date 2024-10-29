@@ -53,7 +53,7 @@ export function ThreadView() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [threadData, setThreadData] = useState<Thread | null>(null);
 
-  const senderEmail = localStorage.getItem('email');
+  const email = localStorage.getItem('email');
   const ws = useRef<WebSocket | null>(null);
   const threadID = localStorage.getItem("threadID");
 
@@ -82,8 +82,8 @@ export function ThreadView() {
       fetchThreadData();
 
       // Websocket connection
-      console.log("senderEmail: ", senderEmail)
-      ws.current = new WebSocket(`ws://localhost:5000/ws/${senderEmail}`)
+      console.log("email: ", email)
+      ws.current = new WebSocket(`ws://localhost:5000/ws/${email}`)
 
       ws.current.onopen = () => {
           console.log("Websocket connected");
@@ -101,10 +101,28 @@ export function ThreadView() {
       return () => {
           ws.current?.close();
       };
-  }, [senderEmail, threadID])
+  }, [email, threadID])
 
-  const sendMessage = () => {
-      const message = { sender: senderEmail, content: newMessage };
+  const sendMessage = async () => {
+      console.log("sendMessage()")
+      console.log("email: ", email)
+
+      const response = await fetch('http://localhost:5000/getName', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      // Check if the response is ok
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const userData = await response.json();
+      const name = "" + userData.Firstname + " " + userData.Lastname
+      const message = { sender: name, content: newMessage };
       
       if (ws.current) {
           ws.current.send(JSON.stringify(message));

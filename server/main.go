@@ -162,6 +162,7 @@ func main() {
 	})
 	e.POST("/user", controller.UserController)
 	e.POST("/funding", controller.AddFundingOpportunity)
+	e.POST("/getName", controller.GetName)
 
 	// Put Handlers
 	e.PUT("/user", func(c echo.Context) error {

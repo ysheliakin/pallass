@@ -39,14 +39,30 @@ type Group struct {
 	CreatedBy   int32  `json:"created_by"`
 }
 
-func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries, dbContext context.Context) {
-	e = echoInstance
-	sql = queriesInstance
-	dbc = dbContext
+type RegisterResponse struct {
+	Message string `json:"message"`
 }
 
 type ErrorPayload struct {
 	Error string `json:"error"`
+}
+
+type User struct {
+    Firstname string `json:"firstname"`
+    Lastname string `json:"lastname"`
+    Email string `json:"email"`
+    Password string `json:"password"`
+    Organization string `json:"organization"`
+    Fieldofstudy string `json:"fieldofstudy"`
+    Jobtitle string `json:"jobtitle"`
+	SocialLinks []string `json:"sociallinks"`
+	TempCode string `json:"tempcode"`
+}
+
+func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries, dbContext context.Context) {
+	e = echoInstance
+	sql = queriesInstance
+	dbc = dbContext
 }
 
 // HelloController handles the root endpoint
@@ -299,4 +315,25 @@ func GetFundingOpportunities(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, results)
+}
+
+func GetName(c echo.Context) error {
+	var user User
+
+    // Decode the incoming JSON request body
+    err := c.Bind(&user); 
+
+	fmt.Println("email: ", user.Email)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Invalid input. Please enter a valid input."})
+    }
+
+	// Retrieve the user's information
+	userData, err := sql.GetUserByEmail(context.Background(), user.Email)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, userData)
 }
