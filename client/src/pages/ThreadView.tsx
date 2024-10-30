@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Title as MantineTitle, Text, Paper, Button, Textarea, Group, Stack, Box } from '@mantine/core';
+import { Container, Title as MantineTitle, Text, Paper, Button, Textarea, Group, Box, Card } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { useParams } from 'react-router-dom';
 
@@ -53,10 +53,12 @@ export function ThreadView() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [threadData, setThreadData] = useState<Thread | null>(null);
+  const [theName, SetTheName] = useState('');
 
   const email = localStorage.getItem('email');
   const ws = useRef<WebSocket | null>(null);
   const threadID = localStorage.getItem("threadID");
+  var getName = ""
 
   useEffect(() => {
       console.log("threadID: ", threadID)
@@ -122,8 +124,15 @@ export function ThreadView() {
       }
 
       const userData = await response.json();
-      const name = "" + userData.Firstname + " " + userData.Lastname
-      const message = { sender: name, content: newMessage };
+      getName = "" + userData.Firstname + " " + userData.Lastname
+      const message = { sender: getName, content: newMessage };
+
+      localStorage.setItem("localName", getName)
+      const name = localStorage.getItem("localName")
+
+      if (name != null) {
+        SetTheName(name)
+      }
       
       if (ws.current) {
           ws.current.send(JSON.stringify(message));
@@ -283,41 +292,96 @@ export function ThreadView() {
   return (
     <Layout>
       <Container size="lg" mt={30}>
-      <Paper p="md" shadow="sm" radius="md" withBorder>
-        <MantineTitle order={2} style={styles.title} mb="xs">
-          {Title}
-        </MantineTitle>
-        
-        <Group justify="space-between" align="center">
-          <Text size="sm" color="dimmed">
-            Created on: <strong>{new Date(CreatedAt).toLocaleDateString()}</strong>
+        <Paper p="md" shadow="sm" radius="md" withBorder>
+          <MantineTitle order={2} style={styles.title} mb="xs">
+            {Title}
+          </MantineTitle>
+          
+          <Group justify="space-between" align="center">
+            <Text size="sm" color="dimmed">
+              Created on: <strong>{new Date(CreatedAt).toLocaleDateString()}</strong>
+            </Text>
+            <Text size="sm" color="dimmed">
+              Upvotes: <strong>{Upvotes}</strong>
+            </Text>
+          </Group>
+
+          <Text mb="lg" size="md" style={{ lineHeight: 1.6 }}>
+            {Content}
           </Text>
-          <Text size="sm" color="dimmed">
-            Upvotes: <strong>{Upvotes}</strong>
-          </Text>
-        </Group>
 
-        <Text mb="lg" size="md" style={{ lineHeight: 1.6 }}>
-          {Content}
-        </Text>
+          {/* Call to Action or Stats */}
+          <Group align="right">
+            <Button variant="outline" color="blue" onClick={() => alert("Upvote feature in development!")}>
+              👍 Upvote
+            </Button>
+          </Group>
+        </Paper>
 
-        {/* Call to Action or Stats */}
-        <Group align="right">
-          <Button variant="outline" color="blue" onClick={() => alert("Upvote feature in development!")}>
-            👍 Upvote
-          </Button>
-        </Group>
-      </Paper>
-
-        <Stack gap="md">
+        {/* User messages */}
+        <div style={{ paddingBottom: '130px' }}>
           {messages.map((msg, index) => (
-            <div key={index}>
-                <strong>{msg.sender}:</strong> {msg.content}
-            </div>
-          ))}
-        </Stack>
+            <Card shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
+              <Group>
+                <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                  <div key={index}>
+                    <Text fw={700}>{msg.sender}</Text>
+                    <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{msg.content}</Text>
 
-        <Paper mt="xl" p="md" withBorder>
+                    {msg.sender == theName ? (
+                      <Group>
+                        <Button 
+                          onClick={() => handleEditMessage(msg.id, msg.content)}
+                          variant="subtle" 
+                          color="blue" 
+                          size="sm"
+                          mt="sm"
+                        >
+                          Edit
+                        </Button>
+
+                        <Button 
+                          onClick={() => handleReply(msg.id)}
+                          variant="subtle" 
+                          color="grape" 
+                          size="sm"
+                          mt="sm"
+                        >
+                          Reply
+                        </Button>
+                      </Group>
+                    ) : (
+                      <Button 
+                        onClick={() => handleReply(msg.id)}
+                        variant="subtle" 
+                        color="grape" 
+                        size="sm"
+                        mt="sm"
+                      >
+                        Reply
+                      </Button>
+                    )}
+                  </div>
+                </Box>                    
+              </Group>
+            </Card>
+          ))}
+        </div>
+
+        {/* User input for posting */}
+        <Paper
+          shadow="sm" 
+          radius="md"
+          mt="xl"
+          p="md"
+          withBorder
+
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            width: '1108px',
+          }}
+        >
           <Textarea
             placeholder="Your message"
             value={newMessage}
@@ -325,7 +389,7 @@ export function ThreadView() {
             minRows={3}
             mb="sm"
           />
-          <Button onClick={sendMessage}>Post Message</Button>
+          <Button style={{ marginBottom: '10px' }} onClick={sendMessage}>Post Message</Button>
           <input
             type="file"
             accept="video/*"
