@@ -125,3 +125,25 @@ func (q *Queries) InsertThread(ctx context.Context, arg InsertThreadParams) (Ins
 	err := row.Scan(&i.ID, &i.Uuid)
 	return i, err
 }
+
+const storeThreadMessage = `-- name: StoreThreadMessage :exec
+INSERT INTO comments (firstname, lastname, thread_id, content)
+VALUES ($1, $2, $3, $4)
+`
+
+type StoreThreadMessageParams struct {
+	Firstname string
+	Lastname  string
+	ThreadID  int32
+	Content   string
+}
+
+func (q *Queries) StoreThreadMessage(ctx context.Context, arg StoreThreadMessageParams) error {
+	_, err := q.db.Exec(ctx, storeThreadMessage,
+		arg.Firstname,
+		arg.Lastname,
+		arg.ThreadID,
+		arg.Content,
+	)
+	return err
+}

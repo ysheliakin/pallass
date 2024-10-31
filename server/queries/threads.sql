@@ -12,3 +12,7 @@ WHERE id = $1;
 SELECT id, firstname, lastname, title, content, category, upvotes, uuid, created_at
 FROM threads
 ORDER BY created_at DESC;
+
+-- name: StoreThreadMessage :exec
+INSERT INTO comments (firstname, lastname, thread_id, content)
+VALUES ($1, $2, $3, $4);

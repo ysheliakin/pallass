@@ -17,7 +17,6 @@ import { SignUpPage } from './pages/SignUp.page';
 import { ThreadView } from './pages/ThreadView';
 import { ForgotPasswordPage } from './pages/ForgotPassword.page';
 import { ResetPasswordPage } from './pages/ResetPassword.page';
-import { ThreadPage } from './pages/Thread.page';
 
 const router = createHashRouter([
   {
@@ -93,10 +92,6 @@ const router = createHashRouter([
   {
     path: `/reset-password`,
     element: <ResetPasswordPage />,
-  },
-  {
-    path: `/thread`,
-    element: <ThreadPage />,
   },
 ]);
 

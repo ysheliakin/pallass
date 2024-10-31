@@ -59,6 +59,13 @@ type User struct {
 	TempCode string `json:"tempcode"`
 }
 
+type ThreadMessage struct {
+	Firstname string `json:"firstname"`
+    Lastname string `json:"lastname"`
+	ThreadID string `json:"threadid"`
+	Content string `json:"content"`
+}
+
 func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries, dbContext context.Context) {
 	e = echoInstance
 	sql = queriesInstance
@@ -336,4 +343,43 @@ func GetName(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, userData)
+}
+
+func StoreThreadMessage(c echo.Context) error {
+	var threadMessage ThreadMessage
+
+	fmt.Println("StoreThreadMessage()")
+
+	// Decode the incoming JSON request body
+    err := c.Bind(&threadMessage); 
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+    }
+
+	fmt.Println("firstname: ", threadMessage.Firstname)
+	fmt.Println("firstname: ", threadMessage.Lastname)
+	fmt.Println("firstname: ", threadMessage.ThreadID)
+	fmt.Println("firstname: ", threadMessage.Content)
+
+	threadId, err := strconv.Atoi(threadMessage.ThreadID)
+	    if err != nil {
+        e.Logger.Error(err)
+        return c.String(http.StatusBadRequest, "Invalid ID format")
+    }
+
+	threadMessageParams := queries.StoreThreadMessageParams{
+		Firstname: threadMessage.Firstname,
+		Lastname:  threadMessage.Lastname,
+		ThreadID:  int32(threadId),
+		Content:   threadMessage.Content,
+	}
+
+	// Store the thread message
+	err = sql.StoreThreadMessage(context.Background(), threadMessageParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Thead message successfully stored"})
 }

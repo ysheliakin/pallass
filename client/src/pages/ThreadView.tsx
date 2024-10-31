@@ -110,7 +110,7 @@ export function ThreadView() {
       console.log("sendMessage()")
       console.log("email: ", email)
 
-      const response = await fetch('http://localhost:5000/getName', {
+      const userName = await fetch('http://localhost:5000/getName', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,12 +119,14 @@ export function ThreadView() {
       });
 
       // Check if the response is ok
-      if (!response.ok) {
+      if (!userName.ok) {
         throw new Error('Network response was not ok');
       }
 
-      const userData = await response.json();
-      getName = "" + userData.Firstname + " " + userData.Lastname
+      const userData = await userName.json();
+      const firstname = userData.Firstname
+      const lastname = userData.Lastname
+      getName = "" + firstname + " " + lastname
       const message = { sender: getName, content: newMessage };
 
       localStorage.setItem("localName", getName)
@@ -139,6 +141,26 @@ export function ThreadView() {
           setNewMessage('');
       } else {
           console.error("The WebSocket is uninitialized.");
+      }
+
+      const threadid = threadID
+      const content = newMessage
+
+      console.log("firstname: ", firstname)
+      console.log("lastname: ", lastname)
+      console.log("threadid: ", threadid)
+      console.log("content: ", content)
+
+      const storeThreadMessage = await fetch('http://localhost:5000/storeThreadMessage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ firstname, lastname, threadid, content }),
+      });
+
+      if (!storeThreadMessage.ok) {
+        throw new Error('Network response was not ok');
       }
   };
 
