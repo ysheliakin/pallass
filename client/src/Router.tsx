@@ -14,7 +14,11 @@ import { PostPage } from './pages/Post.page';
 import { SignUpPage } from './pages/SignUp.page';
 import { ThreadView } from './pages/ThreadView';
 import { SettingsPage } from './pages/Settings.page';
-import { UserProfilePage } from './pages/UserProfile.page'; // Add this new import
+import { UserProfilePage } from './pages/UserProfile.page';
+// Add new imports for online session related pages
+import OnlineSession from './pages/OnlineSession.page';
+// import { CreateSession } from './pages/CreateSession.page';
+// import { JoinSession } from './pages/JoinSession.page';
 
 const router = createHashRouter([
   {
@@ -70,8 +74,13 @@ const router = createHashRouter([
         element: <SettingsPage />,
       },
       {
-        path: '/user-profile', // Add this new route
+        path: '/user-profile',
         element: <UserProfilePage />,
+      },
+      // Add new routes for online sessions
+      {
+        path: '/online-sessions',
+        element: <OnlineSession />,
       },
     ],
   },

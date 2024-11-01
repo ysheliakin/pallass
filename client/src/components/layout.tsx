@@ -151,6 +151,14 @@ export function Layout({ children }: LayoutProps) {
                 >
                   Groups
                 </Button>
+                <Button 
+  component={Link} 
+  to="/online-sessions" 
+  variant={isActive('/online-sessions') ? "filled" : "subtle"} 
+  style={styles.navButton}
+>
+  Online Sessions
+</Button>
               </Group>
               <Group>
                 <Button component={Link} to="/login" variant="outline" style={styles.secondaryButton}>Log in</Button>
