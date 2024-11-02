@@ -26,12 +26,6 @@ import (
 	"sync"
 )
 
-// TODO: Define the Comment struct
-type Comment struct {
-	Content string `json:"content"`
-	UserID  int    `json:"user_id"`
-}
-
 var e *echo.Echo
 var dbc context.Context
 var sql *queries.Queries
@@ -101,20 +95,15 @@ func main() {
 	// }))
 	e.Use(middleware.CORS()) // TODO: might want to make this stricter
 
-	e.GET("/", controller.HelloController)
-
-	e.GET("/threads/:id", controller.GetThreadController)
 	e.POST("/postThread", controller.ThreadController)
-	e.GET("/threads/:id/comments", controller.GetCommentController)
-	e.POST("/comment", controller.CommentController)
 	e.POST("/newgroup", controller.CreateGroup)
 
 	e.GET("/group/:id", controller.GetGroupController)
 
 	e.DELETE("/deleteThread", controller.DeleteThreadController)
 
-	e.PUT("/comment", controller.UpdateCommentController)
-	e.DELETE("/comment", controller.DeleteCommentController)
+	e.PUT("/message", controller.UpdateMessageController)
+	e.DELETE("/message", controller.DeleteMessageController)
 
 	e.POST("/flag", controller.FlagController)
 	e.POST("/upvote", controller.UpvoteController)
@@ -148,9 +137,6 @@ func main() {
 	e.POST("/request-reset", requestPasswordReset)
 	e.POST("/reset-password", resetPassword)
 	e.POST("/validate-code", validateResetCode)
-	e.POST("/comment", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Comment created")
-	})
 	e.POST("/flag", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Flag added")
 	})
@@ -162,8 +148,9 @@ func main() {
 	})
 	e.POST("/user", controller.UserController)
 	e.POST("/funding", controller.AddFundingOpportunity)
-	e.POST("/getName", controller.GetName)
+	e.POST("/getUserName", controller.GetUserName)
 	e.POST("/storeThreadMessage", controller.StoreThreadMessage)
+	e.POST("/threads/:id", controller.GetThreadController)
 
 	// Put Handlers
 	e.PUT("/user", func(c echo.Context) error {
@@ -172,17 +159,11 @@ func main() {
 	e.PUT("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post updated")
 	})
-	e.PUT("/comment", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Comment updated")
-	})
 	e.PUT("/user", controller.UpdateUserController)
 
 	// Delete Handlers
 	e.DELETE("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post deleted")
-	})
-	e.DELETE("/comment", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Comment deleted")
 	})
 
 	// Message handling
@@ -610,26 +591,26 @@ func handleMessages() {
 	}
 }
 
-// func addComment(c echo.Context) error {
+// func addMessage(c echo.Context) error {
 // 	postID := c.Param("id") // Change the route to expect post ID
-// 	var comment Comment
-// 	if err := c.Bind(&comment); err != nil {
+// 	var message Message
+// 	if err := c.Bind(&message); err != nil {
 // 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid input"})
 // 	}
 
-// 	// Insert comment into database
-// 	_, err := sql.CreateComment(context.Background(), comment.Content, postID, comment.UserID) // Use your query function
+// 	// Insert message into database
+// 	_, err := sql.CreateMessage(context.Background(), message.Content, postID, message.UserID) // Use your query function
 // 	if err != nil {
-// 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "could not add comment"})
+// 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "could not add message"})
 // 	}
 
 // 	// Notify users (for simplicity, notify all users)
-// 	_, err = sql.CreateNotification(context.Background(), comment.UserID, comment.Content+" was added to a post!", postID) // Use your query function
+// 	_, err = sql.CreateNotification(context.Background(), message.UserID, message.Content+" was added to a post!", postID) // Use your query function
 // 	if err != nil {
 // 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "could not send notifications"})
 // 	}
 
-// 	return c.JSON(http.StatusCreated, comment)
+// 	return c.JSON(http.StatusCreated, message)
 // }
 
 // func getNotifications(c echo.Context) error {

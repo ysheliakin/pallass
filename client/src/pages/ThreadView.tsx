@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Container, Title as MantineTitle, Text, Paper, Button, Textarea, Group, Box, Card } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
-import { useParams } from 'react-router-dom';
 
 interface User {
   id: string;
@@ -25,15 +24,21 @@ interface Message {
 }
 
 interface Thread {
-  ID: number, 
-  Firstname: string, 
-  Lastname: string, 
-  Title: string, 
-  Content: string, 
-  Category: string, 
-  Upvotes: number, 
-  Uuid: number,
-  CreatedAt: string, 
+  ThreadID: string,
+  ThreadFirstname: string,
+  ThreadLastname: string,
+  ThreadTitle: string,
+  ThreadContent: string,
+  ThreadCategory: string,
+  ThreadUpvotes: string,
+  ThreadUuid: string,
+  ThreadCreatedAt: string,
+  MessageID: string,
+  MessageFirstname: string,
+  MessageLastname: string,
+  MessageContent: string,
+  MessageCreatedAt: string,
+  UserFullname: string
 }
 
 const currentUser: User = {
@@ -52,36 +57,37 @@ export function ThreadView() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [threadData, setThreadData] = useState<Thread | null>(null);
-  const [theName, SetTheName] = useState('');
+  const [threadData, setThreadData] = useState<Thread[] | null>(null);
+  const [userName, SetUserName] = useState('');
 
   const email = localStorage.getItem('email');
   const ws = useRef<WebSocket | null>(null);
   const threadID = localStorage.getItem("threadID");
-  var getName = ""
+  var getUserName = "";
 
   useEffect(() => {
       console.log("threadID: ", threadID)
 
       const fetchThreadData = async () => {
-          const response = await fetch(`http://localhost:5000/threads/${threadID}`, {
-              method: 'GET',
-              headers: {
-                  'Content-Type': 'application/json',
-              }
-          });
-      
-          // Check if the response is ok (status code 200-299)
-          if (!response.ok) {
-              throw new Error('Network response was not ok');
-          }
+        const response = await fetch(`http://localhost:5000/threads/${threadID}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+        });
+    
+        // Check if the response is ok (status code 200-299)
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
 
-          const data: Thread = await response.json();
-          console.log("data: ", data)
-          setThreadData(data);
-          console.log("threadData: ", threadData)
+        const data = await response.json();
+        console.log("data: ", data)
+        setThreadData(data);
+        console.log("threadData: ", threadData)
       }
-
+       
       fetchThreadData();
 
       // Websocket connection
@@ -104,13 +110,13 @@ export function ThreadView() {
       return () => {
           ws.current?.close();
       };
-  }, [email, threadID])
+  }, [email, threadID]);
 
   const sendMessage = async () => {
       console.log("sendMessage()")
       console.log("email: ", email)
 
-      const userName = await fetch('http://localhost:5000/getName', {
+      const userName = await fetch('http://localhost:5000/getUserName', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -126,14 +132,14 @@ export function ThreadView() {
       const userData = await userName.json();
       const firstname = userData.Firstname
       const lastname = userData.Lastname
-      getName = "" + firstname + " " + lastname
-      const message = { sender: getName, content: newMessage };
+      getUserName = "" + firstname + " " + lastname
+      const message = { sender: getUserName, content: newMessage };
 
-      localStorage.setItem("localName", getName)
+      localStorage.setItem("localName", getUserName)
       const name = localStorage.getItem("localName")
 
       if (name != null) {
-        SetTheName(name)
+        SetUserName(name)
       }
       
       if (ws.current) {
@@ -169,11 +175,11 @@ export function ThreadView() {
     return <div>Loading...</div>;
   }
 
-  // Access the title and content of the thread
-  const { Title, Content, Upvotes, CreatedAt } = threadData;
-
-  console.log("Title: ", threadData.Title)
-  console.log("Content: ", threadData.Content)
+  console.log("threadData (2): ", threadData)
+  console.log("Message Content: ", threadData[0])
+  console.log("Message Content: ", threadData[0].MessageLastname)
+  console.log("Message Content: ", threadData[0].MessageContent)
+  console.log("User fullname: ", threadData[0].UserFullname)
 
   const handleEditMessage = (messageId: string, content: string) => {
     setEditingMessageId(messageId);
@@ -316,20 +322,20 @@ export function ThreadView() {
       <Container size="lg" mt={30}>
         <Paper p="md" shadow="sm" radius="md" withBorder>
           <MantineTitle order={2} style={styles.title} mb="xs">
-            {Title}
+            {threadData[0].ThreadTitle}
           </MantineTitle>
           
           <Group justify="space-between" align="center">
             <Text size="sm" color="dimmed">
-              Created on: <strong>{new Date(CreatedAt).toLocaleDateString()}</strong>
+              Created on: <strong>{new Date(threadData[0].ThreadCreatedAt).toLocaleDateString()}</strong>
             </Text>
             <Text size="sm" color="dimmed">
-              Upvotes: <strong>{Upvotes}</strong>
+              Upvotes: <strong>{threadData[0].ThreadUpvotes}</strong>
             </Text>
           </Group>
 
           <Text mb="lg" size="md" style={{ lineHeight: 1.6 }}>
-            {Content}
+            {threadData[0].ThreadContent}
           </Text>
 
           {/* Call to Action or Stats */}
@@ -340,8 +346,59 @@ export function ThreadView() {
           </Group>
         </Paper>
 
-        {/* User messages */}
+        {/* Messages */}
         <div style={{ paddingBottom: '130px' }}>
+          {threadData && threadData.length > 0 ? (
+            threadData.map((threadMessage, index) => (
+              <Card shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
+              <Group>
+                <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                  <div key={index}>
+                    <Text><span style={{ fontWeight: 700 }}>{threadMessage.MessageFirstname} {threadMessage.MessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(threadMessage.MessageCreatedAt).toLocaleDateString()} {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
+                    <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{threadMessage.MessageContent}</Text>
+
+                    {threadMessage.MessageFirstname + " " + threadMessage.MessageLastname == threadData[0].UserFullname ? (
+                      <Group>
+                        <Button 
+                          onClick={() => handleEditMessage(threadMessage.MessageID, threadMessage.MessageContent)}
+                          variant="subtle" 
+                          color="blue" 
+                          size="sm"
+                          mt="sm"
+                        >
+                          Edit
+                        </Button>
+
+                        <Button 
+                          onClick={() => handleReply(threadMessage.MessageID)}
+                          variant="subtle" 
+                          color="grape" 
+                          size="sm"
+                          mt="sm"
+                        >
+                          Reply
+                        </Button>
+                      </Group>
+                    ) : (
+                      <Button 
+                        onClick={() => handleReply(threadMessage.MessageID)}
+                        variant="subtle" 
+                        color="grape" 
+                        size="sm"
+                        mt="sm"
+                      >
+                        Reply
+                      </Button>
+                    )}
+                  </div>
+                </Box>                    
+              </Group>
+              </Card>
+            ))
+          ) : (
+            <p>Hello</p>
+          )}
+
           {messages.map((msg, index) => (
             <Card shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
               <Group>
@@ -350,7 +407,7 @@ export function ThreadView() {
                     <Text fw={700}>{msg.sender}</Text>
                     <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{msg.content}</Text>
 
-                    {msg.sender == theName ? (
+                    {msg.sender == userName ? (
                       <Group>
                         <Button 
                           onClick={() => handleEditMessage(msg.id, msg.content)}

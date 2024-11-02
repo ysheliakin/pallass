@@ -8,7 +8,6 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
-	//"github.com/google/uuid"
 
 	queries "sih/pallass/generated"
 )
@@ -26,10 +25,10 @@ type Thread struct {
 	Upvotes   int    `json:"upvotes"` // defaults to 0
 }
 
-type Comment struct {
+type Message struct {
 	Firstname string `json:"firstname"`
 	Lastname  string `json:"lastname"`
-	ThreadID  int32  `json:"thread_id"` // Ensure this matches your JSON request
+	ThreadID  int32  `json:"thread_id"`
 	Content   string `json:"content"`
 }
 
@@ -70,21 +69,6 @@ func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries,
 	e = echoInstance
 	sql = queriesInstance
 	dbc = dbContext
-}
-
-// HelloController handles the root endpoint
-func HelloController(c echo.Context) error {
-	str := "Hello world: "
-	sampleValues, err := sql.GetSample(dbc) // Sample query with code generated with sqlc
-	if err != nil {
-		e.Logger.Error(err)
-		return c.String(http.StatusInternalServerError, "Error happened :(")
-	}
-	e.Logger.Infof("retrieved %d rows", len(sampleValues))
-	for _, x := range sampleValues {
-		str = str + strconv.FormatInt(int64(x.Int32), 10) + " "
-	}
-	return c.String(http.StatusOK, str)
 }
 
 // UserController handles user-related actions
@@ -166,30 +150,6 @@ func CreateGroup(c echo.Context) error {
 	})
 }
 
-// CommentController handles comment-related actions
-func CommentController(c echo.Context) error {
-	var comment Comment
-
-	err := c.Bind(&comment)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid inputs")
-	}
-
-	commentParams := queries.InsertCommentParams{
-		Firstname: comment.Firstname,
-		Lastname:  comment.Lastname,
-		ThreadID:  comment.ThreadID,
-		Content:   comment.Content,
-	}
-
-	err = sql.InsertComment(context.Background(), commentParams)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "Error creating comment")
-	}
-
-	return c.JSON(http.StatusOK, "Comment created")
-}
-
 // FlagController handles flag-related actions
 func FlagController(c echo.Context) error {
 	return c.String(http.StatusOK, "Flag added")
@@ -227,6 +187,16 @@ func GetThreadsController(c echo.Context) error {
 func GetThreadController(c echo.Context) error {
 	fmt.Println("GetThreadController")
 
+	var user User
+
+    // Decode the incoming JSON request body
+    err := c.Bind(&user); 
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Invalid input. Please enter a valid input."})
+    }
+
+	fmt.Println("email: ", user.Email)
+
 	threadIDStr := c.Param("id")
 	threadID, err := strconv.ParseInt(threadIDStr, 10, 32)
 	if err != nil {
@@ -234,8 +204,14 @@ func GetThreadController(c echo.Context) error {
 	}
 	threadIDInt32 := int32(threadID)
 
+	threadParams := queries.GetThreadAndMessagesByThreadIDAndFullnameByUserEmailParams{
+		ID: threadIDInt32,
+		Email:    user.Email,
+	}
+
 	// Query the database
-	thread, err := sql.GetThreadByID(context.Background(), threadIDInt32) // Pass as int32
+	thread, err := sql.GetThreadAndMessagesByThreadIDAndFullnameByUserEmail(context.Background(), threadParams) // Pass as int32
+	fmt.Println("thread: ", thread)
 	if err != nil {
 		if err.Error() == "no rows in result set" {
 			return c.JSON(http.StatusNotFound, "Thread not found")
@@ -243,27 +219,6 @@ func GetThreadController(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "Error retrieving thread")
 	}
 	return c.JSON(http.StatusOK, thread)
-}
-
-func GetCommentController(c echo.Context) error {
-	threadID := c.Param("id")
-
-	// Convert threadID to int (assuming it's an integer type)
-	id, err := strconv.Atoi(threadID)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid thread ID")
-	}
-
-	comments, err := sql.GetCommentsByThreadID(context.Background(), int32(id)) // Pass as int32
-	if err != nil {
-		if err.Error() == "no rows in result set" {
-			return c.JSON(http.StatusNotFound, "No comments found for this thread")
-		}
-		return c.JSON(http.StatusInternalServerError, "Error retrieving comments")
-	}
-
-	// Return the retrieved comments as a JSON response
-	return c.JSON(http.StatusOK, comments)
 }
 
 func GetUserController(c echo.Context) error {
@@ -280,9 +235,9 @@ func GetGroupController(c echo.Context) error {
 	return c.String(http.StatusOK, "Thread updated")
 }
 
-// UpdateCommentController handles comment updates
-func UpdateCommentController(c echo.Context) error {
-	return c.String(http.StatusOK, "Comment updated")
+// UpdateMessageController handles message updates
+func UpdateMessageController(c echo.Context) error {
+	return c.String(http.StatusOK, "Message updated")
 }
 
 // DeletePostController handles post deletion
@@ -290,9 +245,9 @@ func DeleteThreadController(c echo.Context) error {
 	return c.String(http.StatusOK, "Thread deleted")
 }
 
-// DeleteCommentController handles comment deletion
-func DeleteCommentController(c echo.Context) error {
-	return c.String(http.StatusOK, "Comment deleted")
+// DeleteMessageController handles message deletion
+func DeleteMessageController(c echo.Context) error {
+	return c.String(http.StatusOK, "Message deleted")
 }
 
 func AddFundingOpportunity(c echo.Context) error {
@@ -324,7 +279,7 @@ func GetFundingOpportunities(c echo.Context) error {
 	return c.JSON(http.StatusOK, results)
 }
 
-func GetName(c echo.Context) error {
+func GetUserName(c echo.Context) error {
 	var user User
 
     // Decode the incoming JSON request body

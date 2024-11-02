@@ -8,15 +8,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Comment struct {
-	ID        int32
-	Firstname string
-	Lastname  string
-	ThreadID  int32
-	Content   string
-	CreatedAt pgtype.Timestamp
-}
-
 type FundingOpportunity struct {
 	ID           int32
 	Title        string
@@ -42,6 +33,15 @@ type GroupMember struct {
 	UserID   int32
 	Role     string
 	JoinedAt pgtype.Timestamp
+}
+
+type Message struct {
+	ID        int32
+	Firstname string
+	Lastname  string
+	ThreadID  int32
+	Content   string
+	CreatedAt pgtype.Timestamp
 }
 
 type SampleTable struct {
