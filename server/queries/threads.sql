@@ -8,6 +8,12 @@ SELECT id, firstname, lastname, title, content, category, upvotes, uuid, created
 FROM threads
 ORDER BY created_at DESC;
 
+-- name: UpvoteThread :one
+UPDATE threads
+SET upvotes = upvotes + 1
+WHERE id = $1
+RETURNING upvotes;
+
 -- name: GetThreadAndMessagesByThreadIDAndFullnameByUserEmail :many
 SELECT 
     threads.id AS thread_id, 

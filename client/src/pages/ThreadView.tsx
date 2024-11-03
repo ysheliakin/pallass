@@ -186,6 +186,35 @@ export function ThreadView() {
     setEditedContent(content);
   };
 
+  const handleUpvote = async () => { 
+    try {
+      const response = await fetch(`http://localhost:5000/threads/upvote/${threadID}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to upvote');
+      }
+
+      const data = await response.json(); 
+  
+
+      setThreadData((prevData) => {
+        if (!prevData) return prevData;
+        const updatedThread = { ...prevData[0], ThreadUpvotes: data.upvotes.toString() }; 
+        return [updatedThread];
+      });
+    } catch (error) {
+      console.error('Error upvoting the thread:', error);
+    }
+  };
+
+  
+  
+
   const handleSaveEdit = (messageId: string) => {
     setMessages(messages.map(msg => 
       msg.id === messageId ? { ...msg, content: editedContent } : msg
@@ -340,7 +369,7 @@ export function ThreadView() {
 
           {/* Call to Action or Stats */}
           <Group align="right">
-            <Button variant="outline" color="blue" onClick={() => alert("Upvote feature in development!")}>
+            <Button variant="outline" color="blue" onClick={handleUpvote}>
               👍 Upvote
             </Button>
           </Group>

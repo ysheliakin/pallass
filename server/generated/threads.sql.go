@@ -176,3 +176,17 @@ func (q *Queries) InsertThread(ctx context.Context, arg InsertThreadParams) (Ins
 	err := row.Scan(&i.ID, &i.Uuid)
 	return i, err
 }
+
+const upvoteThread = `-- name: UpvoteThread :one
+UPDATE threads
+SET upvotes = upvotes + 1
+WHERE id = $1
+RETURNING upvotes
+`
+
+func (q *Queries) UpvoteThread(ctx context.Context, id int32) (pgtype.Int4, error) {
+	row := q.db.QueryRow(ctx, upvoteThread, id)
+	var upvotes pgtype.Int4
+	err := row.Scan(&upvotes)
+	return upvotes, err
+}

@@ -47,22 +47,22 @@ type ErrorPayload struct {
 }
 
 type User struct {
-    Firstname string `json:"firstname"`
-    Lastname string `json:"lastname"`
-    Email string `json:"email"`
-    Password string `json:"password"`
-    Organization string `json:"organization"`
-    Fieldofstudy string `json:"fieldofstudy"`
-    Jobtitle string `json:"jobtitle"`
-	SocialLinks []string `json:"sociallinks"`
-	TempCode string `json:"tempcode"`
+	Firstname    string   `json:"firstname"`
+	Lastname     string   `json:"lastname"`
+	Email        string   `json:"email"`
+	Password     string   `json:"password"`
+	Organization string   `json:"organization"`
+	Fieldofstudy string   `json:"fieldofstudy"`
+	Jobtitle     string   `json:"jobtitle"`
+	SocialLinks  []string `json:"sociallinks"`
+	TempCode     string   `json:"tempcode"`
 }
 
 type ThreadMessage struct {
 	Firstname string `json:"firstname"`
-    Lastname string `json:"lastname"`
-	ThreadID string `json:"threadid"`
-	Content string `json:"content"`
+	Lastname  string `json:"lastname"`
+	ThreadID  string `json:"threadid"`
+	Content   string `json:"content"`
 }
 
 func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries, dbContext context.Context) {
@@ -74,6 +74,21 @@ func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries,
 // UserController handles user-related actions
 func UserController(c echo.Context) error {
 	return c.String(http.StatusOK, "User created")
+}
+
+func UpvoteThread(c echo.Context) error {
+
+	threadID, err := strconv.Atoi(c.Param("threadID"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid thread ID")
+	}
+
+	upvotes, err := sql.UpvoteThread(context.Background(), int32(threadID))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
+	}
+
+	return c.JSON(http.StatusOK, map[string]int32{"upvotes": upvotes.Int32})
 }
 
 // ThreadController handles thread-related actions
@@ -110,7 +125,7 @@ func ThreadController(c echo.Context) error {
 	threadUUIDStr := fmt.Sprintf("%x-%x-%x-%x-%x", threadUUID.Uuid.Bytes[0:4], threadUUID.Uuid.Bytes[4:6], threadUUID.Uuid.Bytes[6:8], threadUUID.Uuid.Bytes[8:10], threadUUID.Uuid.Bytes[10:16])
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"id": threadIDStr,
+		"id":   threadIDStr,
 		"uuid": threadUUIDStr,
 	})
 }
@@ -189,11 +204,11 @@ func GetThreadController(c echo.Context) error {
 
 	var user User
 
-    // Decode the incoming JSON request body
-    err := c.Bind(&user); 
+	// Decode the incoming JSON request body
+	err := c.Bind(&user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Invalid input. Please enter a valid input."})
-    }
+	}
 
 	fmt.Println("email: ", user.Email)
 
@@ -205,8 +220,8 @@ func GetThreadController(c echo.Context) error {
 	threadIDInt32 := int32(threadID)
 
 	threadParams := queries.GetThreadAndMessagesByThreadIDAndFullnameByUserEmailParams{
-		ID: threadIDInt32,
-		Email:    user.Email,
+		ID:    threadIDInt32,
+		Email: user.Email,
 	}
 
 	// Query the database
@@ -282,14 +297,14 @@ func GetFundingOpportunities(c echo.Context) error {
 func GetUserName(c echo.Context) error {
 	var user User
 
-    // Decode the incoming JSON request body
-    err := c.Bind(&user); 
+	// Decode the incoming JSON request body
+	err := c.Bind(&user)
 
 	fmt.Println("email: ", user.Email)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Invalid input. Please enter a valid input."})
-    }
+	}
 
 	// Retrieve the user's information
 	userData, err := sql.GetUserByEmail(context.Background(), user.Email)
@@ -306,11 +321,11 @@ func StoreThreadMessage(c echo.Context) error {
 	fmt.Println("StoreThreadMessage()")
 
 	// Decode the incoming JSON request body
-    err := c.Bind(&threadMessage); 
+	err := c.Bind(&threadMessage)
 	if err != nil {
 		e.Logger.Error(err)
 		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
-    }
+	}
 
 	fmt.Println("firstname: ", threadMessage.Firstname)
 	fmt.Println("firstname: ", threadMessage.Lastname)
@@ -318,10 +333,10 @@ func StoreThreadMessage(c echo.Context) error {
 	fmt.Println("firstname: ", threadMessage.Content)
 
 	threadId, err := strconv.Atoi(threadMessage.ThreadID)
-	    if err != nil {
-        e.Logger.Error(err)
-        return c.String(http.StatusBadRequest, "Invalid ID format")
-    }
+	if err != nil {
+		e.Logger.Error(err)
+		return c.String(http.StatusBadRequest, "Invalid ID format")
+	}
 
 	threadMessageParams := queries.StoreThreadMessageParams{
 		Firstname: threadMessage.Firstname,
