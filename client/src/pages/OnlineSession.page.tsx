@@ -5,7 +5,7 @@ import { Layout } from '../components/layout';
 import { notifications } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 
-const SessionScheduler = () => {
+const OnlineSession = () => {
   const navigate = useNavigate();
   const [sessionType, setSessionType] = useState('meeting');
   const [title, setTitle] = useState('');
@@ -242,4 +242,4 @@ const SessionScheduler = () => {
   );
 };
 
-export default SessionScheduler;
+export default OnlineSession;

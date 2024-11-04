@@ -137,24 +137,24 @@ export function LoggedInHomePage() {
             </Box>
 
             <Box mb="xl">
-              <Title order={3} mb="md" style={styles.title}>Online Sessions</Title>
-              <Group>
-                <Button 
-                  component={Link} 
-                  to="/create-session" 
-                  style={styles.primaryButton}
-                >
-                  Create Online Session
-                </Button>
-                <Button 
-                  component={Link} 
-                  to="/join-session" 
-                  style={styles.primaryButton}
-                >
-                  Join Online Session
-                </Button>
-              </Group>
-            </Box>
+  <Title order={3} mb="md" style={styles.title}>Online Sessions</Title>
+  <Group>
+    <Button 
+      component={Link} 
+      to="/create-online-session"    // Changed from /create-session
+      style={styles.primaryButton}
+    >
+      Create Online Session
+    </Button>
+    <Button 
+      component={Link} 
+      to="/join-online-session"      // Changed from /join-session
+      style={styles.primaryButton}
+    >
+      Join Online Session
+    </Button>
+  </Group>
+</Box>
 
             <Box>
               <Title order={3} mb="md" style={styles.title}>Learn</Title>

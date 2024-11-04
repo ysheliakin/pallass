@@ -153,8 +153,8 @@ export function Layout({ children }: LayoutProps) {
                 </Button>
                 <Button 
   component={Link} 
-  to="/online-sessions" 
-  variant={isActive('/online-sessions') ? "filled" : "subtle"} 
+  to="/create-online-session" 
+  variant={isActive('/create-online-session') ? "filled" : "subtle"} 
   style={styles.navButton}
 >
   Online Sessions
