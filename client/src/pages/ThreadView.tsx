@@ -64,6 +64,7 @@ export function ThreadView() {
   const ws = useRef<WebSocket | null>(null);
   const threadID = localStorage.getItem("threadID");
   var getUserName = "";
+  const [upvoteState, setUpvoteState] = useState(false);
 
   useEffect(() => {
       console.log("threadID: ", threadID)
@@ -210,6 +211,7 @@ export function ThreadView() {
     } catch (error) {
       console.error('Error upvoting the thread:', error);
     }
+    setUpvoteState(true);
   };
 
   
@@ -369,7 +371,7 @@ export function ThreadView() {
 
           {/* Call to Action or Stats */}
           <Group align="right">
-            <Button variant="outline" color="blue" onClick={handleUpvote}>
+            <Button variant="outline" color="blue" onClick={handleUpvote} disabled={upvoteState}>
               👍 Upvote
             </Button>
           </Group>
