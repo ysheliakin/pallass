@@ -33,9 +33,10 @@ type Message struct {
 }
 
 type Group struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	CreatedBy   int32  `json:"created_by"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	Privacy       bool   `json:"privacy"`
+	Notifications bool   `json:"notifications"`
 }
 
 type RegisterResponse struct {
@@ -145,10 +146,15 @@ func CreateGroup(c echo.Context) error {
 		descriptionParam = pgtype.Text{Valid: false}
 	}
 
+	privacyParam := pgtype.Bool{Bool: group.Privacy, Valid: true}
+	notificationsParam := pgtype.Bool{Bool: group.Notifications, Valid: true}
+
+	// Inserting group data, including Privacy and Notifications fields
 	groupParams := queries.InsertGroupParams{
-		Name:        group.Name,
-		Description: descriptionParam,
-		CreatedBy:   group.CreatedBy,
+		Name:          group.Name,
+		Description:   descriptionParam,
+		Public:        privacyParam,
+		Notifications: notificationsParam,
 	}
 
 	groupID, err := sql.InsertGroup(context.Background(), groupParams)
@@ -156,13 +162,14 @@ func CreateGroup(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "Error creating group")
 	}
 
-	// Construct a link to the newly created group
-	id := fmt.Sprint(groupID)
+	groupIDStr := strconv.FormatInt(int64(groupID.ID), 10)
+	groupUUIDStr := fmt.Sprintf("%x-%x-%x-%x-%x", groupID.Uuid.Bytes[0:4], groupID.Uuid.Bytes[4:6], groupID.Uuid.Bytes[6:8], groupID.Uuid.Bytes[8:10], groupID.Uuid.Bytes[10:16])
 
-	// Return the link to the client
 	return c.JSON(http.StatusOK, map[string]string{
-		"id": id,
+		"id":   groupIDStr,
+		"uuid": groupUUIDStr,
 	})
+
 }
 
 // FlagController handles flag-related actions

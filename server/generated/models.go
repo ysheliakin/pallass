@@ -19,12 +19,13 @@ type FundingOpportunity struct {
 }
 
 type Group struct {
-	ID          int32
-	Name        string
-	Description pgtype.Text
-	CreatedAt   pgtype.Timestamp
-	CreatedBy   int32
-	Uuid        pgtype.UUID
+	ID            int32
+	Name          string
+	Description   pgtype.Text
+	CreatedAt     pgtype.Timestamp
+	Uuid          pgtype.UUID
+	Public        pgtype.Bool
+	Notifications pgtype.Bool
 }
 
 type GroupMember struct {

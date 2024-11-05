@@ -1,14 +1,14 @@
 -- name: InsertGroup :one
-INSERT INTO groups (name, description, created_at, created_by)
-VALUES ($1, $2, CURRENT_TIMESTAMP, $3)
-RETURNING id;
+INSERT INTO groups (name, description, created_at, public, notifications)
+VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4)
+RETURNING id, uuid;
 
 -- name: InsertGroupMember :exec
 INSERT INTO group_members (group_id, user_id, role, joined_at)
 VALUES ($1, $2, $3, CURRENT_TIMESTAMP);
 
 -- name: GetGroupByID :one
-SELECT id, name, description, created_by, created_at
+SELECT id, name, description, created_at
 FROM groups
 WHERE id = $1;
 
