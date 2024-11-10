@@ -11,9 +11,47 @@ export function CreateGroup() {
   const [notifications, setNotifications] = useState('on');
   const [description, setDescription] = useState('');
 
-  const handleCreateGroup = () => {
+  const handleCreateGroup = async () => {
     console.log('Group data:', { name, users, privacy, notifications, description });
     // Handle group creation logic here
+    const transformedPrivacy = privacy === 'public';
+    const transformedNotifications = notifications === 'on';
+
+    // Group data to be sent in the POST request
+    const groupData = {
+    name,
+    privacy: transformedPrivacy,
+    notifications: transformedNotifications,
+    description
+    };
+
+    console.log('Group data:', groupData);
+
+    try {
+      const response = await fetch('http://localhost:5000/newgroup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(groupData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Access both the 'id' and 'uuid' fields from the response
+        const groupId = data.id;
+        const groupUuid = data.uuid;
+
+        // Log or use the groupId and groupUuid
+        console.log('Group created successfully');
+        console.log('Group ID:', groupId);
+        console.log('Group UUID:', groupUuid);
+      } else {
+        console.error('Failed to create group');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   const handleAddUser = () => {

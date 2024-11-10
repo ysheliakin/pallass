@@ -62,9 +62,10 @@ type LogInUser struct {
 }
 
 type Group struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	CreatedBy   int32  `json:"created_by"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	Privacy       bool   `json:"privacy"`
+	Notifications bool   `json:"notifications"`
 }
 
 func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries, dbContext context.Context) {
