@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Container, Title as MantineTitle, Text, Paper, Button, Textarea, Group, Box, Card } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
+import { useParams } from 'react-router-dom';
+//import { IconVideo } from '@mantine/icons';
 
 interface User {
   id: string;
@@ -19,8 +21,10 @@ interface Message extends Reply {
 }
 
 interface Message {
+  id: string;
   sender: string;
   content: string;
+  date: string;
 }
 
 interface Thread {
@@ -49,6 +53,12 @@ const currentUser: User = {
 export function ThreadView() {
   const styles = useStyles();
   const [newMessage, setNewMessage] = useState('');
+  const [newUserMessage, setNewUserMessage] = useState<[{ id: string, sender: string, content: string, date: string }]>([{
+    id: '',
+    sender: '', 
+    content: '', 
+    date: ''
+  }]);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState('');
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
@@ -59,12 +69,14 @@ export function ThreadView() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [threadData, setThreadData] = useState<Thread[] | null>(null);
   const [userName, SetUserName] = useState('');
+  const [upvoteState, setUpvoteState] = useState(false);
+  const [messageDate, setMessageDate] = useState(null);
 
   const email = localStorage.getItem('email');
   const ws = useRef<WebSocket | null>(null);
   const threadID = localStorage.getItem("threadID");
   var getUserName = "";
-  const [upvoteState, setUpvoteState] = useState(false);
+  var getMessageData = "";
 
   useEffect(() => {
       console.log("threadID: ", threadID)
@@ -84,15 +96,12 @@ export function ThreadView() {
         }
 
         const data = await response.json();
-        console.log("data: ", data)
         setThreadData(data);
-        console.log("threadData: ", threadData)
       }
        
       fetchThreadData();
 
       // Websocket connection
-      console.log("email: ", email)
       ws.current = new WebSocket(`ws://localhost:5000/ws/${email}`)
 
       ws.current.onopen = () => {
@@ -101,6 +110,8 @@ export function ThreadView() {
 
       ws.current.onmessage = (event) => {
           const message = JSON.parse(event.data);
+          message.date = new Date().toISOString()
+          console.log("message (useEffect): ", message)
           setMessages((prevMessages) => [...prevMessages, message]);
       };
 
@@ -114,61 +125,61 @@ export function ThreadView() {
   }, [email, threadID]);
 
   const sendMessage = async () => {
-      console.log("sendMessage()")
-      console.log("email: ", email)
+    console.log("sendMessage()")
+    console.log("email: ", email)
 
-      const userName = await fetch('http://localhost:5000/getUserName', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
+    const userName = await fetch('http://localhost:5000/getUserName', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
 
-      // Check if the response is ok
-      if (!userName.ok) {
-        throw new Error('Network response was not ok');
-      }
+    // Check if the response is ok
+    if (!userName.ok) {
+      throw new Error('Network response was not ok');
+    }
 
-      const userData = await userName.json();
-      const firstname = userData.Firstname
-      const lastname = userData.Lastname
-      getUserName = "" + firstname + " " + lastname
-      const message = { sender: getUserName, content: newMessage };
+    const userData = await userName.json();
+    const firstname = userData.Firstname
+    const lastname = userData.Lastname
+    getUserName = "" + firstname + " " + lastname
+    const message = { sender: getUserName, content: newMessage };
 
-      localStorage.setItem("localName", getUserName)
-      const name = localStorage.getItem("localName")
+    localStorage.setItem("localName", getUserName)
+    const name = localStorage.getItem("localName")
 
-      if (name != null) {
-        SetUserName(name)
-      }
-      
-      if (ws.current) {
-          ws.current.send(JSON.stringify(message));
-          setNewMessage('');
-      } else {
-          console.error("The WebSocket is uninitialized.");
-      }
+    if (name != null) {
+      SetUserName(name)
+    }
+    
+    if (ws.current) {
+        ws.current.send(JSON.stringify(message));
+        setNewMessage('');
+    } else {
+        console.error("The WebSocket is uninitialized.");
+    }
 
-      const threadid = threadID
-      const content = newMessage
+    const threadid = threadID
+    const content = newMessage
 
-      console.log("firstname: ", firstname)
-      console.log("lastname: ", lastname)
-      console.log("threadid: ", threadid)
-      console.log("content: ", content)
+    console.log("firstname: ", firstname)
+    console.log("lastname: ", lastname)
+    console.log("threadid: ", threadid)
+    console.log("content: ", content)
 
-      const storeThreadMessage = await fetch('http://localhost:5000/storeThreadMessage', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ firstname, lastname, threadid, content }),
-      });
+    const storeThreadMessage = await fetch('http://localhost:5000/storeThreadMessage', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ firstname, lastname, threadid, content }),
+    });
 
-      if (!storeThreadMessage.ok) {
-        throw new Error('Network response was not ok');
-      }
+    if (!storeThreadMessage.ok) {
+      throw new Error('Network response was not ok');
+    }
   };
 
   // Handle the loading state
@@ -181,6 +192,7 @@ export function ThreadView() {
   console.log("Message Content: ", threadData[0].MessageLastname)
   console.log("Message Content: ", threadData[0].MessageContent)
   console.log("User fullname: ", threadData[0].UserFullname)
+
 
   const handleEditMessage = (messageId: string, content: string) => {
     setEditingMessageId(messageId);
@@ -204,18 +216,24 @@ export function ThreadView() {
   
 
       setThreadData((prevData) => {
-        if (!prevData) return prevData;
-        const updatedThread = { ...prevData[0], ThreadUpvotes: data.upvotes.toString() }; 
-        return [updatedThread];
+        if (!prevData) {
+          return prevData;
+        }
+        
+        const updatedThread = prevData.map((getData, index) => {
+          if (index === 0) {
+            return { ...getData, ThreadUpvotes: data.upvotes.toString() };
+          }
+          return getData;
+        });
+
+        return updatedThread;
       });
     } catch (error) {
       console.error('Error upvoting the thread:', error);
     }
     setUpvoteState(true);
   };
-
-  
-  
 
   const handleSaveEdit = (messageId: string) => {
     setMessages(messages.map(msg => 
@@ -251,7 +269,6 @@ export function ThreadView() {
     const files = event.target.files;
     if (files && files.length > 0) {
       setVideoFile(files[0]);
-      // You can also handle the upload process here if needed
     }
   };
 
@@ -259,7 +276,6 @@ export function ThreadView() {
     const files = event.target.files;
     if (files && files.length > 0) {
       setAudioFile(files[0]);
-      // You can also handle the upload process here if needed
     }
   };
 
@@ -267,7 +283,6 @@ export function ThreadView() {
     const files = event.target.files;
     if (files && files.length > 0) {
       setImageFile(files[0]);
-      // You can also handle the upload process here if needed
     }
   };
 
@@ -377,7 +392,7 @@ export function ThreadView() {
           </Group>
         </Paper>
 
-        {/* Messages */}
+        {/* Messages displayed on page initialization */}
         <div style={{ paddingBottom: '130px' }}>
           {threadData && threadData.length > 0 ? (
             threadData.map((threadMessage, index) => (
@@ -385,6 +400,7 @@ export function ThreadView() {
               <Group>
                 <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
                   <div key={index}>
+
                     <Text><span style={{ fontWeight: 700 }}>{threadMessage.MessageFirstname} {threadMessage.MessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(threadMessage.MessageCreatedAt).toLocaleDateString()} {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
                     <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{threadMessage.MessageContent}</Text>
 
@@ -427,15 +443,16 @@ export function ThreadView() {
               </Card>
             ))
           ) : (
-            <p>Hello</p>
+            null
           )}
 
+          {/* Messages sent in real-time by a user*/}
           {messages.map((msg, index) => (
             <Card shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
               <Group>
                 <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
                   <div key={index}>
-                    <Text fw={700}>{msg.sender}</Text>
+                    <Text><span style={{ fontWeight: 700 }}>{msg.sender}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(msg.date).toLocaleDateString()} {new Date(msg.date).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
                     <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{msg.content}</Text>
 
                     {msg.sender == userName ? (
@@ -510,7 +527,7 @@ export function ThreadView() {
           
           <label htmlFor="video-upload">
             <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-              <i className="fas fa-upload"></i> Upload Video
+              {/*<IconVideo size={20} /> Upload Video*/} Upload Video
             </Button>
           </label>
 

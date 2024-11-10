@@ -5,7 +5,7 @@ export async function createPost(title: string, content: string) {
         method: 'POST',
         body: JSON.stringify({title, content, user: 1}) // TODO: set user
     }
-    const response = await fetch(`${base}/post`, options);
+    const response = await fetch(`http://localhost:5000/post`, options);
     if (!response.ok) {
         console.error('Request failed: ', response);
     }
