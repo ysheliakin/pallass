@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Group, Image, Paper, Stack, Title } from '@mantine/core';
 import { Layout, useStyles } from '../components/layout';
-import { Welcome } from '../components/Welcome/Welcome';
+
 
 export function HomePage() {
   const styles = useStyles();
@@ -9,6 +9,7 @@ export function HomePage() {
   return (
     <Layout>
       <Container size="lg">
+        <img src="../logo.svg" alt="Logo" style={{ display: 'block', margin: '0 auto' }} />
         <Title order={2} ta="center" mt="xl" style={styles.title}>
           Communicate with fellow researchers for free
         </Title>
