@@ -56,3 +56,44 @@ func CreateGroup(c echo.Context) error {
 func GetGroupController(c echo.Context) error {
 	return c.String(http.StatusOK, "Thread updated")
 }
+
+func JoinGroup(c echo.Context) error {
+	var member GroupMember
+
+	// Bind the JSON input to the GroupMember struct
+	err := c.Bind(&member)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid inputs")
+	}
+
+	groupIDInt, err := strconv.Atoi(member.GroupID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid GroupID format")
+	}
+
+	userIDInt, err := strconv.Atoi(member.UserID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid GroupID format")
+	}
+
+	// Prepare parameters for inserting the group member
+	groupMemberParams := queries.InsertGroupMemberParams{
+		GroupID: int32(groupIDInt),
+		UserID:  int32(userIDInt),
+		Role:    member.Role,
+	}
+
+	// Insert the group member into the database
+	memberID, err := sql.InsertGroupMember(context.Background(), groupMemberParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Error adding group member")
+	}
+
+	// Convert the member ID to a string
+	memberIDStr := strconv.FormatInt(int64(memberID), 10)
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"id": memberIDStr,
+	})
+
+}

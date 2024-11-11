@@ -66,9 +66,10 @@ func (q *Queries) InsertGroup(ctx context.Context, arg InsertGroupParams) (Inser
 	return i, err
 }
 
-const insertGroupMember = `-- name: InsertGroupMember :exec
+const insertGroupMember = `-- name: InsertGroupMember :one
 INSERT INTO group_members (group_id, user_id, role, joined_at)
 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+RETURNING group_id
 `
 
 type InsertGroupMemberParams struct {
@@ -77,7 +78,9 @@ type InsertGroupMemberParams struct {
 	Role    string
 }
 
-func (q *Queries) InsertGroupMember(ctx context.Context, arg InsertGroupMemberParams) error {
-	_, err := q.db.Exec(ctx, insertGroupMember, arg.GroupID, arg.UserID, arg.Role)
-	return err
+func (q *Queries) InsertGroupMember(ctx context.Context, arg InsertGroupMemberParams) (int32, error) {
+	row := q.db.QueryRow(ctx, insertGroupMember, arg.GroupID, arg.UserID, arg.Role)
+	var group_id int32
+	err := row.Scan(&group_id)
+	return group_id, err
 }

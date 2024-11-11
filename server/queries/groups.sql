@@ -3,9 +3,10 @@ INSERT INTO groups (name, description, created_at, public, notifications)
 VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4)
 RETURNING id, uuid;
 
--- name: InsertGroupMember :exec
+-- name: InsertGroupMember :one
 INSERT INTO group_members (group_id, user_id, role, joined_at)
-VALUES ($1, $2, $3, CURRENT_TIMESTAMP);
+VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+RETURNING group_id;
 
 -- name: GetGroupByID :one
 SELECT id, name, description, created_at

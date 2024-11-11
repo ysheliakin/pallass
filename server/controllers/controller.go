@@ -44,16 +44,22 @@ type ThreadMessage struct {
 	Content   string `json:"content"`
 }
 
+type GroupMember struct {
+	GroupID string `json:"groupid"`
+	UserID  string `json:"userid"`
+	Role    string `json:"role"`
+}
+
 type User struct {
-    Firstname string `json:"firstname"`
-    Lastname string `json:"lastname"`
-    Email string `json:"email"`
-    Password string `json:"password"`
-    Organization string `json:"organization"`
-    Fieldofstudy string `json:"fieldofstudy"`
-    Jobtitle string `json:"jobtitle"`
-	SocialLinks []string `json:"sociallinks"`
-	TempCode string `json:"tempcode"`
+	Firstname    string   `json:"firstname"`
+	Lastname     string   `json:"lastname"`
+	Email        string   `json:"email"`
+	Password     string   `json:"password"`
+	Organization string   `json:"organization"`
+	Fieldofstudy string   `json:"fieldofstudy"`
+	Jobtitle     string   `json:"jobtitle"`
+	SocialLinks  []string `json:"sociallinks"`
+	TempCode     string   `json:"tempcode"`
 }
 
 type LogInUser struct {
