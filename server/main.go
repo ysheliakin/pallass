@@ -7,6 +7,10 @@ import (
 	"net/url"
 	"os"
 
+	// controller "sih/pallass/controller"
+	queries "sih/pallass/generated"
+	// router "sih/pallass/routes"
+
 	controller "sih/pallass/controller"
 	queries "sih/pallass/generated"
 
@@ -88,6 +92,8 @@ func main() {
 	sql = queries.New(conn)
 
 	controller.SetGlobalContext(e, sql, dbc)
+	// controller.SetGlobalContext(e, sql, dbc)
+	// router.Run(e)
 
 	// Middleware
 	e.Use(middleware.Logger())
