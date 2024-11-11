@@ -11,6 +11,7 @@ export function ResetPasswordPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const email = localStorage.getItem('email');
+  const token = localStorage.getItem('token');
 
   if (email == null) {
     console.log("No email retrieved")
@@ -26,6 +27,7 @@ export function ResetPasswordPage() {
     const response = await fetch('http://localhost:5000/validate-code', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, tempcode }),
@@ -48,6 +50,7 @@ export function ResetPasswordPage() {
     const response = await fetch('http://localhost:5000/reset-password', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),

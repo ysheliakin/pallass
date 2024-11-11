@@ -73,6 +73,7 @@ export function ThreadView() {
   const [messageDate, setMessageDate] = useState(null);
 
   const email = localStorage.getItem('email');
+  const token = localStorage.getItem('token');
   const ws = useRef<WebSocket | null>(null);
   const threadID = localStorage.getItem("threadID");
   var getUserName = "";
@@ -85,6 +86,7 @@ export function ThreadView() {
         const response = await fetch(`http://localhost:5000/threads/${threadID}`, {
             method: 'POST',
             headers: {
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ email }),
@@ -131,6 +133,7 @@ export function ThreadView() {
     const userName = await fetch('http://localhost:5000/getUserName', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email }),
@@ -172,6 +175,7 @@ export function ThreadView() {
     const storeThreadMessage = await fetch('http://localhost:5000/storeThreadMessage', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ firstname, lastname, threadid, content }),
@@ -204,6 +208,7 @@ export function ThreadView() {
       const response = await fetch(`http://localhost:5000/threads/upvote/${threadID}`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -234,6 +239,24 @@ export function ThreadView() {
     }
     setUpvoteState(true);
   };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    const response = await fetch('http://localhost:5000/deleteMessage', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ messageId }),
+    });
+
+    // Check if the response is ok
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const userData = await response.json();
+  }
 
   const handleSaveEdit = (messageId: string) => {
     setMessages(messages.map(msg => 
@@ -285,83 +308,6 @@ export function ThreadView() {
       setImageFile(files[0]);
     }
   };
-
-  const renderMessage = (message: Message | Reply, isReply = false) => (
-    <Paper key={message.id} p="md" withBorder style={isReply ? { marginLeft: 20 } : {}}>
-      <Group justify="space-between" mb="xs">
-        <Text fw={500}>{message.author.name}</Text>
-        <Text size="sm" color="dimmed">{message.date}</Text>
-      </Group>
-      {editingMessageId === message.id ? (
-        <>
-          <Textarea
-            value={editedContent}
-            onChange={(e) => setEditedContent(e.currentTarget.value)}
-            minRows={3}
-            mb="sm"
-          />
-          <Button onClick={() => handleSaveEdit(message.id)} size="sm">Save</Button>
-        </>
-      ) : (
-        <>
-          <Text mb="sm">{message.content}</Text>
-          <Group>
-            {message.author.id === currentUser.id && (
-              <Button 
-                onClick={() => handleEditMessage(message.id, message.content)}
-                variant="subtle" 
-                color="blue" 
-                size="sm"
-              >
-                Edit
-              </Button>
-            )}
-            {!isReply && (
-              <Button 
-                onClick={() => handleReply(message.id)}
-                variant="subtle" 
-                color="grape" 
-                size="sm"
-              >
-                Reply
-              </Button>
-            )}
-          </Group>
-        </>
-      )}
-      {replyingToId === message.id && (
-        <Box mt="md">
-          <Textarea
-            placeholder="Your reply"
-            value={replyContent}
-            onChange={(e) => setReplyContent(e.currentTarget.value)}
-            minRows={2}
-            mb="sm"
-          />
-          <Button onClick={() => handlePostReply(message.id)} size="sm">Post Reply</Button>
-          <label htmlFor="video-upload">
-            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-              <i className="fas fa-upload"></i> Upload Video
-            </Button>
-          </label>
-
-          <label htmlFor="video-upload">
-            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-              <i className="fas fa-upload"></i> Upload Audio
-            </Button>
-          </label>
-
-          <label htmlFor="video-upload">
-            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-              <i className="fas fa-upload"></i> Upload Image
-            </Button>
-          </label>
-        </Box>
-      )}
-      
-      {'replies' in message && message.replies.map((reply) => renderMessage(reply, true))}
-    </Paper>
-  );
 
   return (
     <Layout>
@@ -425,6 +371,8 @@ export function ThreadView() {
                         >
                           Reply
                         </Button>
+
+                        <Button onClick={() => handleDeleteMessage(threadMessage.MessageID)}>Delete</Button>
                       </Group>
                     ) : (
                       <Button 

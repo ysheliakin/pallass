@@ -18,6 +18,7 @@ interface Threads {
 export function LoggedInHomePage() {
   const styles = useStyles();
   const [threadsData, setThreadsData] = useState<Threads[]>([]);
+  const token = localStorage.getItem('token')
 
   const navigate = useNavigate();
 
@@ -26,6 +27,7 @@ export function LoggedInHomePage() {
         const response = await fetch(`http://localhost:5000/getThreads`, {
             method: 'GET',
             headers: {
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             }
         });

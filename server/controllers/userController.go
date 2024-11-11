@@ -143,9 +143,12 @@ func LoginUser(c echo.Context) error {
 
 func Authenticate(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		fmt.Println("Authenticate()")
+
 		// Get the bearer token
 		bearerToken := c.Request().Header.Get("Authorization")
 		if bearerToken == "" {
+			fmt.Println("No token")
 			return c.JSON(http.StatusUnauthorized, "No token")
 		}
 
@@ -163,7 +166,9 @@ func Authenticate(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(http.StatusUnauthorized, "Invalid token")
 		}
 
-		return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful authentication"})
+		fmt.Println("Token is valid, proceeding to next handler.")
+		//return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful authentication"})
+		return next(c)
 	}
 }
 
