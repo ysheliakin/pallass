@@ -11,6 +11,8 @@ export function CreateGroup() {
   const [notifications, setNotifications] = useState('on');
   const [description, setDescription] = useState('');
 
+  const token = localStorage.getItem('token')
+
   const handleCreateGroup = async () => {
     console.log('Group data:', { name, users, privacy, notifications, description });
     // Handle group creation logic here
@@ -31,6 +33,7 @@ export function CreateGroup() {
       const response = await fetch('http://localhost:5000/newgroup', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(groupData)

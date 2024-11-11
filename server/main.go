@@ -80,9 +80,9 @@ func main() {
 	/* Public routes */
 	// Get handlers
 	e.GET("/funding", controller.GetFundingOpportunities)
+	e.GET("/ws/:email", webSocket)
 	// Post handlers
 	e.POST("/request-reset", controller.RequestPasswordReset)
-	e.POST("/threads/:id", controller.GetThreadController)
 	e.POST("/registeruser", controller.RegisterUser)
 	e.POST("/loginuser", controller.LoginUser)
 
@@ -95,46 +95,46 @@ func main() {
 
 	/* Private routes requiring bearer token */
 	// Get handlers
-	e.GET("/group/:id", controller.GetGroupController)
-	e.GET("/playlist", controller.PlaylistController)
-	//e.GET("/authenticate", controller.Authenticate)
-	e.GET("/ws/:email", webSocket)
-	//e.GET("/user", controller.GetUserController)
-	e.GET("/getThreads", controller.GetThreadsController)
+	authGroup.GET("/group/:id", controller.GetGroupController)
+	authGroup.GET("/playlist", controller.PlaylistController)
+	//authGroup.GET("/authenticate", controller.Authenticate)
+	//authGroup.GET("/user", controller.GetUserController)
+	authGroup.GET("/getThreads", controller.GetThreadsController)
 	// Post handlers
-	e.POST("/postThread", controller.ThreadController)
-	e.POST("/newgroup", controller.CreateGroup)
-	e.POST("/flag", controller.FlagController)
-	e.POST("/threads/upvote/:threadID", controller.UpvoteThread)
-	e.POST("/downvote", controller.DownvoteController)
-	e.POST("/post", func(c echo.Context) error {
+	authGroup.POST("/postThread", controller.ThreadController)
+	authGroup.POST("/threads/:id", controller.GetThreadController)
+	authGroup.POST("/newgroup", controller.CreateGroup)
+	authGroup.POST("/flag", controller.FlagController)
+	authGroup.POST("/threads/upvote/:threadID", controller.UpvoteThread)
+	authGroup.POST("/downvote", controller.DownvoteController)
+	authGroup.POST("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post created")
 	})
-	e.POST("/reset-password", controller.ResetPassword)
-	e.POST("/validate-code", controller.ValidateResetCode)
-	e.POST("/flag", func(c echo.Context) error {
+	authGroup.POST("/reset-password", controller.ResetPassword)
+	authGroup.POST("/validate-code", controller.ValidateResetCode)
+	authGroup.POST("/flag", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Flag added")
 	})
-	e.POST("/downvote", func(c echo.Context) error {
+	authGroup.POST("/downvote", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Downvoted")
 	})
-	e.POST("/user", controller.UserController)
-	e.POST("/funding", controller.AddFundingOpportunity)
-	e.POST("/getUserName", controller.GetUserName)
-	e.POST("/storeThreadMessage", controller.StoreThreadMessage)
+	authGroup.POST("/user", controller.UserController)
+	authGroup.POST("/funding", controller.AddFundingOpportunity)
+	authGroup.POST("/getUserName", controller.GetUserName)
+	authGroup.POST("/storeThreadMessage", controller.StoreThreadMessage)
 	// Put handlers
-	e.PUT("/message", controller.UpdateMessageController)
-	e.PUT("/user", func(c echo.Context) error {
+	authGroup.PUT("/message", controller.UpdateMessageController)
+	authGroup.PUT("/user", func(c echo.Context) error {
 		return c.String(http.StatusOK, "User updated")
 	})
-	e.PUT("/post", func(c echo.Context) error {
+	authGroup.PUT("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post updated")
 	})
-	e.PUT("/user", controller.UpdateUserController)
+	authGroup.PUT("/user", controller.UpdateUserController)
 	// Delete handlers
-	e.DELETE("/deleteThread", controller.DeleteThreadController)
-	e.DELETE("/message", controller.DeleteMessageController)
-	e.DELETE("/post", func(c echo.Context) error {
+	authGroup.DELETE("/deleteThread", controller.DeleteThreadController)
+	authGroup.DELETE("/message", controller.DeleteMessageController)
+	authGroup.DELETE("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post deleted")
 	})
 

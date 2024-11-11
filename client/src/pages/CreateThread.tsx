@@ -15,6 +15,7 @@ export function CreateThread() {
     // Add more predefined categories as needed
   ]);
 
+  const token = localStorage.getItem('token')
   const navigate = useNavigate();
 
   const handleCreateThread =  async () => {
@@ -31,8 +32,9 @@ export function CreateThread() {
     try {
       // Send a POST request to the backend
       const response = await fetch('http://localhost:5000/postThread', {
-        method: 'POST', // Specify the request method
+        method: 'POST', // POST request
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json', // Specify content type as JSON
         },
         body: JSON.stringify(threadData), // Convert thread data to JSON
