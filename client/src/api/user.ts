@@ -1,4 +1,4 @@
-const base = import.meta.env.VITE_API_ENDPOINT;
+import { base } from './base';
 
 export async function register(firstName: string, lastName: string, email: string, password: string, organization: string, fieldOfStudy: string, jobTitle: string, socialLinks: string[]) {
     const options = {

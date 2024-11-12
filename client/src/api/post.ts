@@ -1,4 +1,4 @@
-const base = import.meta.env.VITE_API_ENDPOINT;
+import { base } from './base';
 
 export async function createPost(title: string, content: string) {
     const options = {
