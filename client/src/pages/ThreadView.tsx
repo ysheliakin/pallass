@@ -25,6 +25,7 @@ interface Message {
   sender: string;
   content: string;
   date: string;
+  type: string;
 }
 
 interface Thread {
@@ -53,84 +54,94 @@ const currentUser: User = {
 export function ThreadView() {
   const styles = useStyles();
   const [newMessage, setNewMessage] = useState('');
-  const [newUserMessage, setNewUserMessage] = useState<[{ id: string, sender: string, content: string, date: string }]>([{
-    id: '',
-    sender: '', 
-    content: '', 
-    date: ''
-  }]);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState('');
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [threadData, setThreadData] = useState<Thread[] | null>(null);
-  const [userName, SetUserName] = useState('');
   const [upvoteState, setUpvoteState] = useState(false);
-  const [messageDate, setMessageDate] = useState(null);
+  const [userName, setUserName] = useState('');
 
   const email = localStorage.getItem('email');
   const token = localStorage.getItem('token');
   const ws = useRef<WebSocket | null>(null);
   const threadID = localStorage.getItem("threadID");
   var getUserName = "";
-  var getMessageData = "";
+
+  const fetchThread = async() => {
+    const fetchThreadData = async () => {
+      const response = await fetch(`http://localhost:5000/threads/${threadID}`, {
+          method: 'POST',
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email }),
+      });
+  
+      // Check if the response is ok (status code 200-299)
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      setThreadData(data);
+    }
+    
+    fetchThreadData();
+
+    // Websocket connection
+    ws.current = new WebSocket(`ws://localhost:5000/ws/${email}`)
+
+    ws.current.onopen = () => {
+        console.log("Websocket connected");
+    }
+
+    ws.current.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+
+        // Remove the message of the type is 'DELETE_MESSAGE'
+        if (message.type === 'DELETE_MESSAGE') {
+          // Remove the deleted message (if it was a newly sent message)
+          setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== message.id));
+
+          // Remove the deleted message (if it was an older message displayed during the page initialization)
+          setThreadData((prevMessages) => {
+            if (prevMessages == null ) {
+              return [];
+            }
+
+            const updatedThreadMessages = prevMessages.filter((msg) => msg.MessageID != message.id);
+            return updatedThreadMessages;
+          });
+
+          return;
+        } 
+        
+        // Render the list of messages with the new message included
+        setMessages((prevMessages) => [...prevMessages, message]);
+    };
+
+    ws.current.onerror = (event) => {
+        console.error("WebSocket error observed:", event);
+    };
+
+    ws.current.onclose = () => {
+      console.log('Disconnected from WebSocket server');
+    };
+
+    return () => {
+        ws.current?.close();
+    };
+  }
 
   useEffect(() => {
-      console.log("threadID: ", threadID)
-
-      const fetchThreadData = async () => {
-        const response = await fetch(`http://localhost:5000/threads/${threadID}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email }),
-        });
-    
-        // Check if the response is ok (status code 200-299)
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        setThreadData(data);
-      }
-       
-      fetchThreadData();
-
-      // Websocket connection
-      ws.current = new WebSocket(`ws://localhost:5000/ws/${email}`)
-
-      ws.current.onopen = () => {
-          console.log("Websocket connected");
-      }
-
-      ws.current.onmessage = (event) => {
-          const message = JSON.parse(event.data);
-          message.date = new Date().toISOString()
-          console.log("message (useEffect): ", message)
-          setMessages((prevMessages) => [...prevMessages, message]);
-      };
-
-      ws.current.onerror = (event) => {
-          console.error("WebSocket error observed:", event);
-      };
-
-      return () => {
-          ws.current?.close();
-      };
+    fetchThread();
   }, [email, threadID]);
 
   const sendMessage = async () => {
-    console.log("sendMessage()")
-    console.log("email: ", email)
-
-    const userName = await fetch('http://localhost:5000/getUserName', {
+    const fullname = await fetch('http://localhost:5000/getUserName', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -140,37 +151,17 @@ export function ThreadView() {
     });
 
     // Check if the response is ok
-    if (!userName.ok) {
+    if (!fullname.ok) {
       throw new Error('Network response was not ok');
     }
 
-    const userData = await userName.json();
+    const userData = await fullname.json();
     const firstname = userData.Firstname
     const lastname = userData.Lastname
     getUserName = "" + firstname + " " + lastname
-    const message = { sender: getUserName, content: newMessage };
-
-    localStorage.setItem("localName", getUserName)
-    const name = localStorage.getItem("localName")
-
-    if (name != null) {
-      SetUserName(name)
-    }
-    
-    if (ws.current) {
-        ws.current.send(JSON.stringify(message));
-        setNewMessage('');
-    } else {
-        console.error("The WebSocket is uninitialized.");
-    }
 
     const threadid = threadID
     const content = newMessage
-
-    console.log("firstname: ", firstname)
-    console.log("lastname: ", lastname)
-    console.log("threadid: ", threadid)
-    console.log("content: ", content)
 
     const storeThreadMessage = await fetch('http://localhost:5000/storeThreadMessage', {
       method: 'POST',
@@ -184,19 +175,26 @@ export function ThreadView() {
     if (!storeThreadMessage.ok) {
       throw new Error('Network response was not ok');
     }
+
+    const threadMessageData = await storeThreadMessage.json()
+    const messageID = "" + threadMessageData.ID + ""
+
+    const message = { id: messageID, sender: getUserName, content: newMessage, date: threadMessageData.CreatedAt } as Message;
+
+    localStorage.setItem("localName", getUserName)
+
+    const name = localStorage.getItem("localName")
+    if (name != null) {
+      setUserName(name)
+    }
+
+    if (ws.current) {
+      ws.current.send(JSON.stringify(message));
+      setNewMessage('');
+    } else {
+        console.error("The WebSocket is uninitialized.");
+    }
   };
-
-  // Handle the loading state
-  if (!threadData) {
-    return <div>Loading...</div>;
-  }
-
-  console.log("threadData (2): ", threadData)
-  console.log("Message Content: ", threadData[0])
-  console.log("Message Content: ", threadData[0].MessageLastname)
-  console.log("Message Content: ", threadData[0].MessageContent)
-  console.log("User fullname: ", threadData[0].UserFullname)
-
 
   const handleEditMessage = (messageId: string, content: string) => {
     setEditingMessageId(messageId);
@@ -240,14 +238,13 @@ export function ThreadView() {
     setUpvoteState(true);
   };
 
-  const handleDeleteMessage = async (messageId: string) => {
-    const response = await fetch('http://localhost:5000/deleteMessage', {
-      method: 'POST',
+  const handleDeleteThreadMessage = async (messageId: string) => {    
+    const response = await fetch(`http://localhost:5000/deleteThreadMessage/${messageId}`, {
+      method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ messageId }),
+      }
     });
 
     // Check if the response is ok
@@ -255,7 +252,12 @@ export function ThreadView() {
       throw new Error('Network response was not ok');
     }
 
-    const userData = await response.json();
+    const getMessageID = "" + messageId + ""
+
+    // Delete the message with the corresponding message ID: "getMessageID"
+    if (ws.current) {
+      ws.current.send(JSON.stringify({ id: getMessageID, type: 'DELETE_MESSAGE' }));
+    }
   }
 
   const handleSaveEdit = (messageId: string) => {
@@ -288,26 +290,10 @@ export function ThreadView() {
     }
   };
 
-  const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      setVideoFile(files[0]);
-    }
-  };
-
-  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      setAudioFile(files[0]);
-    }
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      setImageFile(files[0]);
-    }
-  };
+  // Handle the loading state
+  if (!threadData) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Layout>
@@ -341,40 +327,25 @@ export function ThreadView() {
         {/* Messages displayed on page initialization */}
         <div style={{ paddingBottom: '130px' }}>
           {threadData && threadData.length > 0 ? (
-            threadData.map((threadMessage, index) => (
-              <Card shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
+            threadData.map((threadMessage) => (
+              <Card key={threadMessage.MessageID} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
               <Group>
                 <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                  <div key={index}>
+                  <Text><span style={{ fontWeight: 700 }}>{threadMessage.MessageFirstname} {threadMessage.MessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(threadMessage.MessageCreatedAt).toLocaleDateString()} {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
+                  <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{threadMessage.MessageContent}</Text>
 
-                    <Text><span style={{ fontWeight: 700 }}>{threadMessage.MessageFirstname} {threadMessage.MessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(threadMessage.MessageCreatedAt).toLocaleDateString()} {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
-                    <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{threadMessage.MessageContent}</Text>
+                  {threadMessage.MessageFirstname + " " + threadMessage.MessageLastname == threadData[0].UserFullname ? (
+                    <Group>
+                      <Button 
+                        onClick={() => handleEditMessage(threadMessage.MessageID, threadMessage.MessageContent)}
+                        variant="subtle" 
+                        color="blue" 
+                        size="sm"
+                        mt="sm"
+                      >
+                        Edit
+                      </Button>
 
-                    {threadMessage.MessageFirstname + " " + threadMessage.MessageLastname == threadData[0].UserFullname ? (
-                      <Group>
-                        <Button 
-                          onClick={() => handleEditMessage(threadMessage.MessageID, threadMessage.MessageContent)}
-                          variant="subtle" 
-                          color="blue" 
-                          size="sm"
-                          mt="sm"
-                        >
-                          Edit
-                        </Button>
-
-                        <Button 
-                          onClick={() => handleReply(threadMessage.MessageID)}
-                          variant="subtle" 
-                          color="grape" 
-                          size="sm"
-                          mt="sm"
-                        >
-                          Reply
-                        </Button>
-
-                        <Button onClick={() => handleDeleteMessage(threadMessage.MessageID)}>Delete</Button>
-                      </Group>
-                    ) : (
                       <Button 
                         onClick={() => handleReply(threadMessage.MessageID)}
                         variant="subtle" 
@@ -384,8 +355,20 @@ export function ThreadView() {
                       >
                         Reply
                       </Button>
-                    )}
-                  </div>
+
+                      <Button onClick={() => handleDeleteThreadMessage(threadMessage.MessageID)}>Delete</Button>
+                    </Group>
+                  ) : (
+                    <Button 
+                      onClick={() => handleReply(threadMessage.MessageID)}
+                      variant="subtle" 
+                      color="grape" 
+                      size="sm"
+                      mt="sm"
+                    >
+                      Reply
+                    </Button>
+                  )}
                 </Box>                    
               </Group>
               </Card>
@@ -396,7 +379,7 @@ export function ThreadView() {
 
           {/* Messages sent in real-time by a user*/}
           {messages.map((msg, index) => (
-            <Card shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
+            <Card key={msg.id} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
               <Group>
                 <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
                   <div key={index}>
@@ -424,6 +407,8 @@ export function ThreadView() {
                         >
                           Reply
                         </Button>
+
+                        <Button onClick={() => handleDeleteThreadMessage(msg.id)}>Delete</Button>
                       </Group>
                     ) : (
                       <Button 
@@ -465,47 +450,6 @@ export function ThreadView() {
             mb="sm"
           />
           <Button style={{ marginBottom: '10px' }} onClick={sendMessage}>Post Message</Button>
-          <input
-            type="file"
-            accept="video/*"
-            onChange={handleVideoUpload}
-            id="video-upload"
-            style={{ display: 'none' }}  // Hide the default file input
-          />
-          
-          <label htmlFor="video-upload">
-            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-              {/*<IconVideo size={20} /> Upload Video*/} Upload Video
-            </Button>
-          </label>
-
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={handleAudioUpload}
-            id="audio-upload"
-            style={{ display: 'none' }}  // Hide the default file input
-          />
-
-          <label htmlFor="audio-upload">
-            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-              <i className="fas fa-upload"></i> Upload Audio
-            </Button>
-          </label>
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            id="image-upload"
-            style={{ display: 'none' }}  // Hide the default file input
-          />
-
-          <label htmlFor="image-upload">
-            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-              <i className="fas fa-upload"></i> Upload Image
-            </Button>
-          </label>
         </Paper>
       </Container>
     </Layout>

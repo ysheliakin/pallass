@@ -38,7 +38,6 @@ func RegisterUser(c echo.Context) error {
 
 	// Check if the email inputted by the user is already stored in the database
 	result, err := sql.CheckUserExistsByEmail(context.Background(), user.Email)
-	fmt.Println("result: ", result)
 	if err == nil && result == 1 {
 		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "An account with this email address already exists."})
 	}
@@ -167,7 +166,6 @@ func Authenticate(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		fmt.Println("Token is valid, proceeding to next handler.")
-		//return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful authentication"})
 		return next(c)
 	}
 }
@@ -224,8 +222,6 @@ func RequestPasswordReset(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid inputs."})
 	}
 
-	fmt.Println("Email 0: ", user.Email)
-
 	_, err = sql.GetUserByEmail(context.Background(), user.Email)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, RegisterResponse{Message: "The email you entered is not associated with an account."})
@@ -238,9 +234,6 @@ func RequestPasswordReset(c echo.Context) error {
 	}
 
 	storedResetCode := StoreResetCode(resetCode, user.Email)
-
-	fmt.Println("resetCode: ", resetCode)
-	fmt.Println("storedResetCode: ", storedResetCode)
 
 	if storedResetCode == resetCode || storedResetCode == "" {
 		fmt.Println("Error storing the code")
@@ -259,9 +252,7 @@ func RequestPasswordReset(c echo.Context) error {
 func StoreResetCode(code string, email string) string {
 	var user User
 
-	fmt.Println("")
 	fmt.Println("storeResetCode()")
-	fmt.Println("code: ", code)
 
 	// Hash the code
 	hashedCode, err := bcrypt.GenerateFromPassword([]byte(code), bcrypt.DefaultCost)
@@ -270,21 +261,14 @@ func StoreResetCode(code string, email string) string {
 	}
 	user.TempCode = string(hashedCode)
 
-	fmt.Println("user.TempCode: ", user.TempCode)
-
 	var tempCodeParam = pgtype.Text{String: user.TempCode, Valid: true}
 
 	user.Email = email
-
-	fmt.Println("tempCodeParam: ", tempCodeParam)
-	fmt.Println("user.Email: ", user.Email)
 
 	userParams := queries.UpdateUserCodeByEmailParams{
 		TempCode: tempCodeParam,
 		Email:    user.Email,
 	}
-
-	fmt.Println("userParams: ", userParams)
 
 	// Add a temporary code to the user table where the email address equals that of a user row
 	err = sql.UpdateUserCodeByEmail(context.Background(), userParams)
@@ -307,8 +291,6 @@ func ResetPassword(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid password."})
 	}
 
-	fmt.Println("Password (resetPassword): ", user.Password)
-
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -320,8 +302,6 @@ func ResetPassword(c echo.Context) error {
 		Password: user.Password,
 		Email:    user.Email,
 	}
-
-	fmt.Println("Email (resetPassword): ", user.Email)
 
 	// Update the user's password in the database
 	err = sql.UpdateUserPasswordByEmail(context.Background(), userParams)
@@ -351,9 +331,6 @@ func ValidateResetCode(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid code."})
 	}
 
-	fmt.Println("Email: ", user.Email)
-	fmt.Println("user.TempCode: ", user.TempCode)
-
 	// Retrieve the user from the database
 	dbUser, err := sql.GetUserByEmail(context.Background(), user.Email)
 	if err != nil {
@@ -361,11 +338,7 @@ func ValidateResetCode(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "An error occurred while verifying the code you entered."})
 	}
 
-	fmt.Println("dbUser.TempCode: ", dbUser.TempCode)
-
 	tempCodeStr := (dbUser.TempCode).String
-
-	fmt.Println("tempCodeStr: ", tempCodeStr)
 
 	// Compare the code inputted by the user with the hashed code in the database
 	err = bcrypt.CompareHashAndPassword([]byte(tempCodeStr), []byte(user.TempCode))

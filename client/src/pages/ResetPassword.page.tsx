@@ -21,9 +21,6 @@ export function ResetPasswordPage() {
   const handleCodeSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    console.log("Email (handleCodeSubmit): ", email)
-    console.log("tempCode (handleCodeSubmit): ", tempcode)
-
     const response = await fetch('http://localhost:5000/validate-code', {
         method: 'POST',
         headers: {
@@ -44,8 +41,6 @@ export function ResetPasswordPage() {
 
   const handlePasswordSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
-    console.log("Email (handlePasswordSubmit): ", email)
 
     const response = await fetch('http://localhost:5000/reset-password', {
         method: 'POST',

@@ -38,9 +38,7 @@ export function LoggedInHomePage() {
         }
 
         const data = await response.json();
-        console.log("data: ", data)
         setThreadsData(data);
-        console.log("threadData: ", threadsData)
       }
 
       fetchThreadData();

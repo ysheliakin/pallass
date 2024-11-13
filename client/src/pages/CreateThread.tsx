@@ -19,7 +19,6 @@ export function CreateThread() {
   const navigate = useNavigate();
 
   const handleCreateThread =  async () => {
-    console.log('Thread data:', { title, description, category });
     // Handle thread creation logic here
     const threadData = {
       Firstname: "Guest",

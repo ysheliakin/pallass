@@ -36,8 +36,11 @@ var broadcast = make(chan Message)
 var mu sync.Mutex
 
 type Message struct {
+	ID      string `json:"id"`
 	Sender  string `json:"sender"`
 	Content string `json:"content"`
+	Date    string `json:"date"`
+	Type    string 	`json:"type"`
 }
 
 type RegisterResponse struct {
@@ -97,7 +100,6 @@ func main() {
 	// Get handlers
 	authGroup.GET("/group/:id", controller.GetGroupController)
 	authGroup.GET("/playlist", controller.PlaylistController)
-	//authGroup.GET("/authenticate", controller.Authenticate)
 	//authGroup.GET("/user", controller.GetUserController)
 	authGroup.GET("/getThreads", controller.GetThreadsController)
 	// Post handlers
@@ -133,7 +135,7 @@ func main() {
 	authGroup.PUT("/user", controller.UpdateUserController)
 	// Delete handlers
 	authGroup.DELETE("/deleteThread", controller.DeleteThreadController)
-	authGroup.DELETE("/message", controller.DeleteMessageController)
+	authGroup.DELETE("/deleteThreadMessage/:messageID", controller.DeleteThreadMessage)
 	authGroup.DELETE("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post deleted")
 	})
@@ -189,7 +191,21 @@ func webSocket(c echo.Context) error {
 			break
 		}
 
-		broadcast <- msg
+		// If the message is of type DELETE_MESSAGE, create a delete message with the Type and ID fields
+        if msg.Type == "DELETE_MESSAGE" {
+            deleteMessage := Message{
+                Type:  "DELETE_MESSAGE",
+                ID: msg.ID,
+            }
+
+			fmt.Println("After deleteMessage")
+
+            // Broadcast the delete message to all clients
+            broadcast <- deleteMessage
+        } else {
+            // Broadcast the normal messages
+            broadcast <- msg
+        }
 	}
 
 	return nil
@@ -197,10 +213,13 @@ func webSocket(c echo.Context) error {
 
 func handleMessages() {
 	for {
+		// Wait for a new broadcasted message
 		msg := <-broadcast
 		mu.Lock()
+		// Go through each connected client and send the message
 		for client := range clients {
 			err := client.WriteJSON(msg)
+			// If an error occurs, close the client connection and remove the client from the list of connected clients
 			if err != nil {
 				client.Close()
 				delete(clients, client)

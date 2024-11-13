@@ -101,8 +101,6 @@ func GetThreadController(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Invalid input. Please enter a valid input."})
 	}
 
-	fmt.Println("email: ", user.Email)
-
 	threadIDStr := c.Param("id")
 	threadID, err := strconv.ParseInt(threadIDStr, 10, 32)
 	if err != nil {
@@ -117,7 +115,6 @@ func GetThreadController(c echo.Context) error {
 
 	// Query the database
 	thread, err := sql.GetThreadAndMessagesByThreadIDAndFullnameByUserEmail(context.Background(), threadParams) // Pass as int32
-	fmt.Println("thread: ", thread)
 	if err != nil {
 		if err.Error() == "no rows in result set" {
 			return c.JSON(http.StatusNotFound, "Thread not found")
@@ -127,7 +124,7 @@ func GetThreadController(c echo.Context) error {
 	return c.JSON(http.StatusOK, thread)
 }
 
-// DeletePostController handles post deletion
+// DeleteThreadController handles thread deletion
 func DeleteThreadController(c echo.Context) error {
 	return c.String(http.StatusOK, "Thread deleted")
 }
@@ -144,11 +141,6 @@ func StoreThreadMessage(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
 	}
 
-	fmt.Println("firstname: ", threadMessage.Firstname)
-	fmt.Println("firstname: ", threadMessage.Lastname)
-	fmt.Println("firstname: ", threadMessage.ThreadID)
-	fmt.Println("firstname: ", threadMessage.Content)
-
 	threadId, err := strconv.Atoi(threadMessage.ThreadID)
 	if err != nil {
 		e.Logger.Error(err)
@@ -163,12 +155,13 @@ func StoreThreadMessage(c echo.Context) error {
 	}
 
 	// Store the thread message
-	err = sql.StoreThreadMessage(context.Background(), threadMessageParams)
+	messageData, err := sql.StoreThreadMessage(context.Background(), threadMessageParams)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, RegisterResponse{Message: "Thead message successfully stored"})
+	fmt.Println("messageData: ", messageData)
+	return c.JSON(http.StatusOK, messageData)
 }
 
 func GetUserName(c echo.Context) error {
@@ -176,8 +169,6 @@ func GetUserName(c echo.Context) error {
 
 	// Decode the incoming JSON request body
 	err := c.Bind(&user)
-
-	fmt.Println("email: ", user.Email)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Invalid input. Please enter a valid input."})
@@ -190,4 +181,24 @@ func GetUserName(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, userData)
+}
+
+func DeleteThreadMessage(c echo.Context) error {
+	fmt.Println("DeleteThreadMessage()")
+
+	threadMessageIDStr := c.Param("messageID")
+
+	threadId, err := strconv.Atoi(threadMessageIDStr)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.String(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	// Delete the thread message
+	err = sql.DeleteThreadMessageByID(context.Background(), int32(threadId))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Thead message successfully stored"})
 }

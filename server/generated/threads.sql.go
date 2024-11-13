@@ -11,6 +11,16 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const deleteThreadMessageByID = `-- name: DeleteThreadMessageByID :exec
+DELETE FROM messages 
+WHERE id = $1
+`
+
+func (q *Queries) DeleteThreadMessageByID(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteThreadMessageByID, id)
+	return err
+}
+
 const getThreadAndMessagesByThreadIDAndFullnameByUserEmail = `-- name: GetThreadAndMessagesByThreadIDAndFullnameByUserEmail :many
 SELECT 
     threads.id AS thread_id, 
@@ -22,6 +32,7 @@ SELECT
     threads.upvotes AS thread_upvotes,
     threads.uuid AS thread_uuid,
     threads.created_at AS thread_created_at,
+    messages.id AS message_id,
     messages.firstname AS message_firstname,
     messages.lastname AS message_lastname,
     messages.thread_id AS message_thread_id,
@@ -53,6 +64,7 @@ type GetThreadAndMessagesByThreadIDAndFullnameByUserEmailRow struct {
 	ThreadUpvotes    pgtype.Int4
 	ThreadUuid       pgtype.UUID
 	ThreadCreatedAt  pgtype.Timestamp
+	MessageID        pgtype.Int4
 	MessageFirstname pgtype.Text
 	MessageLastname  pgtype.Text
 	MessageThreadID  pgtype.Int4
@@ -80,6 +92,7 @@ func (q *Queries) GetThreadAndMessagesByThreadIDAndFullnameByUserEmail(ctx conte
 			&i.ThreadUpvotes,
 			&i.ThreadUuid,
 			&i.ThreadCreatedAt,
+			&i.MessageID,
 			&i.MessageFirstname,
 			&i.MessageLastname,
 			&i.MessageThreadID,

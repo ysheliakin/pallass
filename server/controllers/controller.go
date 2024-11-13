@@ -38,6 +38,7 @@ type ErrorPayload struct {
 }
 
 type ThreadMessage struct {
+	ID string `json:"id"`
 	Firstname string `json:"firstname"`
 	Lastname  string `json:"lastname"`
 	ThreadID  string `json:"threadid"`
@@ -93,11 +94,6 @@ func PlaylistController(c echo.Context) error {
 // UpdateMessageController handles message updates
 func UpdateMessageController(c echo.Context) error {
 	return c.String(http.StatusOK, "Message updated")
-}
-
-// DeleteMessageController handles message deletion
-func DeleteMessageController(c echo.Context) error {
-	return c.String(http.StatusOK, "Message deleted")
 }
 
 func AddFundingOpportunity(c echo.Context) error {

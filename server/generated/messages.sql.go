@@ -7,11 +7,14 @@ package queries
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const storeThreadMessage = `-- name: StoreThreadMessage :exec
+const storeThreadMessage = `-- name: StoreThreadMessage :one
 INSERT INTO messages (firstname, lastname, thread_id, content)
 VALUES ($1, $2, $3, $4)
+RETURNING id, created_at
 `
 
 type StoreThreadMessageParams struct {
@@ -21,12 +24,19 @@ type StoreThreadMessageParams struct {
 	Content   string
 }
 
-func (q *Queries) StoreThreadMessage(ctx context.Context, arg StoreThreadMessageParams) error {
-	_, err := q.db.Exec(ctx, storeThreadMessage,
+type StoreThreadMessageRow struct {
+	ID        int32
+	CreatedAt pgtype.Timestamp
+}
+
+func (q *Queries) StoreThreadMessage(ctx context.Context, arg StoreThreadMessageParams) (StoreThreadMessageRow, error) {
+	row := q.db.QueryRow(ctx, storeThreadMessage,
 		arg.Firstname,
 		arg.Lastname,
 		arg.ThreadID,
 		arg.Content,
 	)
-	return err
+	var i StoreThreadMessageRow
+	err := row.Scan(&i.ID, &i.CreatedAt)
+	return i, err
 }

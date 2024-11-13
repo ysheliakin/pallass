@@ -25,6 +25,7 @@ SELECT
     threads.upvotes AS thread_upvotes,
     threads.uuid AS thread_uuid,
     threads.created_at AS thread_created_at,
+    messages.id AS message_id,
     messages.firstname AS message_firstname,
     messages.lastname AS message_lastname,
     messages.thread_id AS message_thread_id,
@@ -39,3 +40,7 @@ WHERE
     threads.id = $1
 ORDER BY 
     messages.created_at ASC;
+
+-- name: DeleteThreadMessageByID :exec
+DELETE FROM messages 
+WHERE id = $1;
