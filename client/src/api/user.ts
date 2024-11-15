@@ -1,14 +1,6 @@
-//const base = import.meta.env.VITE_API_ENDPOINT;
+import { base } from './base';
 
-export async function register(firstName: string, lastName: string, email: string, password: string, organization: string, fieldOfStudy: string, jobTitle: string, socialLinks: string[]) {
-    console.log("firstName: ", firstName)
-    console.log("lastName: ", lastName)
-    console.log("email: ", email)
-    console.log("password: ", password)
-    console.log("organization: ", organization)
-    console.log("fieldOfStudy: ", fieldOfStudy)
-
-    
+export async function register(firstName: string, lastName: string, email: string, password: string, organization: string, fieldOfStudy: string, jobTitle: string, socialLinks: string[]) {    
     const options = {
         method: 'POST',
         headers: {
@@ -16,7 +8,7 @@ export async function register(firstName: string, lastName: string, email: strin
         },
         body: JSON.stringify({ firstName, lastName, email, password, organization, fieldOfStudy, jobTitle, socialLinks }),
     }
-    const response = await fetch(`http://localhost:5000/registeruser`, options);
+    const response = await fetch(`${base}/registeruser`, options);
     const result = await response.json();
     if (!response.ok) {
         console.error('Request failed: ', result);
@@ -32,7 +24,7 @@ export async function login(email: string, password: string) {
         },
         body: JSON.stringify({ email, password }),
     }
-    const response = await fetch(`http://localhost:5000/loginuser`, options);
+    const response = await fetch(`${base}/loginuser`, options);
     const result = await response.json();
     if (!response.ok) {
         console.error('Request failed: ', result);
@@ -50,7 +42,7 @@ export async function getUser(token: string | null) {
             'Authorization': `Bearer ${token}`
         }
     }
-    const response = await fetch(`http://localhost:5000/user`, options);
+    const response = await fetch(`${base}/user`, options);
     const result = await response.json();
     if (!response.ok) {
         console.error('Request failed: ', result);

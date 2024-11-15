@@ -3,7 +3,7 @@ import { Container, Title as MantineTitle, Text, Paper, Button, Textarea, Group,
 import { Layout, useStyles } from '@/components/layout';
 import { useParams } from 'react-router-dom';
 import { EditorConsumer } from '@tiptap/react';
-//import { IconVideo } from '@mantine/icons';
+import { IconVideo } from '@tabler/icons-react';
 
 interface User {
   id: string;
@@ -49,7 +49,7 @@ interface Thread {
 
 const currentUser: User = {
   id: '2',
-  name: 'Jane Smith'
+  name: 'Jane Smith',
 };
 
 export function ThreadView() {

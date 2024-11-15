@@ -1,16 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Title, Box, MantineProvider, createTheme, MantineThemeOverride, Group, Button, Menu, ActionIcon } from '@mantine/core';
+import React, { useEffect, useState } from 'react';
 import { IconUserCircle } from '@tabler/icons-react';
-
 import { Link, useNavigate } from 'react-router-dom';
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Container,
+  createTheme,
+  Group,
+  MantineProvider,
+  MantineThemeOverride,
+  Menu,
+  Title,
+} from '@mantine/core';
+import logo from '../../logo.svg';
 
 const theme: MantineThemeOverride = createTheme({
   colors: {
-    brand: ['#AB4D7C', '#793852', '#793852', '#793852', '#793852', '#793852', '#793852', '#793852', '#793852', '#793852'],
-    secondary: ['#37344b', '#37344b', '#37344b', '#37344b', '#37344b', '#37344b', '#37344b', '#37344b', '#37344b', '#37344b'],
-    accent: ['#d05572', '#d05572', '#d05572', '#d05572', '#d05572', '#d05572', '#d05572', '#d05572', '#d05572', '#d05572'],
-    background: ['#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1', '#e1f2e1'],
-    light: ['#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1', '#fdf9f1'],
+    brand: [
+      '#AB4D7C',
+      '#793852',
+      '#793852',
+      '#793852',
+      '#793852',
+      '#793852',
+      '#793852',
+      '#793852',
+      '#793852',
+      '#793852',
+    ],
+    secondary: [
+      '#37344b',
+      '#37344b',
+      '#37344b',
+      '#37344b',
+      '#37344b',
+      '#37344b',
+      '#37344b',
+      '#37344b',
+      '#37344b',
+      '#37344b',
+    ],
+    accent: [
+      '#d05572',
+      '#d05572',
+      '#d05572',
+      '#d05572',
+      '#d05572',
+      '#d05572',
+      '#d05572',
+      '#d05572',
+      '#d05572',
+      '#d05572',
+    ],
+    background: [
+      '#e1f2e1',
+      '#e1f2e1',
+      '#e1f2e1',
+      '#e1f2e1',
+      '#e1f2e1',
+      '#e1f2e1',
+      '#e1f2e1',
+      '#e1f2e1',
+      '#e1f2e1',
+      '#e1f2e1',
+    ],
+    light: [
+      '#fdf9f1',
+      '#fdf9f1',
+      '#fdf9f1',
+      '#fdf9f1',
+      '#fdf9f1',
+      '#fdf9f1',
+      '#fdf9f1',
+      '#fdf9f1',
+      '#fdf9f1',
+      '#fdf9f1',
+    ],
   },
   primaryColor: 'brand',
 });
@@ -94,7 +160,7 @@ export function Layout({ children }: LayoutProps) {
     } else {
       setIsAuthenticated(false);
     }
-  }, [])
+  }, []);
 
   // Log the user out
   const handleLogout = () => {
@@ -104,7 +170,7 @@ export function Layout({ children }: LayoutProps) {
     setIsAuthenticated(false);
     // Navigate to the homepage
     navigate('/');
-  }
+  };
 
   return (
     <MantineProvider theme={theme}>
@@ -112,6 +178,7 @@ export function Layout({ children }: LayoutProps) {
         <Container size="xl" px={0}>
           <Box style={styles.header}>
             <div style={styles.headerContent}>
+              <img src={logo} alt="Logo" height={40} />
               <Link to="/" style={styles.title}>
                 <Title order={1}>Pallas's Hub</Title>
               </Link>
@@ -123,7 +190,10 @@ export function Layout({ children }: LayoutProps) {
                         <IconUserCircle size={40} />
                       </ActionIcon>
                     </Menu.Target>
-                    <Menu.Dropdown style={{ border: 'solid darkgray' }} styles={{ dropdown: { zIndex: 1000 } }}>
+                    <Menu.Dropdown
+                      style={{ border: 'solid darkgray' }}
+                      styles={{ dropdown: { zIndex: 1000 } }}
+                    >
                       <Menu.Item>Contacts</Menu.Item>
                       <Menu.Item>Edit profile</Menu.Item>
                       <Menu.Item onClick={handleLogout}>Log Out</Menu.Item>
@@ -131,16 +201,23 @@ export function Layout({ children }: LayoutProps) {
                   </Menu>
                 ) : (
                   <>
-                    <Button component={Link} to="/login" variant="outline" style={styles.secondaryButton}>Log in</Button>
-                    <Button component={Link} to="/signup" style={styles.primaryButton}>Sign up</Button>
+                    <Button
+                      component={Link}
+                      to="/login"
+                      variant="outline"
+                      style={styles.secondaryButton}
+                    >
+                      Log in
+                    </Button>
+                    <Button component={Link} to="/signup" style={styles.primaryButton}>
+                      Sign up
+                    </Button>
                   </>
                 )}
               </Group>
             </div>
           </Box>
-          <Box style={styles.content}>
-            {children}
-          </Box>
+          <Box style={styles.content}>{children}</Box>
         </Container>
       </Box>
     </MantineProvider>
