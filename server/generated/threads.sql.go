@@ -11,16 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const deleteThreadMessageByID = `-- name: DeleteThreadMessageByID :exec
-DELETE FROM messages 
-WHERE id = $1
-`
-
-func (q *Queries) DeleteThreadMessageByID(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deleteThreadMessageByID, id)
-	return err
-}
-
 const getThreadAndMessagesByThreadIDAndFullnameByUserEmail = `-- name: GetThreadAndMessagesByThreadIDAndFullnameByUserEmail :many
 SELECT 
     threads.id AS thread_id, 

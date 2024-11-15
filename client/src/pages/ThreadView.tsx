@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Title as MantineTitle, Text, Paper, Button, Textarea, Group, Box, Card } from '@mantine/core';
+import { Container, Title as MantineTitle, Text, Paper, Button, Textarea, Group, Box, Card, Modal } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { useParams } from 'react-router-dom';
+import { EditorConsumer } from '@tiptap/react';
 //import { IconVideo } from '@mantine/icons';
 
 interface User {
@@ -99,28 +100,46 @@ export function ThreadView() {
     }
 
     ws.current.onmessage = (event) => {
-        const message = JSON.parse(event.data);
+      const message = JSON.parse(event.data);
 
-        // Remove the message of the type is 'DELETE_MESSAGE'
-        if (message.type === 'DELETE_MESSAGE') {
-          // Remove the deleted message (if it was a newly sent message)
-          setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== message.id));
+      // Edit the message's content if the type is 'EDIT_MESSAGE'
+      if (message.type === 'EDIT_MESSAGE') {
+        console.log("message.id: ", message.id)
+        console.log("message.content: ", message.content)
 
-          // Remove the deleted message (if it was an older message displayed during the page initialization)
-          setThreadData((prevMessages) => {
-            if (prevMessages == null ) {
-              return [];
-            }
+        // Edit the message (if it was a newly sent message)
+        setMessages((prevMessages) => prevMessages.map((msg) => msg.id == message.id ? { ...msg, content : message.content } : msg));
 
-            const updatedThreadMessages = prevMessages.filter((msg) => msg.MessageID != message.id);
-            return updatedThreadMessages;
-          });
+        // Edit the message (if it was an older message displayed during the page initialization)
+        setThreadData((prevMessages) => {
+          if (prevMessages == null ) {
+            return [];
+          }
 
-          return;
-        } 
-        
-        // Render the list of messages with the new message included
+          const updatedThreadMessages = prevMessages.map((msg) => msg.MessageID == message.id ? { ...msg, MessageContent : message.content } : msg);
+          console.log("updatedThreadMessages: ", updatedThreadMessages)
+          return updatedThreadMessages;
+        })
+      }
+      // Remove the message if the type is 'DELETE_MESSAGE'
+      else if (message.type === 'DELETE_MESSAGE') {
+        // Remove the deleted message (if it was a newly sent message)
+        setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== message.id));
+
+        // Remove the deleted message (if it was an older message displayed during the page initialization)
+        setThreadData((prevMessages) => {
+          if (prevMessages == null ) {
+            return [];
+          }
+
+          const updatedThreadMessages = prevMessages.filter((msg) => msg.MessageID != message.id);
+          return updatedThreadMessages;
+        })
+      }
+      // Render the list of messages with the new message included 
+      else {
         setMessages((prevMessages) => [...prevMessages, message]);
+      } 
     };
 
     ws.current.onerror = (event) => {
@@ -198,7 +217,7 @@ export function ThreadView() {
 
   const handleEditMessage = (messageId: string, content: string) => {
     setEditingMessageId(messageId);
-    setEditedContent(content);
+    setEditedContent(content);    
   };
 
   const handleUpvote = async () => { 
@@ -260,10 +279,32 @@ export function ThreadView() {
     }
   }
 
-  const handleSaveEdit = (messageId: string) => {
-    setMessages(messages.map(msg => 
-      msg.id === messageId ? { ...msg, content: editedContent } : msg
-    ));
+  const handleSaveEdit = async (messageId: string, content: string) => {
+    const id = "" + messageId + ""
+
+    console.log("getMessageID: ", id)
+
+    const response = await fetch(`http://localhost:5000/editThreadMessage`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id, content }),
+    });
+
+    // Check if the response is ok
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    // Edit the message with the corresponding message ID
+    if (ws.current) {
+      ws.current.send(JSON.stringify({id: id, content: content, type: 'EDIT_MESSAGE'}));
+    }
+
+    console.log("Successful edit (I think)")
+
     setEditingMessageId(null);
     setEditedContent('');
   };
@@ -271,6 +312,10 @@ export function ThreadView() {
   const handleReply = (messageId: string) => {
     setReplyingToId(messageId);
   };
+
+  const handleCancelEdit = (messageId: string) => {
+    setEditingMessageId(null);
+  }
 
   const handlePostReply = (messageId: string) => {
     if (replyContent.trim()) {
@@ -329,22 +374,92 @@ export function ThreadView() {
           {threadData && threadData.length > 0 ? (
             threadData.map((threadMessage) => (
               <Card key={threadMessage.MessageID} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
-              <Group>
-                <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                  <Text><span style={{ fontWeight: 700 }}>{threadMessage.MessageFirstname} {threadMessage.MessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(threadMessage.MessageCreatedAt).toLocaleDateString()} {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
-                  <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{threadMessage.MessageContent}</Text>
-
+                <Group>
                   {threadMessage.MessageFirstname + " " + threadMessage.MessageLastname == threadData[0].UserFullname ? (
-                    <Group>
-                      <Button 
-                        onClick={() => handleEditMessage(threadMessage.MessageID, threadMessage.MessageContent)}
-                        variant="subtle" 
-                        color="blue" 
-                        size="sm"
-                        mt="sm"
-                      >
-                        Edit
-                      </Button>
+                    <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                      <Text><span style={{ fontWeight: 700 }}>{threadMessage.MessageFirstname} {threadMessage.MessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(threadMessage.MessageCreatedAt).toLocaleDateString()} {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
+
+                      {editingMessageId == threadMessage.MessageID ? (
+                        // In-place edit mode: Display a Textarea
+                        <div style={{ flex: 1 }}>
+                          <Textarea
+                            value={editedContent}
+                            onChange={(e) => setEditedContent(e.target.value)}
+                            placeholder="Edit your message"
+                            autosize
+                            styles={{
+                              input: { backgroundColor: 'transparent' },
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        // Display message content normally
+                        <Text style={{ flex: 1 }}>
+                          {threadMessage.MessageContent}
+                        </Text>
+                      )}
+
+                      {editingMessageId == threadMessage.MessageID ? (
+                        // Show "Save" and "Cancel" buttons when editing
+                        <>
+                          <Button
+                            onClick={() => handleSaveEdit(editingMessageId, editedContent)} 
+                            variant="subtle" 
+                            color="green" 
+                            size="sm"
+                            mt="sm"
+                          >
+                            Save
+                          </Button>
+                          <Button 
+                            onClick={() => handleCancelEdit(editingMessageId)} 
+                            variant="subtle" 
+                            color="gray" 
+                            size="sm"
+                            mt="sm"
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        // Show "Edit" button when not editing
+                        <>
+                          <Button 
+                            onClick={() => handleEditMessage(threadMessage.MessageID, threadMessage.MessageContent)} 
+                            variant="subtle" 
+                            color="blue" 
+                            size="sm"
+                            mt="sm"
+                          >
+                            Edit
+                          </Button>
+
+                          <Button
+                            onClick={() => handleReply(threadMessage.MessageID)}
+                            variant="subtle" 
+                            color="grape" 
+                            size="sm"
+                            mt="sm"
+                          >
+                            Reply
+                          </Button>
+
+                          <Button 
+                            onClick={() => handleDeleteThreadMessage(threadMessage.MessageID)}
+                            variant="subtle" 
+                            color="red" 
+                            size="sm"
+                            mt="sm"
+                          >
+                            Delete
+                          </Button>
+                        </>
+                      )}
+                    </Box>
+                  ) : (
+                    <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                      <Text><span style={{ fontWeight: 700 }}>{threadMessage.MessageFirstname} {threadMessage.MessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(threadMessage.MessageCreatedAt).toLocaleDateString()} {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
+                      <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{threadMessage.MessageContent}</Text>
 
                       <Button 
                         onClick={() => handleReply(threadMessage.MessageID)}
@@ -355,22 +470,9 @@ export function ThreadView() {
                       >
                         Reply
                       </Button>
-
-                      <Button onClick={() => handleDeleteThreadMessage(threadMessage.MessageID)}>Delete</Button>
-                    </Group>
-                  ) : (
-                    <Button 
-                      onClick={() => handleReply(threadMessage.MessageID)}
-                      variant="subtle" 
-                      color="grape" 
-                      size="sm"
-                      mt="sm"
-                    >
-                      Reply
-                    </Button>
+                    </Box>
                   )}
-                </Box>                    
-              </Group>
+                </Group>
               </Card>
             ))
           ) : (
@@ -378,18 +480,60 @@ export function ThreadView() {
           )}
 
           {/* Messages sent in real-time by a user*/}
-          {messages.map((msg, index) => (
+          {messages.map((msg) => (
             <Card key={msg.id} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
               <Group>
-                <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                  <div key={index}>
+                {msg.sender == userName ? (
+                  <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
                     <Text><span style={{ fontWeight: 700 }}>{msg.sender}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(msg.date).toLocaleDateString()} {new Date(msg.date).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
-                    <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{msg.content}</Text>
 
-                    {msg.sender == userName ? (
-                      <Group>
+                    {editingMessageId == msg.id ? (
+                      // In-place edit mode: Display a Textarea
+                      <div style={{ flex: 1 }}>
+                        <Textarea
+                          value={editedContent}
+                          onChange={(e) => setEditedContent(e.target.value)}
+                          placeholder="Edit your message"
+                          autosize
+                          styles={{
+                            input: { backgroundColor: 'transparent' },
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      // Display message content normally
+                      <Text style={{ flex: 1 }}>
+                        {msg.content}
+                      </Text>
+                    )}
+
+                    {editingMessageId == msg.id ? (
+                      // Show "Save" and "Cancel" buttons when editing
+                      <>
+                        <Button
+                          onClick={() => handleSaveEdit(editingMessageId, editedContent)} 
+                          variant="subtle" 
+                          color="green" 
+                          size="sm"
+                          mt="sm"
+                        >
+                          Save
+                        </Button>
                         <Button 
-                          onClick={() => handleEditMessage(msg.id, msg.content)}
+                          onClick={() => handleCancelEdit(editingMessageId)} 
+                          variant="subtle" 
+                          color="gray" 
+                          size="sm"
+                          mt="sm"
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      // Show "Edit" button when not editing
+                      <>
+                        <Button 
+                          onClick={() => handleEditMessage(msg.id, msg.content)} 
                           variant="subtle" 
                           color="blue" 
                           size="sm"
@@ -398,7 +542,7 @@ export function ThreadView() {
                           Edit
                         </Button>
 
-                        <Button 
+                        <Button
                           onClick={() => handleReply(msg.id)}
                           variant="subtle" 
                           color="grape" 
@@ -408,21 +552,34 @@ export function ThreadView() {
                           Reply
                         </Button>
 
-                        <Button onClick={() => handleDeleteThreadMessage(msg.id)}>Delete</Button>
-                      </Group>
-                    ) : (
-                      <Button 
-                        onClick={() => handleReply(msg.id)}
-                        variant="subtle" 
-                        color="grape" 
-                        size="sm"
-                        mt="sm"
-                      >
-                        Reply
-                      </Button>
+                        <Button 
+                          onClick={() => handleDeleteThreadMessage(msg.id)}
+                          variant="subtle" 
+                          color="red" 
+                          size="sm"
+                          mt="sm"
+                        >
+                          Delete
+                        </Button>
+                      </>
                     )}
-                  </div>
-                </Box>                    
+                  </Box>
+                ) : (
+                  <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                    <Text><span style={{ fontWeight: 700 }}>{msg.sender}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(msg.date).toLocaleDateString()} {new Date(msg.date).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
+                    <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{msg.content}</Text>
+
+                    <Button 
+                      onClick={() => handleReply(msg.id)}
+                      variant="subtle" 
+                      color="grape" 
+                      size="sm"
+                      mt="sm"
+                    >
+                      Reply
+                    </Button>
+                  </Box>
+                )}
               </Group>
             </Card>
           ))}

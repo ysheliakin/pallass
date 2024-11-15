@@ -202,3 +202,35 @@ func DeleteThreadMessage(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "Thead message successfully stored"})
 }
+
+func EditThreadMessage(c echo.Context) error {
+	var threadMessage ThreadMessage
+
+	fmt.Println("EditThreadMessage()")
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&threadMessage)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	messageId, err := strconv.Atoi(threadMessage.ID)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.String(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	editThreadMessageParams := queries.EditThreadMessageByIDParams{
+		ID:      int32(messageId),
+		Content: threadMessage.Content,
+	}
+
+	// Edit the thread message
+	err = sql.EditThreadMessageByID(context.Background(), editThreadMessageParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Thread message successfully updated"})
+}

@@ -40,7 +40,3 @@ WHERE
     threads.id = $1
 ORDER BY 
     messages.created_at ASC;
-
--- name: DeleteThreadMessageByID :exec
-DELETE FROM messages 
-WHERE id = $1;

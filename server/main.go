@@ -124,6 +124,7 @@ func main() {
 	authGroup.POST("/funding", controller.AddFundingOpportunity)
 	authGroup.POST("/getUserName", controller.GetUserName)
 	authGroup.POST("/storeThreadMessage", controller.StoreThreadMessage)
+	authGroup.POST("/editThreadMessage", controller.EditThreadMessage)
 	// Put handlers
 	authGroup.PUT("/message", controller.UpdateMessageController)
 	authGroup.PUT("/user", func(c echo.Context) error {
@@ -191,14 +192,22 @@ func webSocket(c echo.Context) error {
 			break
 		}
 
-		// If the message is of type DELETE_MESSAGE, create a delete message with the Type and ID fields
-        if msg.Type == "DELETE_MESSAGE" {
-            deleteMessage := Message{
-                Type:  "DELETE_MESSAGE",
+		// If the message is of type EDIT_MESSAGE, create an edit message with the ID, Content, and Type fields
+		if msg.Type == "EDIT_MESSAGE" {
+			editMessage := Message{
                 ID: msg.ID,
+				Content: msg.Content,
+				Type: "EDIT_MESSAGE",
             }
 
-			fmt.Println("After deleteMessage")
+            // Broadcast the edit message to all clients
+            broadcast <- editMessage
+		} else if msg.Type == "DELETE_MESSAGE" {
+			// If the message is of type DELETE_MESSAGE, create a delete message with the ID and Type fields
+            deleteMessage := Message{
+                ID: msg.ID,
+				Type: "DELETE_MESSAGE",
+            }
 
             // Broadcast the delete message to all clients
             broadcast <- deleteMessage

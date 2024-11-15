@@ -11,6 +11,32 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const deleteThreadMessageByID = `-- name: DeleteThreadMessageByID :exec
+DELETE FROM messages 
+WHERE id = $1
+`
+
+func (q *Queries) DeleteThreadMessageByID(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteThreadMessageByID, id)
+	return err
+}
+
+const editThreadMessageByID = `-- name: EditThreadMessageByID :exec
+UPDATE messages
+SET content = $1
+WHERE id = $2
+`
+
+type EditThreadMessageByIDParams struct {
+	Content string
+	ID      int32
+}
+
+func (q *Queries) EditThreadMessageByID(ctx context.Context, arg EditThreadMessageByIDParams) error {
+	_, err := q.db.Exec(ctx, editThreadMessageByID, arg.Content, arg.ID)
+	return err
+}
+
 const storeThreadMessage = `-- name: StoreThreadMessage :one
 INSERT INTO messages (firstname, lastname, thread_id, content)
 VALUES ($1, $2, $3, $4)
