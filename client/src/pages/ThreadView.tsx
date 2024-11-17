@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Title as MantineTitle, Text, Paper, Button, Textarea, Group, Box, Card, Modal } from '@mantine/core';
+import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { useParams } from 'react-router-dom';
 import { EditorConsumer } from '@tiptap/react';
@@ -8,6 +8,13 @@ import { IconVideo } from '@tabler/icons-react';
 interface User {
   id: string;
   name: string;
+}
+
+interface Article {
+  id: string;
+  title: string;
+  url: string;
+  urlToImage: string;
 }
 
 interface Reply {
@@ -63,12 +70,46 @@ export function ThreadView() {
   const [threadData, setThreadData] = useState<Thread[] | null>(null);
   const [upvoteState, setUpvoteState] = useState(false);
   const [userName, setUserName] = useState('');
+  const [articles, setArticles] = useState<Article[]>([]);
 
   const email = localStorage.getItem('email');
   const token = localStorage.getItem('token');
   const ws = useRef<WebSocket | null>(null);
   const threadID = localStorage.getItem("threadID");
   var getUserName = "";
+
+  const fetchArticles = async () => {
+    const today = new Date();
+    
+    const yesterday = new Date(today);
+
+    yesterday.setDate(today.getDate() - 1);
+
+    // Formatting
+    const formattedDate = yesterday.toISOString().split('T')[0];
+    // console.log(formattedDate);
+    // console.log("testing");
+    try {
+      if (threadData && threadData.length > 0) {
+        const response = await fetch(
+          `https://newsapi.org/v2/everything?q=${threadData[0].ThreadTitle}&from=${formattedDate}&to=${formattedDate}&sortBy=popularity&language=en&apiKey=3457f090118c4f92a4eab998982c7457`
+        );
+        const data = await response.json();
+        if (data.articles && Array.isArray(data.articles)) {
+          // Show the first 3 articles
+          setArticles(data.articles.slice(0, 3));
+        } else {
+          console.error('Articles not found in response', data);
+        }
+      } 
+      } catch (error) {
+        console.error("Error fetching articles:", error);
+      }
+  
+
+
+  };
+
 
   const fetchThread = async() => {
     const fetchThreadData = async () => {
@@ -91,6 +132,7 @@ export function ThreadView() {
     }
     
     fetchThreadData();
+    // fetchArticles();
 
     // Websocket connection
     ws.current = new WebSocket(`ws://localhost:5000/ws/${email}`)
@@ -157,7 +199,15 @@ export function ThreadView() {
 
   useEffect(() => {
     fetchThread();
+    fetchArticles();
   }, [email, threadID]);
+
+  useEffect(() => {
+    if (threadData && threadData.length > 0) {
+      fetchArticles();
+    }
+  }, [email, threadID, threadData]);
+
 
   const sendMessage = async () => {
     const fullname = await fetch('http://localhost:5000/getUserName', {
@@ -368,6 +418,36 @@ export function ThreadView() {
             </Button>
           </Group>
         </Paper>
+
+        <Box mt="xl">
+  <Title order={3}>Latest News On The Subject</Title>
+  {articles.length > 0 ? (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+      {articles.map((article, index) => (
+        <Card key={index} shadow="sm" padding="lg" style={{ width: '350px' }}>
+          {article.urlToImage && (
+            <Image src={article.urlToImage} alt={article.title} height={200} fit="cover" />
+          )}
+          <Text size="lg" mt="md">{article.title}</Text>
+          <Button
+            variant="light"
+            color="blue"
+            fullWidth
+            mt="md"
+            component="a"
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Read more
+          </Button>
+        </Card>
+      ))}
+    </div>
+  ) : (
+    <Text>No articles available.</Text>
+  )}
+</Box>
 
         {/* Messages displayed on page initialization */}
         <div style={{ paddingBottom: '130px' }}>
