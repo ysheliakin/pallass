@@ -38,11 +38,12 @@ type ErrorPayload struct {
 }
 
 type ThreadMessage struct {
-	ID string `json:"id"`
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
-	ThreadID  string `json:"threadid"`
-	Content   string `json:"content"`
+	ID             string `json:"id"`
+	Firstname      string `json:"firstname"`
+	Lastname       string `json:"lastname"`
+	ThreadID       string `json:"threadid"`
+	Content        string `json:"content"`
+	ReplyMessageID string `json:"replymessageid"`
 }
 
 type GroupMember struct {

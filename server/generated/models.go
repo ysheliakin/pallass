@@ -43,6 +43,8 @@ type Message struct {
 	ThreadID  int32
 	Content   string
 	CreatedAt pgtype.Timestamp
+	MessageID pgtype.Int4
+	Reply     pgtype.Bool
 }
 
 type SampleTable struct {

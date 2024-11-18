@@ -28,11 +28,18 @@ SELECT
     messages.thread_id AS message_thread_id,
     messages.content AS message_content,
     messages.created_at AS message_created_at,
-    (SELECT firstname || ' ' || lastname FROM users WHERE users.email = $2) AS user_fullname
+    (SELECT firstname || ' ' || lastname FROM users WHERE users.email = $2) AS user_fullname,
+    replying_message.id AS reply_id,
+    replying_message.firstname AS reply_firstname,
+    replying_message.lastname AS reply_lastname,
+    replying_message.content AS reply_content,
+    replying_message.created_at AS reply_created_at
 FROM 
     threads
 LEFT JOIN 
     messages ON threads.id = messages.thread_id
+LEFT JOIN
+    messages AS replying_message ON messages.message_id = replying_message.id
 WHERE 
     threads.id = $1
 ORDER BY 
@@ -61,6 +68,11 @@ type GetThreadAndMessagesByThreadIDAndFullnameByUserEmailRow struct {
 	MessageContent   pgtype.Text
 	MessageCreatedAt pgtype.Timestamp
 	UserFullname     interface{}
+	ReplyID          pgtype.Int4
+	ReplyFirstname   pgtype.Text
+	ReplyLastname    pgtype.Text
+	ReplyContent     pgtype.Text
+	ReplyCreatedAt   pgtype.Timestamp
 }
 
 func (q *Queries) GetThreadAndMessagesByThreadIDAndFullnameByUserEmail(ctx context.Context, arg GetThreadAndMessagesByThreadIDAndFullnameByUserEmailParams) ([]GetThreadAndMessagesByThreadIDAndFullnameByUserEmailRow, error) {
@@ -89,6 +101,11 @@ func (q *Queries) GetThreadAndMessagesByThreadIDAndFullnameByUserEmail(ctx conte
 			&i.MessageContent,
 			&i.MessageCreatedAt,
 			&i.UserFullname,
+			&i.ReplyID,
+			&i.ReplyFirstname,
+			&i.ReplyLastname,
+			&i.ReplyContent,
+			&i.ReplyCreatedAt,
 		); err != nil {
 			return nil, err
 		}

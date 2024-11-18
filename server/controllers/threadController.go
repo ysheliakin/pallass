@@ -76,10 +76,11 @@ func DownvoteController(c echo.Context) error {
 	return c.String(http.StatusOK, "Downvoted")
 }
 
+// Get all of the discussion threads
 func GetThreadsController(c echo.Context) error {
 	fmt.Println("GetThreadsController")
 
-	// Query the database
+	// Query the database to retrieve information from all of the threads
 	threads, err := sql.GetThreads(context.Background())
 	if err != nil {
 		if err.Error() == "no rows in result set" {
@@ -90,6 +91,7 @@ func GetThreadsController(c echo.Context) error {
 	return c.JSON(http.StatusOK, threads)
 }
 
+// Get a thread's information (including its messages)
 func GetThreadController(c echo.Context) error {
 	fmt.Println("GetThreadController")
 
@@ -129,8 +131,12 @@ func DeleteThreadController(c echo.Context) error {
 	return c.String(http.StatusOK, "Thread deleted")
 }
 
+// Store a thread message in the database
 func StoreThreadMessage(c echo.Context) error {
 	var threadMessage ThreadMessage
+	var replyMessageIDParam pgtype.Int4
+
+	reply := pgtype.Bool{Bool: false, Valid: true}
 
 	fmt.Println("StoreThreadMessage()")
 
@@ -138,13 +144,34 @@ func StoreThreadMessage(c echo.Context) error {
 	err := c.Bind(&threadMessage)
 	if err != nil {
 		e.Logger.Error(err)
+		fmt.Println("Error decoding the incoming JSON request body")
 		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
 	}
 
 	threadId, err := strconv.Atoi(threadMessage.ThreadID)
 	if err != nil {
 		e.Logger.Error(err)
-		return c.String(http.StatusBadRequest, "Invalid ID format")
+		fmt.Println("Invalid thread ID format")
+		return c.String(http.StatusBadRequest, "Invalid thread ID format")
+	}
+
+	// If the message is a reply, convert the replied to message ID to pgtpye.Int4 and set reply to true
+	// Else set the reply to false
+	if threadMessage.ReplyMessageID != "" {
+		fmt.Println("ReplyMessageID exists")
+
+		replyMessageID, err := strconv.Atoi(threadMessage.ReplyMessageID)
+		if err != nil {
+			e.Logger.Error(err)
+			fmt.Println("Invalid reply message ID format")
+			return c.String(http.StatusBadRequest, "Invalid reply message ID format")
+		}
+
+		replyMessageIDParam = pgtype.Int4{Int32: int32(replyMessageID), Valid: true}
+
+		reply = pgtype.Bool{Bool: true, Valid: true}
+	} else {
+		replyMessageIDParam = pgtype.Int4{Valid: false}
 	}
 
 	threadMessageParams := queries.StoreThreadMessageParams{
@@ -152,11 +179,14 @@ func StoreThreadMessage(c echo.Context) error {
 		Lastname:  threadMessage.Lastname,
 		ThreadID:  int32(threadId),
 		Content:   threadMessage.Content,
+		MessageID: replyMessageIDParam,
+		Reply: reply,
 	}
 
 	// Store the thread message
 	messageData, err := sql.StoreThreadMessage(context.Background(), threadMessageParams)
 	if err != nil {
+		fmt.Println("Unable to StoreThreadMessage")
 		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
 	}
 
@@ -164,6 +194,7 @@ func StoreThreadMessage(c echo.Context) error {
 	return c.JSON(http.StatusOK, messageData)
 }
 
+// Get the information of the user sending a message
 func GetUserName(c echo.Context) error {
 	var user User
 
@@ -233,4 +264,31 @@ func EditThreadMessage(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "Thread message successfully updated"})
+}
+
+// Get the information of the message being replied to
+func GetReplyingMessageData(c echo.Context) error {
+	var threadMessage ThreadMessage
+
+	fmt.Println("GetReplyingMessageData()")
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&threadMessage)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	replyingMessageId, err := strconv.Atoi(threadMessage.ID)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.String(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	replyingMessageData, err := sql.SelectReplyingMessageByID(context.Background(), int32(replyingMessageId))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, replyingMessageData)
 }
