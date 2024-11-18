@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Title, Text, Paper, Button, Textarea, Group, Stack } from '@mantine/core';
-import { Layout, useStyles } from '../components/layout';
+import React, { useEffect, useState } from 'react';
+import { IconMusic, IconPhoto, IconVideo } from '@tabler/icons-react';
 import { useParams } from 'react-router-dom';
-import { IconVideo, IconMusic, IconPhoto } from '@tabler/icons-react'; // Import relevant icons
+import { Button, Container, Group, Paper, Stack, Text, Textarea, Title } from '@mantine/core';
+import { Layout, useStyles } from '../components/layout';
 
 interface User {
   id: string;
@@ -30,7 +30,7 @@ interface Thread {
 
 const currentUser: User = {
   id: '2',
-  name: 'Jane Smith'
+  name: 'Jane Smith',
 };
 
 export function ThreadView() {
@@ -50,38 +50,37 @@ export function ThreadView() {
   useEffect(() => {
     // Fetch thread data
     const fetchThread = async () => {
-        try {
-            const response = await fetch(`http://localhost:5000/threads/${threadId}`);
-            const data = await response.json();
-            setThread(data);
-        } catch (error) {
-            console.error("Error fetching thread:", error);
-        }
+      try {
+        const response = await fetch(`http://localhost:5000/threads/${threadId}`);
+        const data = await response.json();
+        setThread(data);
+      } catch (error) {
+        console.error('Error fetching thread:', error);
+      }
     };
 
     // Fetch comments data
     const fetchComments = async () => {
-        try {
-            const response = await fetch(`http://localhost:5000/threads/${threadId}/comments`);
-            const data = await response.json();
-            console.log("Comments response:", data); // Log the response
-            // Check if the data is an array
-            if (Array.isArray(data)) {
-                setComments(data);
-            } else {
-                console.error("Comments data is not an array:", data);
-                setComments([]); // Reset to an empty array if the data is not an array
-            }
-        } catch (error) {
-            console.error("Error fetching comments:", error);
-            setComments([]); // Reset to an empty array on error
+      try {
+        const response = await fetch(`http://localhost:5000/threads/${threadId}/comments`);
+        const data = await response.json();
+        console.log('Comments response:', data); // Log the response
+        // Check if the data is an array
+        if (Array.isArray(data)) {
+          setComments(data);
+        } else {
+          console.error('Comments data is not an array:', data);
+          setComments([]); // Reset to an empty array if the data is not an array
         }
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+        setComments([]); // Reset to an empty array on error
+      }
     };
 
     fetchThread();
     fetchComments();
-}, [threadId]);
-
+  }, [threadId]);
 
   const handlePostMessage = () => {
     if (newMessage.trim()) {
@@ -137,8 +136,12 @@ export function ThreadView() {
   const renderComment = (comment: Comment) => (
     <Paper key={comment.ID} p="md" withBorder>
       <Group justify="space-between" mb="xs">
-        <Text fw={500}>{comment.Firstname} {comment.Lastname}</Text>
-        <Text size="sm" color="dimmed">{new Date(comment.CreatedAt).toLocaleString()}</Text>
+        <Text fw={500}>
+          {comment.Firstname} {comment.Lastname}
+        </Text>
+        <Text size="sm" color="dimmed">
+          {new Date(comment.CreatedAt).toLocaleString()}
+        </Text>
       </Group>
       <Text mb="sm">{comment.Content}</Text>
     </Paper>
@@ -149,7 +152,9 @@ export function ThreadView() {
       <Container size="lg" mt={30}>
         {thread ? (
           <>
-            <Title order={2} style={styles.title}>{thread.Title}</Title>
+            <Title order={2} style={styles.title}>
+              {thread.Title}
+            </Title>
             <Text mb="xl">{thread.Content}</Text>
             <Text mb="xl">Category: {thread.Category}</Text>
             <Text mb="xl">Created At: {new Date(thread.CreatedAt).toLocaleString()}</Text>
@@ -159,9 +164,7 @@ export function ThreadView() {
           <Text>Loading thread...</Text>
         )}
 
-        <Stack gap="md">
-          {comments.map(comment => renderComment(comment))}
-        </Stack>
+        <Stack gap="md">{comments.map((comment) => renderComment(comment))}</Stack>
 
         <Paper mt="xl" p="md" withBorder>
           <Textarea
@@ -177,9 +180,9 @@ export function ThreadView() {
             accept="video/*"
             onChange={handleVideoUpload}
             id="video-upload"
-            style={{ display: 'none' }}  // Hide the default file input
+            style={{ display: 'none' }} // Hide the default file input
           />
-          
+
           <label htmlFor="video-upload">
             <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
               <IconVideo size={20} /> Upload Video
@@ -191,7 +194,7 @@ export function ThreadView() {
             accept="audio/*"
             onChange={handleAudioUpload}
             id="audio-upload"
-            style={{ display: 'none' }}  // Hide the default file input
+            style={{ display: 'none' }} // Hide the default file input
           />
 
           <label htmlFor="audio-upload">
@@ -205,7 +208,7 @@ export function ThreadView() {
             accept="image/*"
             onChange={handleImageUpload}
             id="image-upload"
-            style={{ display: 'none' }}  // Hide the default file input
+            style={{ display: 'none' }} // Hide the default file input
           />
 
           <label htmlFor="image-upload">
@@ -218,4 +221,3 @@ export function ThreadView() {
     </Layout>
   );
 }
-

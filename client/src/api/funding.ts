@@ -1,4 +1,4 @@
-const base = import.meta.env.VITE_API_ENDPOINT;
+import { base } from './base';
 
 export async function createFundingOpportunity(title: string, description: string, amount: number, link: string, deadline: Date | null) {
     const body ={

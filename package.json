@@ -1,9 +1,0 @@
-{
-  "dependencies": {
-<<<<<<< HEAD
-    "@tabler/icons-react": "^3.20.0"
-=======
-    "query-string": "^9.1.1"
->>>>>>> 5f371eda6fdcfab62571027afd436480f7df06ca
-  }
-}
