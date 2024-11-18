@@ -12,7 +12,7 @@ import (
 )
 
 const getGroupByID = `-- name: GetGroupByID :one
-SELECT id, name, description, created_by, created_at
+SELECT id, name, description, created_at
 FROM groups
 WHERE id = $1
 `
@@ -21,7 +21,6 @@ type GetGroupByIDRow struct {
 	ID          int32
 	Name        string
 	Description pgtype.Text
-	CreatedBy   int32
 	CreatedAt   pgtype.Timestamp
 }
 
@@ -32,34 +31,45 @@ func (q *Queries) GetGroupByID(ctx context.Context, id int32) (GetGroupByIDRow, 
 		&i.ID,
 		&i.Name,
 		&i.Description,
-		&i.CreatedBy,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const insertGroup = `-- name: InsertGroup :one
-INSERT INTO groups (name, description, created_at, created_by)
-VALUES ($1, $2, CURRENT_TIMESTAMP, $3)
-RETURNING id
+INSERT INTO groups (name, description, created_at, public, notifications)
+VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4)
+RETURNING id, uuid
 `
 
 type InsertGroupParams struct {
-	Name        string
-	Description pgtype.Text
-	CreatedBy   int32
+	Name          string
+	Description   pgtype.Text
+	Public        pgtype.Bool
+	Notifications pgtype.Bool
 }
 
-func (q *Queries) InsertGroup(ctx context.Context, arg InsertGroupParams) (int32, error) {
-	row := q.db.QueryRow(ctx, insertGroup, arg.Name, arg.Description, arg.CreatedBy)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
+type InsertGroupRow struct {
+	ID   int32
+	Uuid pgtype.UUID
 }
 
-const insertGroupMember = `-- name: InsertGroupMember :exec
+func (q *Queries) InsertGroup(ctx context.Context, arg InsertGroupParams) (InsertGroupRow, error) {
+	row := q.db.QueryRow(ctx, insertGroup,
+		arg.Name,
+		arg.Description,
+		arg.Public,
+		arg.Notifications,
+	)
+	var i InsertGroupRow
+	err := row.Scan(&i.ID, &i.Uuid)
+	return i, err
+}
+
+const insertGroupMember = `-- name: InsertGroupMember :one
 INSERT INTO group_members (group_id, user_id, role, joined_at)
 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+RETURNING group_id
 `
 
 type InsertGroupMemberParams struct {
@@ -68,7 +78,9 @@ type InsertGroupMemberParams struct {
 	Role    string
 }
 
-func (q *Queries) InsertGroupMember(ctx context.Context, arg InsertGroupMemberParams) error {
-	_, err := q.db.Exec(ctx, insertGroupMember, arg.GroupID, arg.UserID, arg.Role)
-	return err
+func (q *Queries) InsertGroupMember(ctx context.Context, arg InsertGroupMemberParams) (int32, error) {
+	row := q.db.QueryRow(ctx, insertGroupMember, arg.GroupID, arg.UserID, arg.Role)
+	var group_id int32
+	err := row.Scan(&group_id)
+	return group_id, err
 }

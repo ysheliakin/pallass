@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Title, TextInput, PasswordInput, Button, Paper } from '@mantine/core';
-import { Layout, useStyles } from '../components/layout';
+import { Layout, useStyles } from '@/components/layout';
 
 export function JoinQASession() {
   const styles = useStyles();

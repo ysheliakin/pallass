@@ -12,7 +12,7 @@ import {
   Title,
 } from '@mantine/core';
 import { register } from '@/api/user';
-import { Layout, useStyles } from '../components/layout';
+import { Layout, useStyles } from '@/components/layout';
 
 export function SignUpPage() {
   const styles = useStyles();
@@ -43,10 +43,11 @@ export function SignUpPage() {
 
     // Log the user in if it worked well, otherwise error
     if (response.ok) {
-      navigate('/dashboard');
+      setError('');
+      navigate('/login');
     } else {
-      const errorData = await response.json();
-      setError(errorData.message);
+      //const errorData = await response.json();
+      setError(response.message);
     }
   };
 
@@ -58,6 +59,11 @@ export function SignUpPage() {
     const updatedLinks = [...socialLinks];
     updatedLinks[index] = value;
     setSocialLinks(updatedLinks);
+  };
+
+  const removeSocialLink = (index: number) => {
+    const updatedLinks = socialLinks.filter((_, i) => i !== index); 
+    setSocialLinks(updatedLinks); 
   };
 
   return (
@@ -140,22 +146,24 @@ export function SignUpPage() {
           />
 
           <Box mt="md">
-            <Text size="sm" style={{ marginBottom: 5 }}>
-              Social media accounts
+            <Text size="sm" style={{ fontWeight: 600 }}>
+              Your network links
             </Text>
             {socialLinks.map((link, index) => (
-              <TextInput
-                key={index}
-                placeholder="https://..."
-                value={link}
-                onChange={(event) => updateSocialLink(index, event.currentTarget.value)}
-                styles={{ input: styles.input }}
-                mt={5}
-              />
+              <Group key={index} mb="sm">
+                <TextInput
+                  key={index}
+                  placeholder="https://..."
+                  value={link}
+                  onChange={(event) => updateSocialLink(index, event.currentTarget.value)}
+                  styles={{ input: styles.input }}
+                  mt={5}
+                />
+                <Button onClick={() => removeSocialLink(index)} color="red" size="xs">Remove</Button>
+              </Group>
             ))}
             <Button
               onClick={addSocialLink}
-              variant="outline"
               size="xs"
               mt={5}
               style={styles.secondaryButton}

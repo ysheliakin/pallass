@@ -2,7 +2,6 @@ import React from 'react';
 import { Container, Group, Image, Paper, Stack, Title } from '@mantine/core';
 import { Layout, useStyles } from '../components/layout';
 
-
 export function HomePage() {
   const styles = useStyles();
 

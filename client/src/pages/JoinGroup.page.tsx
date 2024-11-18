@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Title, TextInput, Radio, Button, Paper, Stack } from '@mantine/core';
-import { Layout, useStyles } from '../components/layout';
+import { Layout, useStyles } from '@/components/layout';
 
 export function JoinGroup() {
   const styles = useStyles();

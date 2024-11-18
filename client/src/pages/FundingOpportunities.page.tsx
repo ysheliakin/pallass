@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Center, Group, Loader, Text, Title } from '@mantine/core';
-import { getFundingOpportunities } from '../api/funding';
-import { Layout } from '../components/layout';
+import { getFundingOpportunities } from '@/api/funding';
+import { Layout } from '@/components/layout';
 
 type FundingItem = {
   Title: string;
