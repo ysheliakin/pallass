@@ -32,12 +32,14 @@ const filterFundingItems = (
   major: string,
   deadline: Date
 ): FundingItem[] => {
-  return FundingItem.filter(item => 
-    item.targetAmount >= minAmount && 
-    item.targetAmount <= maxAmount && 
+  return fundingItems.filter(item => 
+    item.TargetAmount >= minAmount && 
+    item.TargetAmount <= maxAmount && 
     item.major.toLowerCase().includes(major.toLowerCase()) && 
     item.deadlineDate <= deadline
   );
+};
+
 
 
 export const FundingOpportunities = () => {

@@ -1,11 +1,6 @@
-<<<<<<< HEAD
-import React, { useEffect, useState } from 'react';
-import { IconMusic, IconPhoto, IconVideo } from '@tabler/icons-react';
-=======
 import React, { useState, useEffect, useRef } from 'react';
 import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
->>>>>>> 71e8c27a0a83c0f557ff824db80d91d019008166
 import { useParams } from 'react-router-dom';
 import { EditorConsumer } from '@tiptap/react';
 import { IconVideo } from '@tabler/icons-react';
@@ -866,52 +861,7 @@ export function ThreadView() {
             minRows={3}
             mb="sm"
           />
-<<<<<<< HEAD
-          <Button onClick={handlePostMessage}>Post Comment</Button>
-          <input
-            type="file"
-            accept="video/*"
-            onChange={handleVideoUpload}
-            id="video-upload"
-            style={{ display: 'none' }} // Hide the default file input
-          />
-
-          <label htmlFor="video-upload">
-            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-              <IconVideo size={20} /> Upload Video
-            </Button>
-          </label>
-
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={handleAudioUpload}
-            id="audio-upload"
-            style={{ display: 'none' }} // Hide the default file input
-          />
-
-          <label htmlFor="audio-upload">
-            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-            <IconMusic size={20} /> Upload Audio
-            </Button>
-          </label>
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            id="image-upload"
-            style={{ display: 'none' }} // Hide the default file input
-          />
-
-          <label htmlFor="image-upload">
-            <Button component="span" variant="outline" style={{ marginBottom: '10px' }}>
-            <IconPhoto size={20} /> Upload Image
-            </Button>
-          </label>
-=======
           <Button style={{ marginBottom: '10px' }} onClick={sendMessage}>Post Message</Button>
->>>>>>> 71e8c27a0a83c0f557ff824db80d91d019008166
         </Paper>
       </Container>
     </Layout>
