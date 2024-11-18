@@ -10,8 +10,8 @@ export function CreateThread() {
   const [category, setCategory] = useState<string | null>(null);
   const [newCategory, setNewCategory] = useState('');
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([
-    { value: 'general', label: 'General' },
-    { value: 'tech', label: 'Technology' },
+    { value: 'General', label: 'General' },
+    { value: 'Technology', label: 'Technology' },
     // Add more predefined categories as needed
   ]);
 

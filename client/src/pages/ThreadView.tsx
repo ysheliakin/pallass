@@ -17,6 +17,14 @@ interface Article {
   urlToImage: string;
 }
 
+interface Paper {
+
+  title: string;
+  Author: string;
+  organization: string;
+  paperLink: string; 
+}
+
 interface Reply {
   id: string;
   author: User;
@@ -71,6 +79,7 @@ export function ThreadView() {
   const [upvoteState, setUpvoteState] = useState(false);
   const [userName, setUserName] = useState('');
   const [articles, setArticles] = useState<Article[]>([]);
+  const [papers, setPapers] = useState<Paper[]>([]);
 
   const email = localStorage.getItem('email');
   const token = localStorage.getItem('token');
@@ -80,7 +89,7 @@ export function ThreadView() {
 
   const fetchArticles = async () => {
     const today = new Date();
-    
+
     const yesterday = new Date(today);
 
     yesterday.setDate(today.getDate() - 1);
@@ -89,10 +98,28 @@ export function ThreadView() {
     const formattedDate = yesterday.toISOString().split('T')[0];
     // console.log(formattedDate);
     // console.log("testing");
+    var filteredQuery;
+
+    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'benefits', 'like', 'so', 'or',
+      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we', 'all',
+      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it'
+    ];
+    // filter out filler words
+    if (threadData && threadData.length > 0 && threadData[0].ThreadTitle) {
+      const query = threadData[0].ThreadTitle;
+      filteredQuery = query
+        .split(' ')
+        .filter(word => !fillerWords.includes(word.toLowerCase()))
+        .join(' ');
+      
+      console.log('Filtered Query:', filteredQuery);
+    } else {
+      console.error('ThreadTitle is null or undefined');
+    }
     try {
       if (threadData && threadData.length > 0) {
         const response = await fetch(
-          `https://newsapi.org/v2/everything?q=${threadData[0].ThreadTitle}&from=${formattedDate}&to=${formattedDate}&sortBy=popularity&language=en&apiKey=3457f090118c4f92a4eab998982c7457`
+          `https://newsapi.org/v2/everything?q=${filteredQuery}&from=${formattedDate}&to=${formattedDate}&sortBy=popularity&language=en&apiKey=3457f090118c4f92a4eab998982c7457`
         );
         const data = await response.json();
         if (data.articles && Array.isArray(data.articles)) {
@@ -104,6 +131,69 @@ export function ThreadView() {
       } 
       } catch (error) {
         console.error("Error fetching articles:", error);
+      }
+  
+
+
+  };
+
+  const fetchPapers = async () => {
+    const today = new Date();
+
+    const yesterday = new Date(today);
+
+    yesterday.setDate(today.getDate() - 1);
+
+    // Formatting
+    const formattedDate = yesterday.toISOString().split('T')[0];
+    // console.log(formattedDate);
+    // console.log("testing");
+    var filteredQuery;
+
+    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'benefits', 'like', 'so', 'or',
+      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we', 'all',
+      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it'
+    ];
+    // filter out filler words
+    if (threadData && threadData.length > 0 && threadData[0].ThreadTitle) {
+      const query = threadData[0].ThreadCategory;
+      filteredQuery = query
+        .split(' ')
+        .filter(word => !fillerWords.includes(word.toLowerCase()))
+        .join(' ');
+      
+      console.log('Filtered Query:', filteredQuery);
+    } else {
+      console.error('ThreadTitle is null or undefined');
+    }
+    const safeQuery = filteredQuery || '';
+    try {
+      if (threadData && threadData.length > 0) {
+        const response = await fetch(
+          `https://doaj.org/api/search/journals/${filteredQuery}?page=1&pageSize=3`
+          // q=${encodeURIComponent(safeQuery)}&fromDate=${formattedDate}&toDate=${formattedDate}&size=3&lang=en`
+        );
+        // const textResponse = await response.text();
+        // console.log(textResponse);
+        const data = await response.json();
+        // console.log('API Response:', JSON.stringify(data, null, 2));
+
+        if (data && data.results && data.results.length > 0) {
+          const papers: Paper[] = data.results.map((paper: any) => ({
+            title: paper.bibjson.title.exact,
+            Author: paper.bibjson.author,  
+            organization: paper.bibjson.publisher.name || ' ', // Publisher name as organization
+            paperLink: paper.bibjson.article.license_display_example_url || 'N/A', // Link to article
+          }));
+    
+  
+          setPapers(papers.slice(0, 3));
+        } else {
+          console.error('Papers not found in response', data);
+        }
+      } 
+      } catch (error) {
+        console.error("Error fetching Papers:", error);
       }
   
 
@@ -205,6 +295,7 @@ export function ThreadView() {
   useEffect(() => {
     if (threadData && threadData.length > 0) {
       fetchArticles();
+      fetchPapers();
     }
   }, [email, threadID, threadData]);
 
@@ -449,6 +540,90 @@ export function ThreadView() {
   )}
 </Box>
 
+<Box mt="xl">
+<Title order={3}>Interesting Journals In The Field</Title>
+
+  {papers.length > 0 ? (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '20px',
+        justifyContent: 'center',
+        marginTop: '20px',
+      }}
+    >
+      {papers.map((paper, index) => (
+        <Card
+          key={index}
+          shadow="sm"
+          padding="lg"
+          style={{
+            width: '300px',
+            borderRadius: '10px',
+            backgroundColor: '#fff',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            cursor: 'pointer',
+            overflow: 'hidden',
+          }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <Text
+            size="lg"
+            mt="md"
+            style={{
+              fontSize: '1.2rem',
+              fontWeight: 'bold',
+              color: '#333',
+              marginBottom: '10px',
+              lineHeight: '1.5',
+            }}
+          >
+            {paper.title}
+          </Text>
+
+          <Text>
+            {paper.Author}
+          </Text>
+
+          <Text>
+            {paper.organization}
+          </Text>
+          
+          <Button
+            variant="light"
+            color="blue"
+            fullWidth
+            mt="md"
+            component="a"
+            href={paper.paperLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              backgroundColor: '#1E90FF',
+              color: '#fff',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              padding: '12px',
+              borderRadius: '5px',
+              transition: 'background-color 0.3s ease',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4682B4'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1E90FF'}
+          >
+            Read more
+          </Button>
+        </Card>
+      ))}
+    </div>
+  ) : (
+    <Text style={{fontSize: '1.2rem', color: '#777' }}>No articles available.</Text>
+  )}
+</Box>
+
+<Title order={3}>Comments</Title>
         {/* Messages displayed on page initialization */}
         <div style={{ paddingBottom: '130px' }}>
           {threadData && threadData.length > 0 ? (
