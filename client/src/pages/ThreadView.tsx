@@ -246,8 +246,6 @@ export function ThreadView() {
 
     // Handle incoming messages from the WebSocket server (i.e. when a user sends a message)
     ws.current.onmessage = (event) => {
-      console.log("onmessage()")
-
       const message = JSON.parse(event.data);
 
       // Edit the message's content if the type is 'EDIT_MESSAGE'
@@ -262,13 +260,12 @@ export function ThreadView() {
           }
 
           const updatedThreadMessages = prevMessages.map((msg) => msg.MessageID == message.id ? { ...msg, MessageContent : message.content } : msg);
-          console.log("updatedThreadMessages: ", updatedThreadMessages)
           return updatedThreadMessages;
         })
       }
-      // Remove the message if the type is 'DELETE_MESSAGE'
+      // Remove the message and its nested replies if the type is 'DELETE_MESSAGE'
       else if (message.type === 'DELETE_MESSAGE') {
-        // To delete a message and its nested replies that were were displayed on page initialization
+        // To delete a message and its nested replies that were newly sent
         const deleteNewMessageAndReplies = (messages: Message[], deletingMessageId: string): Message[] => {
           // Contain all messages that are going to be deleted
           const deletingMessages = new Set([deletingMessageId]);
@@ -290,16 +287,33 @@ export function ThreadView() {
           return messages.filter((msg) => !deletingMessages.has(msg.id));
         };
 
-        // Remove the deleted message (if it was a newly sent message)
+        // To delete a message and its nested replies that were displayed on page initialization
+        const deleteOldMessageAndReplies = (messages: Thread[], deletingMessageId: string): Thread[] => {
+          const deletingMessages = new Set([Number(deletingMessageId)]);
+      
+          const deletingReplies = (messageId: string) => {
+            const replies = messages.filter((msg) => msg.ReplyID == messageId);
+            replies.forEach((reply) => {
+              deletingMessages.add(Number(reply.MessageID));
+              deletingReplies(reply.MessageID);
+            });
+          };
+      
+          deletingReplies(deletingMessageId);
+      
+          return messages.filter((msg) => !deletingMessages.has(Number(msg.MessageID)));
+        };
+
+        // Remove the deleted message and its nested replies (if it was a newly sent message)
         setMessages((prevMessages) => deleteNewMessageAndReplies(prevMessages, message.id));
 
-        // Remove the deleted message (if it was an older message displayed during the page initialization)
+        // Remove the deleted message and its nested replies (if it was an older message displayed during the page initialization)
         setThreadData((prevMessages) => {
           if (prevMessages == null ) {
             return [];
           }
 
-          const updatedThreadMessages = prevMessages.filter((msg) => msg.MessageID != message.id);
+          const updatedThreadMessages = deleteOldMessageAndReplies(prevMessages, message.id);
           return updatedThreadMessages;
         })
       }
@@ -466,8 +480,6 @@ export function ThreadView() {
   const handleSaveEdit = async (messageId: string, content: string) => {
     const id = "" + messageId + ""
 
-    console.log("getMessageID: ", id)
-
     const response = await fetch(`http://localhost:5000/editThreadMessage`, {
       method: 'POST',
       headers: {
@@ -486,8 +498,6 @@ export function ThreadView() {
     if (ws.current) {
       ws.current.send(JSON.stringify({id: id, content: content, type: 'EDIT_MESSAGE'}));
     }
-
-    console.log("Successful edit (I think)")
 
     setEditingMessageId(null);
     setEditedContent('');
@@ -564,8 +574,6 @@ export function ThreadView() {
     const replyingMessageSender = replyingMessageData[0].Firstname + " " + replyingMessageData[0].Lastname
     const replyingMessageID = "" + replyingMessageData[0].ID + ""
 
-    console.log("replyingMessageData[0].ID: ", replyingMessageID)
-
     var message: Message
 
     // If the ID of the message being replied to exists, create an object containing a reply
@@ -595,7 +603,6 @@ export function ThreadView() {
 
     if (ws.current) {
       // Send the message
-      console.log("message (postreply): ", message)
       ws.current.send(JSON.stringify(message));
       setNewMessage('');
     } else {
@@ -788,7 +795,6 @@ export function ThreadView() {
                     {/* Display the 'Edit' and 'Delete' buttons if the user is the one who sent the message */}
                     {threadMessage.MessageFirstname + " " + threadMessage.MessageLastname == threadData[0].UserFullname ? (
                       <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                        <Text>{ threadMessage.MessageID }</Text>
                         <Text><span style={{ fontWeight: 700 }}>{threadMessage.MessageFirstname} {threadMessage.MessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(threadMessage.MessageCreatedAt).toLocaleDateString()} {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
 
                         {editingMessageId == threadMessage.MessageID ? (
@@ -901,7 +907,6 @@ export function ThreadView() {
                 <Card shadow="sm" padding="xs" radius="md" style={{ backgroundColor: '#D7C6B4', marginTop: '10px', ...(msg.reply === 'true' ? { borderBottomLeftRadius: '0', borderBottomRightRadius: '0' } : {}) }}>
                   <Group>
                     <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                      <Text>{ msg.replyingmsgid }</Text>
                       <Text><span style={{ color: '#BE4BDB', fontWeight: 700, fontSize: 14 }}>Reply To </span> | <span style={{ fontSize: 12, fontWeight: 700 }}>{ msg.replyingmsgsender }</span> <span style={{ fontSize: 10, float: 'right' }}>{new Date(msg.replyingmsgdate).toLocaleDateString()} {new Date(msg.replyingmsgdate).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
                       <Text style={{ fontSize: 12 }}>{ msg.replyingmsgcontent }</Text>
                     </Box>
@@ -914,7 +919,6 @@ export function ThreadView() {
                   {/* Display the 'Edit' and 'Delete' buttons if the user is the one who sent the message */}
                   {msg.sender == userName ? (
                     <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                      <Text>{ msg.id }</Text>
                       <Text><span style={{ fontWeight: 700 }}>{msg.sender}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(msg.date).toLocaleDateString()} {new Date(msg.date).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
 
                       {editingMessageId == msg.id ? (

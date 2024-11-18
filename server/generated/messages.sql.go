@@ -11,13 +11,28 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const deleteThreadMessageByID = `-- name: DeleteThreadMessageByID :exec
-DELETE FROM messages 
-WHERE id = $1
+const deleteThreadMessageAndRepliesByID = `-- name: DeleteThreadMessageAndRepliesByID :exec
+WITH RECURSIVE deleted_replies AS (
+  -- Base case -> get the direct replies
+  SELECT id
+  FROM messages
+  WHERE message_id = $1
+  
+  -- Allow duplicate values that are in both the base and recursive cases
+  UNION ALL
+  
+  -- Recursive case -> get the nested replies
+  SELECT m.id
+  FROM messages m
+  INNER JOIN deleted_replies dr ON dr.id = m.message_id
+)
+DELETE FROM messages
+WHERE messages.id IN (SELECT id FROM deleted_replies)
+  OR messages.id = $1
 `
 
-func (q *Queries) DeleteThreadMessageByID(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deleteThreadMessageByID, id)
+func (q *Queries) DeleteThreadMessageAndRepliesByID(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteThreadMessageAndRepliesByID, id)
 	return err
 }
 

@@ -22,6 +22,7 @@ SELECT
     threads.upvotes AS thread_upvotes,
     threads.uuid AS thread_uuid,
     threads.created_at AS thread_created_at,
+    -- Messages in the thread
     messages.id AS message_id,
     messages.firstname AS message_firstname,
     messages.lastname AS message_lastname,
@@ -29,6 +30,7 @@ SELECT
     messages.content AS message_content,
     messages.created_at AS message_created_at,
     (SELECT firstname || ' ' || lastname FROM users WHERE users.email = $2) AS user_fullname,
+    -- Messages being replied to
     replying_message.id AS reply_id,
     replying_message.firstname AS reply_firstname,
     replying_message.lastname AS reply_lastname,

@@ -226,12 +226,12 @@ func DeleteThreadMessage(c echo.Context) error {
 	}
 
 	// Delete the thread message
-	err = sql.DeleteThreadMessageByID(context.Background(), int32(threadId))
+	err = sql.DeleteThreadMessageAndRepliesByID(context.Background(), int32(threadId))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, RegisterResponse{Message: "Thead message successfully stored"})
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Thead message and replies successfully deleted"})
 }
 
 func EditThreadMessage(c echo.Context) error {
