@@ -1,8 +1,11 @@
 import { base } from './base';
 
-export async function register(firstName: string, lastName: string, email: string, password: string, organization: string, fieldOfStudy: string, jobTitle: string, socialLinks: string[]) {
+export async function register(firstName: string, lastName: string, email: string, password: string, organization: string, fieldOfStudy: string, jobTitle: string, socialLinks: string[]) {    
     const options = {
         method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
         body: JSON.stringify({ firstName, lastName, email, password, organization, fieldOfStudy, jobTitle, socialLinks }),
     }
     const response = await fetch(`${base}/registeruser`, options);

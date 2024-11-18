@@ -24,16 +24,6 @@ func (q *Queries) CheckUserExistsByEmail(ctx context.Context, email string) (int
 	return column_1, err
 }
 
-const createAccountVerificationCode = `-- name: CreateAccountVerificationCode :exec
-INSERT INTO account_verification_codes (account_verification_code)
-VALUES ($1)
-`
-
-func (q *Queries) CreateAccountVerificationCode(ctx context.Context, accountVerificationCode string) error {
-	_, err := q.db.Exec(ctx, createAccountVerificationCode, accountVerificationCode)
-	return err
-}
-
 const createUser = `-- name: CreateUser :exec
 INSERT INTO users (firstname, lastname, email, password, organization, field_of_study, job_title)
 VALUES ($1, $2, $3, $4, $5, $6, $7)

@@ -3,25 +3,22 @@ package main
 import (
 	"context"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
+	"fmt"
+	"sync"
 
-	controller "sih/pallass/controller"
+	controller "sih/pallass/controllers"
 	queries "sih/pallass/generated"
 
-	"fmt"
-	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5"
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"github.com/joho/godotenv"
 )
-
-// TODO: Define the Comment struct
-type Comment struct {
-	Content string `json:"content"`
-	UserID  int    `json:"user_id"`
-}
 
 var e *echo.Echo
 var dbc context.Context
@@ -32,14 +29,29 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+var clients = make(map[*websocket.Conn]bool)
+
+// Broadcast messages
+var broadcast = make(chan Message)
+var mu sync.Mutex
+
+type Message struct {
+	ID      string `json:"id"`
+	Sender  string `json:"sender"`
+	Content string `json:"content"`
+	Date    string `json:"date"`
+	Type    string 	`json:"type"`
+}
+
+type RegisterResponse struct {
+	Message string `json:"message"`
+}
+
 func init() {
-	// Load the environment variables from .env file in dev
-	// (in prod they are set in AWS)
-	if os.Getenv("env") == "prod" {
-		err := godotenv.Load()
-		if err != nil {
-			e.Logger.Fatal(err)
-		}
+	// Load the environment variables
+	err := godotenv.Load()
+	if err != nil {
+		e.Logger.Fatal(err)
 	}
 }
 
@@ -68,14 +80,14 @@ func main() {
 	// }))
 	e.Use(middleware.CORS()) // TODO: might want to make this stricter
 
-	// Public routes
-	e.GET("/", controller.HelloController)
+	/* Public routes */
+	// Get handlers
+	e.GET("/funding", controller.GetFundingOpportunities)
+	e.GET("/ws/:email", webSocket)
+	// Post handlers
 	e.POST("/request-reset", controller.RequestPasswordReset)
-	e.GET("/threads/:id", controller.GetThreadController)
-	e.GET("/threads/:id/comments", controller.GetCommentController)
 	e.POST("/registeruser", controller.RegisterUser)
 	e.POST("/loginuser", controller.LoginUser)
-	e.GET("/funding", controller.GetFundingOpportunities)
 
 	// routes registered after this will require authentication
 	authGroup := e.Group("")
@@ -84,78 +96,78 @@ func main() {
 	authGroup.Use(middleware.CORS()) // TODO: might want to make this stricter
 	authGroup.Use(controller.Authenticate)
 
-	// Private routes requiring bearer token
-	authGroup.POST("/postThread", controller.ThreadController)
-	authGroup.POST("/comment", controller.CommentController)
-	authGroup.POST("/newgroup", controller.CreateGroup)
-
+	/* Private routes requiring bearer token */
+	// Get handlers
 	authGroup.GET("/group/:id", controller.GetGroupController)
-
-	authGroup.DELETE("/deleteThread", controller.DeleteThreadController)
-
-	authGroup.PUT("/comment", controller.UpdateCommentController)
-	authGroup.DELETE("/comment", controller.DeleteCommentController)
-
-	authGroup.POST("/flag", controller.FlagController)
-	authGroup.POST("/upvote", controller.UpvoteController)
-	authGroup.POST("/downvote", controller.DownvoteController)
-
 	authGroup.GET("/playlist", controller.PlaylistController)
-
-	// Get Handlers
-	authGroup.GET("/playlist", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Here is the playlist")
-	})
-	authGroup.GET("/ws/:email", webSocket)
-	authGroup.GET("/user", controller.GetUser)
-
-	// Post Handlers
+	//authGroup.GET("/user", controller.GetUserController)
+	authGroup.GET("/getThreads", controller.GetThreadsController)
+	// Post handlers
+	authGroup.POST("/postThread", controller.ThreadController)
+	authGroup.POST("/threads/:id", controller.GetThreadController)
+	authGroup.POST("/newgroup", controller.CreateGroup)
+	authGroup.POST("/flag", controller.FlagController)
+	authGroup.POST("/threads/upvote/:threadID", controller.UpvoteThread)
+	authGroup.POST("/downvote", controller.DownvoteController)
 	authGroup.POST("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post created")
 	})
 	authGroup.POST("/reset-password", controller.ResetPassword)
 	authGroup.POST("/validate-code", controller.ValidateResetCode)
-	authGroup.POST("/comment", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Comment created")
-	})
 	authGroup.POST("/flag", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Flag added")
-	})
-	authGroup.POST("/upvote", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Upvoted")
 	})
 	authGroup.POST("/downvote", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Downvoted")
 	})
 	authGroup.POST("/user", controller.UserController)
 	authGroup.POST("/funding", controller.AddFundingOpportunity)
-
-	// Put Handlers
+	authGroup.POST("/getUserName", controller.GetUserName)
+	authGroup.POST("/storeThreadMessage", controller.StoreThreadMessage)
+	authGroup.POST("/editThreadMessage", controller.EditThreadMessage)
+	// Put handlers
+	authGroup.PUT("/message", controller.UpdateMessageController)
 	authGroup.PUT("/user", func(c echo.Context) error {
 		return c.String(http.StatusOK, "User updated")
 	})
 	authGroup.PUT("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post updated")
 	})
-	authGroup.PUT("/comment", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Comment updated")
-	})
 	authGroup.PUT("/user", controller.UpdateUserController)
-
-	// Delete Handlers
+	// Delete handlers
+	authGroup.DELETE("/deleteThread", controller.DeleteThreadController)
+	authGroup.DELETE("/deleteThreadMessage/:messageID", controller.DeleteThreadMessage)
 	authGroup.DELETE("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post deleted")
 	})
-	authGroup.DELETE("/comment", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Comment deleted")
-	})
+
+	// Message handling
+	go handleMessages()
 
 	// Start server
 	e.Logger.Fatal(e.Start(":5000"))
 }
 
+// Reverse Proxy for Angular
+func getOrigin() *url.URL {
+	origin, _ := url.Parse("http://localhost:4200")
+	return origin
+}
+
+var origin = getOrigin()
+
+var director = func(req *http.Request) {
+	req.Header.Add("X-Forwarded-Host", req.Host)
+	req.Header.Add("X-Origin-Host", origin.Host)
+	req.URL.Scheme = "http"
+	req.URL.Host = origin.Host
+}
+
+// AngularHandler loads Angular assets
+var AngularHandler = &httputil.ReverseProxy{Director: director}
+
 func webSocket(c echo.Context) error {
-	fmt.Println("WebSocket")
+	fmt.Println("webSocket")
 
 	conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
@@ -163,29 +175,90 @@ func webSocket(c echo.Context) error {
 	}
 	defer conn.Close()
 
+	// Lock the mutex
+	mu.Lock()
+	clients[conn] = true
+	// Unlock the mutex
+	mu.Unlock()
+
+	for {
+		var msg Message
+
+		err := conn.ReadJSON(&msg)
+		if err != nil {
+			mu.Lock()
+			delete(clients, conn)
+			mu.Unlock()
+			break
+		}
+
+		// If the message is of type EDIT_MESSAGE, create an edit message with the ID, Content, and Type fields
+		if msg.Type == "EDIT_MESSAGE" {
+			editMessage := Message{
+                ID: msg.ID,
+				Content: msg.Content,
+				Type: "EDIT_MESSAGE",
+            }
+
+            // Broadcast the edit message to all clients
+            broadcast <- editMessage
+		} else if msg.Type == "DELETE_MESSAGE" {
+			// If the message is of type DELETE_MESSAGE, create a delete message with the ID and Type fields
+            deleteMessage := Message{
+                ID: msg.ID,
+				Type: "DELETE_MESSAGE",
+            }
+
+            // Broadcast the delete message to all clients
+            broadcast <- deleteMessage
+        } else {
+            // Broadcast the normal messages
+            broadcast <- msg
+        }
+	}
+
 	return nil
 }
 
-// func addComment(c echo.Context) error {
+func handleMessages() {
+	for {
+		// Wait for a new broadcasted message
+		msg := <-broadcast
+		mu.Lock()
+		// Go through each connected client and send the message
+		for client := range clients {
+			err := client.WriteJSON(msg)
+			// If an error occurs, close the client connection and remove the client from the list of connected clients
+			if err != nil {
+				client.Close()
+				delete(clients, client)
+			}
+		}
+		mu.Unlock()
+	}
+}
+
+
+// func addMessage(c echo.Context) error {
 // 	postID := c.Param("id") // Change the route to expect post ID
-// 	var comment Comment
-// 	if err := c.Bind(&comment); err != nil {
+// 	var message Message
+// 	if err := c.Bind(&message); err != nil {
 // 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid input"})
 // 	}
 
-// 	// Insert comment into database
-// 	_, err := sql.CreateComment(context.Background(), comment.Content, postID, comment.UserID) // Use your query function
+// 	// Insert message into database
+// 	_, err := sql.CreateMessage(context.Background(), message.Content, postID, message.UserID) // Use your query function
 // 	if err != nil {
-// 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "could not add comment"})
+// 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "could not add message"})
 // 	}
 
 // 	// Notify users (for simplicity, notify all users)
-// 	_, err = sql.CreateNotification(context.Background(), comment.UserID, comment.Content+" was added to a post!", postID) // Use your query function
+// 	_, err = sql.CreateNotification(context.Background(), message.UserID, message.Content+" was added to a post!", postID) // Use your query function
 // 	if err != nil {
 // 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "could not send notifications"})
 // 	}
 
-// 	return c.JSON(http.StatusCreated, comment)
+// 	return c.JSON(http.StatusCreated, message)
 // }
 
 // func getNotifications(c echo.Context) error {

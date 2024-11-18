@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Title, TextInput, Textarea, Select, Text, Button, Paper, Group } from '@mantine/core';
-import { Layout, useStyles } from '../components/layout';
+import { Layout, useStyles } from '@/components/layout';
 import { useNavigate } from 'react-router-dom';
 
 export function CreateThread() {
@@ -9,15 +9,16 @@ export function CreateThread() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<string | null>(null);
   const [newCategory, setNewCategory] = useState('');
-  const navigate = useNavigate();
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([
-    { value: 'general', label: 'General' },
-    { value: 'tech', label: 'Technology' },
+    { value: 'General', label: 'General' },
+    { value: 'Technology', label: 'Technology' },
     // Add more predefined categories as needed
   ]);
 
+  const token = localStorage.getItem('token')
+  const navigate = useNavigate();
+
   const handleCreateThread =  async () => {
-    console.log('Thread data:', { title, description, category });
     // Handle thread creation logic here
     const threadData = {
       Firstname: "Guest",
@@ -30,8 +31,9 @@ export function CreateThread() {
     try {
       // Send a POST request to the backend
       const response = await fetch('http://localhost:5000/postThread', {
-        method: 'POST', // Specify the request method
+        method: 'POST', // POST request
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json', // Specify content type as JSON
         },
         body: JSON.stringify(threadData), // Convert thread data to JSON
@@ -43,13 +45,9 @@ export function CreateThread() {
       }
   
       // Get the response data
-      const data = await response.json();
-      console.log('Response from server:', data);
-      navigate(`/thread/${data.threadID}`);
-      // navigate(`/funding-opportunities`);
-
-
-
+      const threadIdentifiers = await response.json();
+      localStorage.setItem("threadID", threadIdentifiers.id);
+      navigate(`/thread/${threadIdentifiers.uuid}`);
     } catch (error) {
       console.error('Error creating thread:', error);
       alert('Failed to create thread. Please try again.');

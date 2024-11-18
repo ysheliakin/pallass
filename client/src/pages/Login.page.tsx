@@ -11,7 +11,7 @@ import {
   Title,
 } from '@mantine/core';
 import { login } from '@/api/user';
-import { Layout, useStyles } from '../components/layout';
+import { Layout, useStyles } from '@/components/layout';
 
 export function LoginPage() {
   const styles = useStyles();

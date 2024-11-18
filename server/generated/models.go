@@ -8,15 +8,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Comment struct {
-	ID        int32
-	Firstname string
-	Lastname  string
-	ThreadID  int32
-	Content   string
-	CreatedAt pgtype.Timestamp
-}
-
 type FundingOpportunity struct {
 	ID           int32
 	Title        string
@@ -28,11 +19,13 @@ type FundingOpportunity struct {
 }
 
 type Group struct {
-	ID          int32
-	Name        string
-	Description pgtype.Text
-	CreatedAt   pgtype.Timestamp
-	CreatedBy   int32
+	ID            int32
+	Name          string
+	Description   pgtype.Text
+	CreatedAt     pgtype.Timestamp
+	Uuid          pgtype.UUID
+	Public        pgtype.Bool
+	Notifications pgtype.Bool
 }
 
 type GroupMember struct {
@@ -43,14 +36,29 @@ type GroupMember struct {
 	JoinedAt pgtype.Timestamp
 }
 
+type Message struct {
+	ID        int32
+	Firstname string
+	Lastname  string
+	ThreadID  int32
+	Content   string
+	CreatedAt pgtype.Timestamp
+}
+
 type SampleTable struct {
 	ID pgtype.Int4
 }
 
-type AccountVerificationCode struct {
-	ID                      int32
-	AccountVerificationCode string
-	CreatedAt               pgtype.Timestamp
+type Thread struct {
+	ID        int32
+	Firstname string
+	Lastname  string
+	Title     string
+	Content   string
+	Category  string
+	Upvotes   pgtype.Int4
+	CreatedAt pgtype.Timestamp
+	Uuid      pgtype.UUID
 }
 
 type User struct {
@@ -71,15 +79,4 @@ type UserSocialLink struct {
 	UserEmail  string
 	SocialLink string
 	CreatedAt  pgtype.Timestamp
-}
-
-type Thread struct {
-	ID        int32
-	Firstname string
-	Lastname  string
-	Title     string
-	Content   string
-	Category  string
-	Upvotes   pgtype.Int4
-	CreatedAt pgtype.Timestamp
 }

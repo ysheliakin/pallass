@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Title, TextInput, Textarea, Button, Paper } from '@mantine/core';
-import { Layout, useStyles } from '../components/layout';
+import { Layout, useStyles } from '@/components/layout';
 
 export function HostQASession() {
   const styles = useStyles();
