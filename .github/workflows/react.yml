@@ -16,7 +16,17 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
+      - name: Configure AWS credential
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/pallass-gh-actions-role
+          aws-region: us-east-1
+
     - name: Checkout code
       uses: actions/checkout@v4
 
