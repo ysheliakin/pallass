@@ -1,9 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Title as MantineTitle, Text, Paper, Button, Textarea, Group, Box, Card, Modal } from '@mantine/core';
+import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { useParams } from 'react-router-dom';
 import { EditorConsumer } from '@tiptap/react';
 import { IconVideo } from '@tabler/icons-react';
+
+interface User {
+  id: string;
+  name: string;
+}
+
+interface Article {
+  id: string;
+  title: string;
+  url: string;
+  urlToImage: string;
+}
+
+interface Paper {
+
+  title: string;
+  Author: string;
+  organization: string;
+  paperLink: string; 
+}
+
+interface Reply {
+  id: string;
+  author: User;
+  date: string;
+  content: string;
+}
+
+interface Message extends Reply {
+  replies: Reply[];
+}
 
 interface Message {
   id: string,
@@ -57,6 +88,8 @@ export function ThreadView() {
   const [threadData, setThreadData] = useState<Thread[] | null>(null);
   const [upvoteState, setUpvoteState] = useState(false);
   const [userName, setUserName] = useState('');
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [papers, setPapers] = useState<Paper[]>([]);
 
   const email = localStorage.getItem('email');
   // Get the JWT token
@@ -65,6 +98,120 @@ export function ThreadView() {
   const ws = useRef<WebSocket | null>(null);
   const threadID = localStorage.getItem("threadID");
   var getUserName = "";
+
+  const fetchArticles = async () => {
+    const today = new Date();
+
+    const yesterday = new Date(today);
+
+    yesterday.setDate(today.getDate() - 1);
+
+    // Formatting
+    const formattedDate = yesterday.toISOString().split('T')[0];
+    // console.log(formattedDate);
+    // console.log("testing");
+    var filteredQuery;
+
+    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'benefits', 'like', 'so', 'or',
+      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we', 'all',
+      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it'
+    ];
+    // filter out filler words
+    if (threadData && threadData.length > 0 && threadData[0].ThreadTitle) {
+      const query = threadData[0].ThreadTitle;
+      filteredQuery = query
+        .split(' ')
+        .filter(word => !fillerWords.includes(word.toLowerCase()))
+        .join(' ');
+      
+      console.log('Filtered Query:', filteredQuery);
+    } else {
+      console.error('ThreadTitle is null or undefined');
+    }
+    try {
+      if (threadData && threadData.length > 0) {
+        const response = await fetch(
+          `https://newsapi.org/v2/everything?q=${filteredQuery}&from=${formattedDate}&to=${formattedDate}&sortBy=popularity&language=en&apiKey=3457f090118c4f92a4eab998982c7457`
+        );
+        const data = await response.json();
+        if (data.articles && Array.isArray(data.articles)) {
+          // Show the first 3 articles
+          setArticles(data.articles.slice(0, 3));
+        } else {
+          console.error('Articles not found in response', data);
+        }
+      } 
+      } catch (error) {
+        console.error("Error fetching articles:", error);
+      }
+  
+
+
+  };
+
+  const fetchPapers = async () => {
+    const today = new Date();
+
+    const yesterday = new Date(today);
+
+    yesterday.setDate(today.getDate() - 1);
+
+    // Formatting
+    const formattedDate = yesterday.toISOString().split('T')[0];
+    // console.log(formattedDate);
+    // console.log("testing");
+    var filteredQuery;
+
+    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'benefits', 'like', 'so', 'or',
+      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we', 'all',
+      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it'
+    ];
+    // filter out filler words
+    if (threadData && threadData.length > 0 && threadData[0].ThreadTitle) {
+      const query = threadData[0].ThreadCategory;
+      filteredQuery = query
+        .split(' ')
+        .filter(word => !fillerWords.includes(word.toLowerCase()))
+        .join(' ');
+      
+      console.log('Filtered Query:', filteredQuery);
+    } else {
+      console.error('ThreadTitle is null or undefined');
+    }
+    const safeQuery = filteredQuery || '';
+    try {
+      if (threadData && threadData.length > 0) {
+        const response = await fetch(
+          `https://doaj.org/api/search/journals/${filteredQuery}?page=1&pageSize=3`
+          // q=${encodeURIComponent(safeQuery)}&fromDate=${formattedDate}&toDate=${formattedDate}&size=3&lang=en`
+        );
+        // const textResponse = await response.text();
+        // console.log(textResponse);
+        const data = await response.json();
+        // console.log('API Response:', JSON.stringify(data, null, 2));
+
+        if (data && data.results && data.results.length > 0) {
+          const papers: Paper[] = data.results.map((paper: any) => ({
+            title: paper.bibjson.title.exact,
+            Author: paper.bibjson.author,  
+            organization: paper.bibjson.publisher.name || ' ', // Publisher name as organization
+            paperLink: paper.bibjson.article.license_display_example_url || 'N/A', // Link to article
+          }));
+    
+  
+          setPapers(papers.slice(0, 3));
+        } else {
+          console.error('Papers not found in response', data);
+        }
+      } 
+      } catch (error) {
+        console.error("Error fetching Papers:", error);
+      }
+  
+
+
+  };
+
 
   const fetchThread = async() => {
     // Get the discussion thread's information (including its messages)
@@ -88,6 +235,7 @@ export function ThreadView() {
     }
     
     fetchThreadData();
+    // fetchArticles();
 
     // Websocket connection
     ws.current = new WebSocket(`ws://localhost:5000/ws/${email}`)
@@ -177,7 +325,16 @@ export function ThreadView() {
   // Runs on initialization of the page
   useEffect(() => {
     fetchThread();
+    fetchArticles();
   }, [email, threadID]);
+
+  useEffect(() => {
+    if (threadData && threadData.length > 0) {
+      fetchArticles();
+      fetchPapers();
+    }
+  }, [email, threadID, threadData]);
+
 
   const sendMessage = async () => {
     // Get the sender's information
@@ -495,6 +652,120 @@ export function ThreadView() {
           </Group>
         </Paper>
 
+        <Box mt="xl">
+  <Title order={3}>Latest News On The Subject</Title>
+  {articles.length > 0 ? (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+      {articles.map((article, index) => (
+        <Card key={index} shadow="sm" padding="lg" style={{ width: '350px' }}>
+          {article.urlToImage && (
+            <Image src={article.urlToImage} alt={article.title} height={200} fit="cover" />
+          )}
+          <Text size="lg" mt="md">{article.title}</Text>
+          <Button
+            variant="light"
+            color="blue"
+            fullWidth
+            mt="md"
+            component="a"
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Read more
+          </Button>
+        </Card>
+      ))}
+    </div>
+  ) : (
+    <Text>No articles available.</Text>
+  )}
+</Box>
+
+<Box mt="xl">
+<Title order={3}>Interesting Journals In The Field</Title>
+
+  {papers.length > 0 ? (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '20px',
+        justifyContent: 'center',
+        marginTop: '20px',
+      }}
+    >
+      {papers.map((paper, index) => (
+        <Card
+          key={index}
+          shadow="sm"
+          padding="lg"
+          style={{
+            width: '300px',
+            borderRadius: '10px',
+            backgroundColor: '#fff',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            cursor: 'pointer',
+            overflow: 'hidden',
+          }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <Text
+            size="lg"
+            mt="md"
+            style={{
+              fontSize: '1.2rem',
+              fontWeight: 'bold',
+              color: '#333',
+              marginBottom: '10px',
+              lineHeight: '1.5',
+            }}
+          >
+            {paper.title}
+          </Text>
+
+          <Text>
+            {paper.Author}
+          </Text>
+
+          <Text>
+            {paper.organization}
+          </Text>
+          
+          <Button
+            variant="light"
+            color="blue"
+            fullWidth
+            mt="md"
+            component="a"
+            href={paper.paperLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              backgroundColor: '#1E90FF',
+              color: '#fff',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              padding: '12px',
+              borderRadius: '5px',
+              transition: 'background-color 0.3s ease',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4682B4'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1E90FF'}
+          >
+            Read more
+          </Button>
+        </Card>
+      ))}
+    </div>
+  ) : (
+    <Text style={{fontSize: '1.2rem', color: '#777' }}>No articles available.</Text>
+  )}
+</Box>
+
+<Title order={3}>Comments</Title>
         {/* Messages displayed on page initialization */}
         <div style={{ paddingBottom: replyingToMessageId ? '220px' : '130px' }}>
           {threadData && threadData.length > 0 ? (

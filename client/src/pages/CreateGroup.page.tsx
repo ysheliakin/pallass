@@ -11,7 +11,9 @@ export function CreateGroup() {
   const [notifications, setNotifications] = useState('on');
   const [description, setDescription] = useState('');
 
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token');
+  const email = localStorage.getItem('email');
+  var getUserName = "";
 
   const handleCreateGroup = async () => {
     console.log('Group data:', { name, users, privacy, notifications, description });
