@@ -63,6 +63,13 @@ type Thread struct {
 	Uuid      pgtype.UUID
 }
 
+type ThreadUpvote struct {
+	ID        int32
+	ThreadID  int32
+	CreatedAt pgtype.Timestamp
+	UserEmail string
+}
+
 type User struct {
 	ID           int32
 	Firstname    string

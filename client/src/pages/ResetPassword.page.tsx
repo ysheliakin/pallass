@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { TextInput, PasswordInput, Container, Title, Paper, Button } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 
 export function ResetPasswordPage() {
   const styles = useStyles();
+  const navigate = useNavigate();
+
   const [tempcode, setTempcode] = useState('');
   const [display, setDisplay] = useState<'tempcode' | 'password'>('tempcode');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate();
   const email = localStorage.getItem('email');
   const token = localStorage.getItem('token');
 
@@ -60,46 +61,54 @@ export function ResetPasswordPage() {
     }
   }
 
+  const handleBackToLogin = () => {
+    navigate('/login')
+  };
+
   return (
     <Layout>
-    {display === 'tempcode' ? (
-      <Container size="xs" mt={60}>
-        <Title order={2} ta="center" mt="xl" style={styles.title}>Enter your verification code</Title>
+      <Link to="/" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Homepage
+      </Link>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+      {display === 'tempcode' ? (
+        <Container size="xs" mt={60}>
+          <Title order={2} ta="center" mt="xl" style={styles.title}>Enter your verification code</Title>
 
-        <Paper withBorder shadow="md" p={30} mt={30} radius="md">          
-            <input type="hidden" value={email} name="email" />
-            <TextInput
-              label="Verfication code"
-              placeholder="Your verification code"
-              required
-              value={tempcode}
-              onChange={(event) => setTempcode(event.currentTarget.value)}
-            />
-            <Button fullWidth mt="xl" style={styles.primaryButton} onClick={handleCodeSubmit}>Submit</Button>
-        </Paper> 
-      </Container>
-    ) : (
-      <Container size="xs" mt={60}>
-        <Title order={2} ta="center" mt="xl" style={styles.title}>Reset your password</Title>
+          {error && <p style={{ color: "red" }}>{error}</p>}
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+          <Paper withBorder shadow="md" p={30} mt={30} radius="md">          
+              <input type="hidden" value={email} name="email" />
+              <TextInput
+                label="Verfication code"
+                placeholder="Your verification code"
+                required
+                value={tempcode}
+                onChange={(event) => setTempcode(event.currentTarget.value)}
+              />
+              <Button fullWidth mt="xl" style={styles.primaryButton} onClick={handleCodeSubmit}>Submit</Button>
+          </Paper> 
+        </Container>
+      ) : (
+        <Container size="xs" mt={60}>
+          <Title order={2} ta="center" mt="xl" style={styles.title}>Reset your password</Title>
 
-        <Paper withBorder shadow="md" p={30} mt={30} radius="md"> 
-            <input type="hidden" value={email} name="email" />
-            <PasswordInput
-              label="New password"
-              placeholder="Your new password"
-              required
-              mt="md"
-              value={password}
-              onChange={(event) => setPassword(event.currentTarget.value)}
-            />
-            <Button fullWidth mt="xl" style={styles.primaryButton} onClick={handlePasswordSubmit}>Change password</Button>
-        </Paper> 
-      </Container>
-    )}
+          {error && <p style={{ color: "red" }}>{error}</p>}
+
+          <Paper withBorder shadow="md" p={30} mt={30} radius="md"> 
+              <input type="hidden" value={email} name="email" />
+              <PasswordInput
+                label="New password"
+                placeholder="Your new password"
+                required
+                mt="md"
+                value={password}
+                onChange={(event) => setPassword(event.currentTarget.value)}
+              />
+              <Button fullWidth mt="xl" style={styles.primaryButton} onClick={handlePasswordSubmit}>Change password</Button>
+          </Paper> 
+        </Container>
+      )}
     </Layout>
   );
 }

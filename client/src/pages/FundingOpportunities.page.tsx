@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Card, Center, Group, Loader, Text, Title } from '@mantine/core';
 import { getFundingOpportunities } from '@/api/funding';
 import { Layout } from '@/components/layout';
+import { Link } from 'react-router-dom';
 
 type FundingItem = {
   Title: string;
@@ -32,6 +33,10 @@ export const FundingOpportunities = () => {
 
   return (
     <Layout>
+      <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Your Dashboard
+      </Link>
+      
       <br />
       <Center>
         <Title>Funding Opportunities</Title>

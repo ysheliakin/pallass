@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { EditorConsumer } from '@tiptap/react';
 import { IconVideo } from '@tabler/icons-react';
 
@@ -56,7 +56,7 @@ interface Thread {
   ThreadTitle: string,
   ThreadContent: string,
   ThreadCategory: string,
-  ThreadUpvotes: string,
+  UpvoteCount: string,
   ThreadUuid: string,
   ThreadCreatedAt: string,
   MessageID: string,
@@ -70,11 +70,14 @@ interface Thread {
   ReplyLastname: string,
   ReplyContent: string,
   ReplyCreatedAt: string,
-  UserFullname: string
+  UserFullname: string,
+  UpvoteEmails: Array<String>
 }
 
 export function ThreadView() {
   const styles = useStyles();
+  const navigate = useNavigate();
+
   const [newMessage, setNewMessage] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState('');
@@ -116,6 +119,9 @@ export function ThreadView() {
       'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we', 'all',
       'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it'
     ];
+
+    console.log("threadData (fetchArticles): ", threadData)
+
     // filter out filler words
     if (threadData && threadData.length > 0 && threadData[0].ThreadTitle) {
       const query = threadData[0].ThreadTitle;
@@ -231,6 +237,17 @@ export function ThreadView() {
       }
 
       const data = await response.json();
+      console.log("data: ", data)
+
+      if (data != null) { 
+        // If the user upvoted the thread, do not allow the user to click on the "Upvote" button again
+        data[0].UpvoteEmails.map((user_email: String) => {
+          if (user_email == email) {
+            setUpvoteState(true)
+          }
+        })
+      }
+
       setThreadData(data);
     }
     
@@ -247,6 +264,7 @@ export function ThreadView() {
     // Handle incoming messages from the WebSocket server (i.e. when a user sends a message)
     ws.current.onmessage = (event) => {
       const message = JSON.parse(event.data);
+      console.log("message: ", message)
 
       // Edit the message's content if the type is 'EDIT_MESSAGE'
       if (message.type === 'EDIT_MESSAGE') {
@@ -339,7 +357,7 @@ export function ThreadView() {
   // Runs on initialization of the page
   useEffect(() => {
     fetchThread();
-    fetchArticles();
+    //fetchArticles();
   }, [email, threadID]);
 
   useEffect(() => {
@@ -419,21 +437,33 @@ export function ThreadView() {
   // Upvote the discussion thread
   const handleUpvote = async () => { 
     try {
-      const response = await fetch(`http://localhost:5000/threads/upvote/${threadID}`, {
+      const storeUpvote = await fetch(`http://localhost:5000/threads/upvote/${threadID}`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+  
+      if (!storeUpvote.ok) {
+        throw new Error('Failed to upvote');
+      }
+
+      const getThreadUpvotes = await fetch(`http://localhost:5000/threads/getUpvotes/${threadID}`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
   
-      if (!response.ok) {
+      if (!getThreadUpvotes.ok) {
         throw new Error('Failed to upvote');
       }
 
-      const data = await response.json(); 
+      const data = await getThreadUpvotes.json();
   
-
       setThreadData((prevData) => {
         if (!prevData) {
           return prevData;
@@ -441,7 +471,7 @@ export function ThreadView() {
         
         const updatedThread = prevData.map((getData, index) => {
           if (index === 0) {
-            return { ...getData, ThreadUpvotes: data.upvotes.toString() };
+            return { ...getData, UpvoteCount: data };
           }
           return getData;
         });
@@ -629,8 +659,16 @@ export function ThreadView() {
     return <div>Loading...</div>;
   }
 
+  const handleBackToDashboard = () => {
+    navigate('/dashboard')
+  };
+
   return (
     <Layout>
+      <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Your Dashboard
+      </Link>
+
       <Container size="lg" mt={30}>
         {/* Discussion thread's title, description, creation date, and upvotes */}
         <Paper p="md" shadow="sm" radius="md" withBorder>
@@ -643,7 +681,7 @@ export function ThreadView() {
               Created on: <strong>{new Date(threadData[0].ThreadCreatedAt).toLocaleDateString()}</strong>
             </Text>
             <Text size="sm" color="dimmed">
-              Upvotes: <strong>{threadData[0].ThreadUpvotes}</strong>
+              Upvotes: <strong>{threadData[0].UpvoteCount}</strong>
             </Text>
           </Group>
 
@@ -775,7 +813,7 @@ export function ThreadView() {
 <Title order={3}>Comments</Title>
         {/* Messages displayed on page initialization */}
         <div style={{ paddingBottom: replyingToMessageId ? '220px' : '130px' }}>
-          {threadData && threadData.length > 0 ? (
+          {threadData && threadData[0].MessageID ? (
             threadData.map((threadMessage) => (
               <React.Fragment key={threadMessage.MessageID}>
                 {/* If the message is a reply, display the message being replied to */}

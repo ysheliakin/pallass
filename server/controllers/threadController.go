@@ -13,18 +13,61 @@ import (
 )
 
 func UpvoteThread(c echo.Context) error {
+	var user User
 
-	threadID, err := strconv.Atoi(c.Param("threadID"))
+	fmt.Println()
+	fmt.Println("UpvoteThread()")
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "Invalid input. Please enter a valid input."})
+	}
+
+	fmt.Println("user.Email: ", user.Email)
+
+	threadId, err := strconv.Atoi(c.Param("threadID"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid thread ID")
 	}
 
-	upvotes, err := sql.UpvoteThread(context.Background(), int32(threadID))
+	fmt.Println("threadId: ", int32(threadId))
+
+	upvoteParams := queries.InsertThreadUpvoteParams{
+		ThreadID: int32(threadId),
+		UserEmail: user.Email,
+	}
+
+	fmt.Println("upvoteParams")
+
+	err = sql.InsertThreadUpvote(context.Background(), upvoteParams)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
 	}
 
-	return c.JSON(http.StatusOK, map[string]int32{"upvotes": upvotes.Int32})
+	fmt.Println("InsertThreadUpvote()")
+
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Successfully upvoted the thread"})
+}
+
+func GetThreadUpvotes(c echo.Context) error {
+	fmt.Println("GetThreadUpvotes()")
+
+	threadId, err := strconv.Atoi(c.Param("threadID"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid thread ID")
+	}
+
+	fmt.Println("threadID: ", int32(threadId))
+
+	threadUpvotesCount, err := sql.GetThreadUpvotesCount(context.Background(), int32(threadId))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
+	}
+
+	fmt.Println("threadUpvotesCount worked")
+
+	return c.JSON(http.StatusOK, threadUpvotesCount)	
 }
 
 // ThreadController handles thread-related actions
@@ -66,11 +109,6 @@ func ThreadController(c echo.Context) error {
 	})
 }
 
-// UpvoteController handles upvote actions
-func UpvoteController(c echo.Context) error {
-	return c.String(http.StatusOK, "Upvoted")
-}
-
 // DownvoteController handles downvote actions
 func DownvoteController(c echo.Context) error {
 	return c.String(http.StatusOK, "Downvoted")
@@ -110,10 +148,14 @@ func GetThreadController(c echo.Context) error {
 	}
 	threadIDInt32 := int32(threadID)
 
+	fmt.Println("threadIDInt32: ", threadIDInt32)
+
 	threadParams := queries.GetThreadAndMessagesByThreadIDAndFullnameByUserEmailParams{
 		ID:    threadIDInt32,
 		Email: user.Email,
 	}
+
+	fmt.Println("threadParams initiated")
 
 	// Query the database
 	thread, err := sql.GetThreadAndMessagesByThreadIDAndFullnameByUserEmail(context.Background(), threadParams) // Pass as int32
@@ -123,6 +165,8 @@ func GetThreadController(c echo.Context) error {
 		}
 		return c.JSON(http.StatusInternalServerError, "Error retrieving thread")
 	}
+
+	fmt.Println("thread: ", thread)
 	return c.JSON(http.StatusOK, thread)
 }
 

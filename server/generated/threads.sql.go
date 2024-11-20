@@ -19,7 +19,6 @@ SELECT
     threads.title AS thread_title, 
     threads.content AS thread_content, 
     threads.category AS thread_category,
-    threads.upvotes AS thread_upvotes,
     threads.uuid AS thread_uuid,
     threads.created_at AS thread_created_at,
     -- Messages in the thread
@@ -35,15 +34,22 @@ SELECT
     replying_message.firstname AS reply_firstname,
     replying_message.lastname AS reply_lastname,
     replying_message.content AS reply_content,
-    replying_message.created_at AS reply_created_at
+    replying_message.created_at AS reply_created_at,
+    -- Count of the thread's upvotes
+    COUNT(thread_upvotes.id) AS upvote_count,
+    array_agg(thread_upvotes.user_email) AS upvote_emails
 FROM 
     threads
 LEFT JOIN 
     messages ON threads.id = messages.thread_id
 LEFT JOIN
     messages AS replying_message ON messages.message_id = replying_message.id
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id
 WHERE 
     threads.id = $1
+GROUP BY 
+    threads.id, messages.id, replying_message.id
 ORDER BY 
     messages.created_at ASC
 `
@@ -60,7 +66,6 @@ type GetThreadAndMessagesByThreadIDAndFullnameByUserEmailRow struct {
 	ThreadTitle      string
 	ThreadContent    string
 	ThreadCategory   string
-	ThreadUpvotes    pgtype.Int4
 	ThreadUuid       pgtype.UUID
 	ThreadCreatedAt  pgtype.Timestamp
 	MessageID        pgtype.Int4
@@ -75,6 +80,8 @@ type GetThreadAndMessagesByThreadIDAndFullnameByUserEmailRow struct {
 	ReplyLastname    pgtype.Text
 	ReplyContent     pgtype.Text
 	ReplyCreatedAt   pgtype.Timestamp
+	UpvoteCount      int64
+	UpvoteEmails     interface{}
 }
 
 func (q *Queries) GetThreadAndMessagesByThreadIDAndFullnameByUserEmail(ctx context.Context, arg GetThreadAndMessagesByThreadIDAndFullnameByUserEmailParams) ([]GetThreadAndMessagesByThreadIDAndFullnameByUserEmailRow, error) {
@@ -93,7 +100,6 @@ func (q *Queries) GetThreadAndMessagesByThreadIDAndFullnameByUserEmail(ctx conte
 			&i.ThreadTitle,
 			&i.ThreadContent,
 			&i.ThreadCategory,
-			&i.ThreadUpvotes,
 			&i.ThreadUuid,
 			&i.ThreadCreatedAt,
 			&i.MessageID,
@@ -108,6 +114,8 @@ func (q *Queries) GetThreadAndMessagesByThreadIDAndFullnameByUserEmail(ctx conte
 			&i.ReplyLastname,
 			&i.ReplyContent,
 			&i.ReplyCreatedAt,
+			&i.UpvoteCount,
+			&i.UpvoteEmails,
 		); err != nil {
 			return nil, err
 		}
@@ -119,8 +127,21 @@ func (q *Queries) GetThreadAndMessagesByThreadIDAndFullnameByUserEmail(ctx conte
 	return items, nil
 }
 
+const getThreadUpvotesCount = `-- name: GetThreadUpvotesCount :one
+SELECT COUNT(*)
+FROM thread_upvotes
+WHERE thread_id = $1
+`
+
+func (q *Queries) GetThreadUpvotesCount(ctx context.Context, threadID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, getThreadUpvotesCount, threadID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getThreads = `-- name: GetThreads :many
-SELECT id, firstname, lastname, title, content, category, upvotes, uuid, created_at
+SELECT id, firstname, lastname, title, content, category, uuid, created_at
 FROM threads
 ORDER BY created_at DESC
 `
@@ -132,7 +153,6 @@ type GetThreadsRow struct {
 	Title     string
 	Content   string
 	Category  string
-	Upvotes   pgtype.Int4
 	Uuid      pgtype.UUID
 	CreatedAt pgtype.Timestamp
 }
@@ -153,7 +173,6 @@ func (q *Queries) GetThreads(ctx context.Context) ([]GetThreadsRow, error) {
 			&i.Title,
 			&i.Content,
 			&i.Category,
-			&i.Upvotes,
 			&i.Uuid,
 			&i.CreatedAt,
 		); err != nil {
@@ -168,8 +187,8 @@ func (q *Queries) GetThreads(ctx context.Context) ([]GetThreadsRow, error) {
 }
 
 const insertThread = `-- name: InsertThread :one
-INSERT INTO threads (firstname, lastname, title, content, category, upvotes, created_at)
-VALUES ($1, $2, $3, $4, $5, 0, CURRENT_TIMESTAMP)
+INSERT INTO threads (firstname, lastname, title, content, category, created_at)
+VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
 RETURNING id, uuid
 `
 
@@ -199,16 +218,17 @@ func (q *Queries) InsertThread(ctx context.Context, arg InsertThreadParams) (Ins
 	return i, err
 }
 
-const upvoteThread = `-- name: UpvoteThread :one
-UPDATE threads
-SET upvotes = upvotes + 1
-WHERE id = $1
-RETURNING upvotes
+const insertThreadUpvote = `-- name: InsertThreadUpvote :exec
+INSERT INTO thread_upvotes (thread_id, user_email, created_at)
+VALUES ($1, $2, CURRENT_TIMESTAMP)
 `
 
-func (q *Queries) UpvoteThread(ctx context.Context, id int32) (pgtype.Int4, error) {
-	row := q.db.QueryRow(ctx, upvoteThread, id)
-	var upvotes pgtype.Int4
-	err := row.Scan(&upvotes)
-	return upvotes, err
+type InsertThreadUpvoteParams struct {
+	ThreadID  int32
+	UserEmail string
+}
+
+func (q *Queries) InsertThreadUpvote(ctx context.Context, arg InsertThreadUpvoteParams) error {
+	_, err := q.db.Exec(ctx, insertThreadUpvote, arg.ThreadID, arg.UserEmail)
+	return err
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Anchor,
   Button,
@@ -39,12 +39,16 @@ export function LoginPage() {
     }
   };
 
-  const handleForgotPassword = async () => {
+  const handleForgotPassword = () => {
     navigate('/forgot-password');
   };
 
   return (
     <Layout>
+      <Link to="/" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Homepage
+      </Link>
+
       <Container size="xs" mt={60}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>
           Log in

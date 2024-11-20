@@ -13,6 +13,7 @@ const mockThreads = Array(12).fill(null).map((_, index) => ({
 
 export function DiscoverThreads() {
   const styles = useStyles();
+
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [threadName, setThreadName] = useState('');
   const [sortBy, setSortBy] = useState('mostRecentlyActive');
@@ -40,6 +41,10 @@ export function DiscoverThreads() {
 
   return (
     <Layout>
+      <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Your Dashboard
+      </Link>
+
       <Container size="xl" mt={30}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>Discover Threads</Title>
         

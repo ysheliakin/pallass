@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -66,8 +66,16 @@ export function SignUpPage() {
     setSocialLinks(updatedLinks); 
   };
 
+  const handleBackToHomepage = () => {
+    navigate('/')
+  }
+
   return (
     <Layout>
+      <Link to="/" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Homepage
+      </Link>
+      
       <Container size="sm" mt={30}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>
           Sign up for free

@@ -94,6 +94,7 @@ func main() {
 	e.POST("/registeruser", controller.RegisterUser)
 	e.POST("/loginuser", controller.LoginUser)
 
+
 	// routes registered after this will require authentication
 	authGroup := e.Group("")
 	authGroup.Use(middleware.Logger())
@@ -107,6 +108,7 @@ func main() {
 	authGroup.GET("/playlist", controller.PlaylistController)
 	//authGroup.GET("/user", controller.GetUserController)
 	authGroup.GET("/getThreads", controller.GetThreadsController)
+	authGroup.GET("/threads/getUpvotes/:threadID", controller.GetThreadUpvotes)
 	// Post handlers
 	authGroup.POST("/postThread", controller.ThreadController)
 	authGroup.POST("/threads/:id", controller.GetThreadController)
