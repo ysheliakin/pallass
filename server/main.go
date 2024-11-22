@@ -107,7 +107,9 @@ func main() {
 	authGroup.GET("/group/:id", controller.GetGroupController)
 	authGroup.GET("/playlist", controller.PlaylistController)
 	//authGroup.GET("/user", controller.GetUserController)
-	authGroup.GET("/getThreads", controller.GetThreadsController)
+	authGroup.GET("/getThreadsSortedByMostUpvotes", controller.GetThreadsSortedByMostUpvotes)
+	authGroup.GET("/getThreadsSortedByLeastUpvotes", controller.GetThreadsSortedByLeastUpvotes)
+	authGroup.GET("/getUpvotedThreads/:email", controller.GetUpvotedThreadsController)
 	authGroup.GET("/threads/getUpvotes/:threadID", controller.GetThreadUpvotes)
 	// Post handlers
 	authGroup.POST("/postThread", controller.ThreadController)
@@ -133,6 +135,12 @@ func main() {
 	authGroup.POST("/storeThreadMessage", controller.StoreThreadMessage)
 	authGroup.POST("/editThreadMessage", controller.EditThreadMessage)
 	authGroup.POST("/getReplyingMessageData", controller.GetReplyingMessageData)
+
+	authGroup.POST("/getThreadsByNameSortedByMostUpvotes", controller.GetThreadsByNameSortedByMostUpvotes)
+	authGroup.POST("/getThreadsByNameSortedByLeastUpvotes", controller.GetThreadsByNameSortedByLeastUpvotes)
+
+	authGroup.POST("/getThreadsByCategorySortedByMostUpvotes", controller.GetThreadsByCategorySortedByMostUpvotes)
+	authGroup.POST("/getThreadsByCategorySortedByLeastUpvotes", controller.GetThreadsByCategorySortedByLeastUpvotes)
 	// Put handlers
 	authGroup.PUT("/message", controller.UpdateMessageController)
 	authGroup.PUT("/user", func(c echo.Context) error {

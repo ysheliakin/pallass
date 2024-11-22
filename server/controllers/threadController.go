@@ -115,16 +115,47 @@ func DownvoteController(c echo.Context) error {
 }
 
 // Get all of the discussion threads
-func GetThreadsController(c echo.Context) error {
-	fmt.Println("GetThreadsController")
+func GetThreadsSortedByMostUpvotes(c echo.Context) error {
+	fmt.Println("getThreadsSortedByMostUpvoted")
 
 	// Query the database to retrieve information from all of the threads
-	threads, err := sql.GetThreads(context.Background())
+	threads, err := sql.GetThreadsSortedByMostUpvotes(context.Background())
 	if err != nil {
 		if err.Error() == "no rows in result set" {
-			return c.JSON(http.StatusNotFound, "Thread not found")
+			return c.JSON(http.StatusNotFound, "No threads were found")
 		}
 		return c.JSON(http.StatusInternalServerError, "Error retrieving thread")
+	}
+	return c.JSON(http.StatusOK, threads)
+}
+
+func GetThreadsSortedByLeastUpvotes(c echo.Context) error {
+	fmt.Println("getThreadsSortedByMostUpvoted")
+
+	// Query the database to retrieve information from all of the threads
+	threads, err := sql.GetThreadsSortedByLeastUpvotes(context.Background())
+	if err != nil {
+		if err.Error() == "no rows in result set" {
+			return c.JSON(http.StatusNotFound, "No threads were found")
+		}
+		return c.JSON(http.StatusInternalServerError, "Error retrieving thread")
+	}
+	return c.JSON(http.StatusOK, threads)
+}
+
+// Get all of the discussion threads that the user upvoted
+func GetUpvotedThreadsController(c echo.Context) error {
+	fmt.Println("GetUpvotedThreadsController")
+
+	email := c.Param("email")
+
+	// Query the database to retrieve information from all of the upvoted threads
+	threads, err := sql.GetUpvotedThreadsByUserEmail(context.Background(), email)
+	if err != nil {
+		if err.Error() == "no rows in result set" {
+			return c.JSON(http.StatusNotFound, "No upvoted threads were found")
+		}
+		return c.JSON(http.StatusInternalServerError, "Error retrieving upvoted threads")
 	}
 	return c.JSON(http.StatusOK, threads)
 }
@@ -335,4 +366,128 @@ func GetReplyingMessageData(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, replyingMessageData)
+}
+
+func GetThreadsByCategory(c echo.Context) error {
+	var thread Thread
+
+	fmt.Println("GetThreadsByCategory()")
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&thread)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	fmt.Println("thread.Category: ", thread.Category)
+
+	threads, err := sql.GetThreadsByCategory(context.Background(), thread.Category)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
+	}
+
+	fmt.Println("threads: ", threads)
+
+	return c.JSON(http.StatusOK, threads)
+}
+
+func GetThreadsByCategorySortedByMostUpvotes(c echo.Context) error {
+	var thread Thread
+
+	fmt.Println("GetThreadsByCategory()")
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&thread)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	fmt.Println("thread.Category: ", thread.Category)
+
+	threads, err := sql.GetThreadsByCategorySortedByMostUpvotes(context.Background(), thread.Category)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
+	}
+
+	fmt.Println("threads: ", threads)
+
+	return c.JSON(http.StatusOK, threads)
+}
+
+func GetThreadsByCategorySortedByLeastUpvotes(c echo.Context) error {
+	var thread Thread
+
+	fmt.Println("GetThreadsByCategory()")
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&thread)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	fmt.Println("thread.Category: ", thread.Category)
+
+	threads, err := sql.GetThreadsByCategorySortedByLeastUpvotes(context.Background(), thread.Category)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
+	}
+
+	fmt.Println("threads: ", threads)
+
+	return c.JSON(http.StatusOK, threads)
+}
+
+func GetThreadsByNameSortedByMostUpvotes(c echo.Context) error {
+	var thread Thread
+
+	fmt.Println()
+	fmt.Println("GetThreadsByCategory()")
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&thread)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	threadTitle := "%" + thread.Title + "%"
+	fmt.Println("thread.Title: ", threadTitle)
+
+	threads, err := sql.GetThreadsByNameSortedByMostUpvotes(context.Background(), threadTitle)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
+	}
+
+	fmt.Println("threads: ", threads)
+
+	return c.JSON(http.StatusOK, threads)
+}
+
+func GetThreadsByNameSortedByLeastUpvotes(c echo.Context) error {
+	var thread Thread
+
+	fmt.Println()
+	fmt.Println("GetThreadsByCategory()")
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&thread)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	threadTitle := "%" + thread.Title + "%"
+	fmt.Println("threadTitle: ", threadTitle)
+
+	threads, err := sql.GetThreadsByNameSortedByLeastUpvotes(context.Background(), threadTitle)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
+	}
+
+	fmt.Println("threads: ", threads)
+
+	return c.JSON(http.StatusOK, threads)
 }

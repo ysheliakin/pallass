@@ -140,32 +140,22 @@ func (q *Queries) GetThreadUpvotesCount(ctx context.Context, threadID int32) (in
 	return count, err
 }
 
-const getThreads = `-- name: GetThreads :many
-SELECT id, firstname, lastname, title, content, category, uuid, created_at
+const getThreadsByCategory = `-- name: GetThreadsByCategory :many
+SELECT id, firstname, lastname, title, content, category, created_at, uuid 
 FROM threads
+WHERE category = $1
 ORDER BY created_at DESC
 `
 
-type GetThreadsRow struct {
-	ID        int32
-	Firstname string
-	Lastname  string
-	Title     string
-	Content   string
-	Category  string
-	Uuid      pgtype.UUID
-	CreatedAt pgtype.Timestamp
-}
-
-func (q *Queries) GetThreads(ctx context.Context) ([]GetThreadsRow, error) {
-	rows, err := q.db.Query(ctx, getThreads)
+func (q *Queries) GetThreadsByCategory(ctx context.Context, category string) ([]Thread, error) {
+	rows, err := q.db.Query(ctx, getThreadsByCategory, category)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetThreadsRow
+	var items []Thread
 	for rows.Next() {
-		var i GetThreadsRow
+		var i Thread
 		if err := rows.Scan(
 			&i.ID,
 			&i.Firstname,
@@ -173,8 +163,408 @@ func (q *Queries) GetThreads(ctx context.Context) ([]GetThreadsRow, error) {
 			&i.Title,
 			&i.Content,
 			&i.Category,
-			&i.Uuid,
 			&i.CreatedAt,
+			&i.Uuid,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getThreadsByCategorySortedByLeastUpvotes = `-- name: GetThreadsByCategorySortedByLeastUpvotes :many
+SELECT
+    threads.id, threads.firstname, threads.lastname, threads.title, threads.content, threads.category, threads.created_at, threads.uuid,
+    COUNT(thread_upvotes.id) AS upvote_count
+FROM 
+    threads
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id
+WHERE 
+    threads.category = $1
+GROUP BY
+    threads.id
+ORDER BY 
+    upvote_count ASC
+`
+
+type GetThreadsByCategorySortedByLeastUpvotesRow struct {
+	ID          int32
+	Firstname   string
+	Lastname    string
+	Title       string
+	Content     string
+	Category    string
+	CreatedAt   pgtype.Timestamp
+	Uuid        pgtype.UUID
+	UpvoteCount int64
+}
+
+func (q *Queries) GetThreadsByCategorySortedByLeastUpvotes(ctx context.Context, category string) ([]GetThreadsByCategorySortedByLeastUpvotesRow, error) {
+	rows, err := q.db.Query(ctx, getThreadsByCategorySortedByLeastUpvotes, category)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetThreadsByCategorySortedByLeastUpvotesRow
+	for rows.Next() {
+		var i GetThreadsByCategorySortedByLeastUpvotesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Firstname,
+			&i.Lastname,
+			&i.Title,
+			&i.Content,
+			&i.Category,
+			&i.CreatedAt,
+			&i.Uuid,
+			&i.UpvoteCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getThreadsByCategorySortedByMostUpvotes = `-- name: GetThreadsByCategorySortedByMostUpvotes :many
+SELECT
+    threads.id, threads.firstname, threads.lastname, threads.title, threads.content, threads.category, threads.created_at, threads.uuid,
+    COUNT(thread_upvotes.id) AS upvote_count 
+FROM 
+    threads
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id 
+WHERE 
+    threads.category = $1
+GROUP BY
+    threads.id
+ORDER BY 
+    upvote_count DESC
+`
+
+type GetThreadsByCategorySortedByMostUpvotesRow struct {
+	ID          int32
+	Firstname   string
+	Lastname    string
+	Title       string
+	Content     string
+	Category    string
+	CreatedAt   pgtype.Timestamp
+	Uuid        pgtype.UUID
+	UpvoteCount int64
+}
+
+func (q *Queries) GetThreadsByCategorySortedByMostUpvotes(ctx context.Context, category string) ([]GetThreadsByCategorySortedByMostUpvotesRow, error) {
+	rows, err := q.db.Query(ctx, getThreadsByCategorySortedByMostUpvotes, category)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetThreadsByCategorySortedByMostUpvotesRow
+	for rows.Next() {
+		var i GetThreadsByCategorySortedByMostUpvotesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Firstname,
+			&i.Lastname,
+			&i.Title,
+			&i.Content,
+			&i.Category,
+			&i.CreatedAt,
+			&i.Uuid,
+			&i.UpvoteCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getThreadsByNameSortedByLeastUpvotes = `-- name: GetThreadsByNameSortedByLeastUpvotes :many
+SELECT
+    threads.id, threads.firstname, threads.lastname, threads.title, threads.content, threads.category, threads.created_at, threads.uuid,
+    COUNT(thread_upvotes.id) AS upvote_count 
+FROM 
+    threads
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id 
+WHERE 
+    threads.title ILIKE $1
+GROUP BY
+    threads.id
+ORDER BY 
+    upvote_count ASC
+`
+
+type GetThreadsByNameSortedByLeastUpvotesRow struct {
+	ID          int32
+	Firstname   string
+	Lastname    string
+	Title       string
+	Content     string
+	Category    string
+	CreatedAt   pgtype.Timestamp
+	Uuid        pgtype.UUID
+	UpvoteCount int64
+}
+
+func (q *Queries) GetThreadsByNameSortedByLeastUpvotes(ctx context.Context, title string) ([]GetThreadsByNameSortedByLeastUpvotesRow, error) {
+	rows, err := q.db.Query(ctx, getThreadsByNameSortedByLeastUpvotes, title)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetThreadsByNameSortedByLeastUpvotesRow
+	for rows.Next() {
+		var i GetThreadsByNameSortedByLeastUpvotesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Firstname,
+			&i.Lastname,
+			&i.Title,
+			&i.Content,
+			&i.Category,
+			&i.CreatedAt,
+			&i.Uuid,
+			&i.UpvoteCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getThreadsByNameSortedByMostUpvotes = `-- name: GetThreadsByNameSortedByMostUpvotes :many
+SELECT
+    threads.id, threads.firstname, threads.lastname, threads.title, threads.content, threads.category, threads.created_at, threads.uuid,
+    COUNT(thread_upvotes.id) AS upvote_count 
+FROM 
+    threads
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id 
+WHERE 
+    threads.title ILIKE $1
+GROUP BY
+    threads.id
+ORDER BY 
+    upvote_count DESC
+`
+
+type GetThreadsByNameSortedByMostUpvotesRow struct {
+	ID          int32
+	Firstname   string
+	Lastname    string
+	Title       string
+	Content     string
+	Category    string
+	CreatedAt   pgtype.Timestamp
+	Uuid        pgtype.UUID
+	UpvoteCount int64
+}
+
+func (q *Queries) GetThreadsByNameSortedByMostUpvotes(ctx context.Context, title string) ([]GetThreadsByNameSortedByMostUpvotesRow, error) {
+	rows, err := q.db.Query(ctx, getThreadsByNameSortedByMostUpvotes, title)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetThreadsByNameSortedByMostUpvotesRow
+	for rows.Next() {
+		var i GetThreadsByNameSortedByMostUpvotesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Firstname,
+			&i.Lastname,
+			&i.Title,
+			&i.Content,
+			&i.Category,
+			&i.CreatedAt,
+			&i.Uuid,
+			&i.UpvoteCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getThreadsSortedByLeastUpvotes = `-- name: GetThreadsSortedByLeastUpvotes :many
+SELECT
+    threads.id, threads.firstname, threads.lastname, threads.title, threads.content, threads.category, threads.created_at, threads.uuid,
+    COUNT(thread_upvotes.id) AS upvote_count
+FROM 
+    threads
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id
+GROUP BY
+    threads.id
+ORDER BY 
+    upvote_count ASC
+`
+
+type GetThreadsSortedByLeastUpvotesRow struct {
+	ID          int32
+	Firstname   string
+	Lastname    string
+	Title       string
+	Content     string
+	Category    string
+	CreatedAt   pgtype.Timestamp
+	Uuid        pgtype.UUID
+	UpvoteCount int64
+}
+
+func (q *Queries) GetThreadsSortedByLeastUpvotes(ctx context.Context) ([]GetThreadsSortedByLeastUpvotesRow, error) {
+	rows, err := q.db.Query(ctx, getThreadsSortedByLeastUpvotes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetThreadsSortedByLeastUpvotesRow
+	for rows.Next() {
+		var i GetThreadsSortedByLeastUpvotesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Firstname,
+			&i.Lastname,
+			&i.Title,
+			&i.Content,
+			&i.Category,
+			&i.CreatedAt,
+			&i.Uuid,
+			&i.UpvoteCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getThreadsSortedByMostUpvotes = `-- name: GetThreadsSortedByMostUpvotes :many
+SELECT
+    threads.id, threads.firstname, threads.lastname, threads.title, threads.content, threads.category, threads.created_at, threads.uuid,
+    COUNT(thread_upvotes.id) AS upvote_count
+FROM 
+    threads
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id
+GROUP BY
+    threads.id
+ORDER BY 
+    upvote_count DESC
+`
+
+type GetThreadsSortedByMostUpvotesRow struct {
+	ID          int32
+	Firstname   string
+	Lastname    string
+	Title       string
+	Content     string
+	Category    string
+	CreatedAt   pgtype.Timestamp
+	Uuid        pgtype.UUID
+	UpvoteCount int64
+}
+
+func (q *Queries) GetThreadsSortedByMostUpvotes(ctx context.Context) ([]GetThreadsSortedByMostUpvotesRow, error) {
+	rows, err := q.db.Query(ctx, getThreadsSortedByMostUpvotes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetThreadsSortedByMostUpvotesRow
+	for rows.Next() {
+		var i GetThreadsSortedByMostUpvotesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Firstname,
+			&i.Lastname,
+			&i.Title,
+			&i.Content,
+			&i.Category,
+			&i.CreatedAt,
+			&i.Uuid,
+			&i.UpvoteCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUpvotedThreadsByUserEmail = `-- name: GetUpvotedThreadsByUserEmail :many
+SELECT threads.id, firstname, lastname, title, content, category, threads.created_at, uuid, thread_upvotes.id, thread_id, thread_upvotes.created_at, user_email
+FROM threads
+JOIN thread_upvotes ON threads.id = thread_upvotes.thread_id
+WHERE thread_upvotes.user_email = $1
+ORDER BY thread_upvotes.created_at DESC
+`
+
+type GetUpvotedThreadsByUserEmailRow struct {
+	ID          int32
+	Firstname   string
+	Lastname    string
+	Title       string
+	Content     string
+	Category    string
+	CreatedAt   pgtype.Timestamp
+	Uuid        pgtype.UUID
+	ID_2        int32
+	ThreadID    int32
+	CreatedAt_2 pgtype.Timestamp
+	UserEmail   string
+}
+
+func (q *Queries) GetUpvotedThreadsByUserEmail(ctx context.Context, userEmail string) ([]GetUpvotedThreadsByUserEmailRow, error) {
+	rows, err := q.db.Query(ctx, getUpvotedThreadsByUserEmail, userEmail)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUpvotedThreadsByUserEmailRow
+	for rows.Next() {
+		var i GetUpvotedThreadsByUserEmailRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Firstname,
+			&i.Lastname,
+			&i.Title,
+			&i.Content,
+			&i.Category,
+			&i.CreatedAt,
+			&i.Uuid,
+			&i.ID_2,
+			&i.ThreadID,
+			&i.CreatedAt_2,
+			&i.UserEmail,
 		); err != nil {
 			return nil, err
 		}

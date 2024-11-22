@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Title, Button, Group, Paper, SimpleGrid } from '@mantine/core';
+import { Container, Title, Button, Group, Paper, SimpleGrid, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { Layout, useStyles } from '@/components/layout';
-import { useNavigate } from 'react-router-dom';
 
 interface Threads {
   ID: number, 
@@ -11,20 +10,19 @@ interface Threads {
   Title: string, 
   Content: string, 
   Category: string, 
-  Upvotes: number, 
   Uuid: number
 }
 
 export function LoggedInHomePage() {
   const styles = useStyles();
   const [threadsData, setThreadsData] = useState<Threads[]>([]);
-  const token = localStorage.getItem('token')
-
-  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+  const email = localStorage.getItem('email');
 
   useEffect(() => {
+    // Get the threads upvoted by the user
     const fetchThreadData = async () => {
-        const response = await fetch(`http://localhost:5000/getThreads`, {
+        const response = await fetch(`http://localhost:5000/getUpvotedThreads/${email}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -44,9 +42,8 @@ export function LoggedInHomePage() {
       fetchThreadData();
   }, [])
 
-  const handleViewThread = (threadID: number, threadUuid: number) => {{
+  const handleViewThread = (threadID: number) => {{
     localStorage.setItem("threadID", threadID.toString());
-    navigate(`/thread/${threadUuid}`);
   }}
 
   return (
@@ -76,14 +73,29 @@ export function LoggedInHomePage() {
           </Button>
         </Group>
 
-        <Title order={3} mb="md" style={styles.title}>Discussion Forum threads you follow</Title>
-        <SimpleGrid cols={2} spacing="md" mb="xl">          
-          {threadsData.map((threadData) => (
-            <Button key={threadData.ID} style={{ margin: '5px' }} onClick={() => handleViewThread(threadData.ID, threadData.Uuid)}>
-              {threadData.Title}
-            </Button>
-          ))}
-        </SimpleGrid>
+        <Title order={3} mb="md" style={styles.title}>Discussion Forum threads you upvoted</Title>
+        {/* If the user upvoted threads, display them. Otherwise, display a message. */}
+        {threadsData ? (
+          <SimpleGrid cols={2} spacing="md" mb="xl">          
+            {threadsData.map((threadData) => (
+              <Paper 
+                key={threadData.ID}
+                p="md" 
+                withBorder
+                component={Link}
+                onClick={() => handleViewThread(threadData.ID)}
+                to={`/thread/${threadData.Uuid}`}
+              >
+                <Text fw={500} color="black">{threadData.Title}</Text>
+                <Text size="sm" color="dimmed" mt="xs">
+                  Category: {threadData.Category}
+                </Text>            
+              </Paper>
+            ))}
+          </SimpleGrid>
+        ) : (
+          <Text mb="md">You have not upvoted any discussion threads yet.</Text>
+        )}
 
         <Group mb="xl">
           <Button component={Link} to="/create-thread" variant="subtle" color="violet">

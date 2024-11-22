@@ -3,10 +3,38 @@ INSERT INTO threads (firstname, lastname, title, content, category, created_at)
 VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
 RETURNING id, uuid;
 
--- name: GetThreads :many
-SELECT id, firstname, lastname, title, content, category, uuid, created_at
+-- name: GetUpvotedThreadsByUserEmail :many
+SELECT *
 FROM threads
-ORDER BY created_at DESC;
+JOIN thread_upvotes ON threads.id = thread_upvotes.thread_id
+WHERE thread_upvotes.user_email = $1
+ORDER BY thread_upvotes.created_at DESC;
+
+-- name: GetThreadsSortedByMostUpvotes :many
+SELECT
+    threads.*,
+    COUNT(thread_upvotes.id) AS upvote_count
+FROM 
+    threads
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id
+GROUP BY
+    threads.id
+ORDER BY 
+    upvote_count DESC;
+
+-- name: GetThreadsSortedByLeastUpvotes :many
+SELECT
+    threads.*,
+    COUNT(thread_upvotes.id) AS upvote_count
+FROM 
+    threads
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id
+GROUP BY
+    threads.id
+ORDER BY 
+    upvote_count ASC;
 
 -- name: GetThreadAndMessagesByThreadIDAndFullnameByUserEmail :many
 SELECT 
@@ -58,3 +86,71 @@ VALUES ($1, $2, CURRENT_TIMESTAMP);
 SELECT COUNT(*)
 FROM thread_upvotes
 WHERE thread_id = $1;
+
+-- name: GetThreadsByCategory :many
+SELECT * 
+FROM threads
+WHERE category = $1
+ORDER BY created_at DESC;
+
+
+-- name: GetThreadsByCategorySortedByMostUpvotes :many
+SELECT
+    threads.*,
+    COUNT(thread_upvotes.id) AS upvote_count 
+FROM 
+    threads
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id 
+WHERE 
+    threads.category = $1
+GROUP BY
+    threads.id
+ORDER BY 
+    upvote_count DESC;
+
+
+-- name: GetThreadsByCategorySortedByLeastUpvotes :many
+SELECT
+    threads.*,
+    COUNT(thread_upvotes.id) AS upvote_count
+FROM 
+    threads
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id
+WHERE 
+    threads.category = $1
+GROUP BY
+    threads.id
+ORDER BY 
+    upvote_count ASC;
+
+-- name: GetThreadsByNameSortedByMostUpvotes :many
+SELECT
+    threads.*,
+    COUNT(thread_upvotes.id) AS upvote_count 
+FROM 
+    threads
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id 
+WHERE 
+    threads.title ILIKE $1
+GROUP BY
+    threads.id
+ORDER BY 
+    upvote_count DESC;
+
+-- name: GetThreadsByNameSortedByLeastUpvotes :many
+SELECT
+    threads.*,
+    COUNT(thread_upvotes.id) AS upvote_count 
+FROM 
+    threads
+LEFT JOIN
+    thread_upvotes ON threads.id = thread_upvotes.thread_id 
+WHERE 
+    threads.title ILIKE $1
+GROUP BY
+    threads.id
+ORDER BY 
+    upvote_count ASC;

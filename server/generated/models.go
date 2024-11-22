@@ -58,7 +58,6 @@ type Thread struct {
 	Title     string
 	Content   string
 	Category  string
-	Upvotes   pgtype.Int4
 	CreatedAt pgtype.Timestamp
 	Uuid      pgtype.UUID
 }

@@ -237,7 +237,6 @@ export function ThreadView() {
       }
 
       const data = await response.json();
-      console.log("data: ", data)
 
       if (data != null) { 
         // If the user upvoted the thread, do not allow the user to click on the "Upvote" button again
@@ -264,7 +263,6 @@ export function ThreadView() {
     // Handle incoming messages from the WebSocket server (i.e. when a user sends a message)
     ws.current.onmessage = (event) => {
       const message = JSON.parse(event.data);
-      console.log("message: ", message)
 
       // Edit the message's content if the type is 'EDIT_MESSAGE'
       if (message.type === 'EDIT_MESSAGE') {
