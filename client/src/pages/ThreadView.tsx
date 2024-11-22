@@ -51,14 +51,13 @@ interface Message {
 
 interface Thread {
   ThreadID: string,
-  ThreadFirstname: string,
-  ThreadLastname: string,
   ThreadTitle: string,
   ThreadContent: string,
   ThreadCategory: string,
   UpvoteCount: string,
   ThreadUuid: string,
   ThreadCreatedAt: string,
+  ThreadUserEmail: string,
   MessageID: string,
   MessageFirstname: string,
   MessageLastname: string,

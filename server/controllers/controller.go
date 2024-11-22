@@ -14,11 +14,10 @@ var dbc context.Context
 var sql *queries.Queries
 
 type Thread struct {
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
 	Title     string `json:"title"`
 	Content   string `json:"content"`
 	Category  string `json:"category"`
+	UserEmail string `json:"useremail"`
 	Upvotes   int    `json:"upvotes"` // defaults to 0
 }
 

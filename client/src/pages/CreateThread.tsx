@@ -16,16 +16,16 @@ export function CreateThread() {
   ]);
 
   const token = localStorage.getItem('token')
+  const email = localStorage.getItem('email')
   const navigate = useNavigate();
 
   const handleCreateThread =  async () => {
     // Handle thread creation logic here
     const threadData = {
-      Firstname: "Guest",
-      Lastname: "Guest",
       Title: title,
       Content: description,
       Category: category,
+      UserEmail: email
     };
   
     try {

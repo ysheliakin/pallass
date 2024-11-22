@@ -1,6 +1,6 @@
 -- name: InsertThread :one
-INSERT INTO threads (firstname, lastname, title, content, category, created_at)
-VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+INSERT INTO threads (title, content, category, user_email, created_at)
+VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
 RETURNING id, uuid;
 
 -- name: GetUpvotedThreadsByUserEmail :many
@@ -39,13 +39,12 @@ ORDER BY
 -- name: GetThreadAndMessagesByThreadIDAndFullnameByUserEmail :many
 SELECT 
     threads.id AS thread_id, 
-    threads.firstname AS thread_firstname,
-    threads.lastname AS thread_lastname, 
     threads.title AS thread_title, 
     threads.content AS thread_content, 
     threads.category AS thread_category,
     threads.uuid AS thread_uuid,
     threads.created_at AS thread_created_at,
+    threads.user_email AS thread_user_email,
     -- Messages in the thread
     messages.id AS message_id,
     messages.firstname AS message_firstname,

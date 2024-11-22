@@ -53,13 +53,12 @@ type SampleTable struct {
 
 type Thread struct {
 	ID        int32
-	Firstname string
-	Lastname  string
 	Title     string
 	Content   string
 	Category  string
 	CreatedAt pgtype.Timestamp
 	Uuid      pgtype.UUID
+	UserEmail pgtype.Text
 }
 
 type ThreadUpvote struct {

@@ -10,7 +10,8 @@ interface Threads {
   Title: string, 
   Content: string, 
   Category: string, 
-  Uuid: number
+  Uuid: number,
+  UserEmail: string
 }
 
 export function LoggedInHomePage() {
@@ -36,6 +37,7 @@ export function LoggedInHomePage() {
         }
 
         const data = await response.json();
+        console.log("data: ", data)
         setThreadsData(data);
       }
 

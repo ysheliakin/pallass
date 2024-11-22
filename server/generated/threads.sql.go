@@ -14,13 +14,12 @@ import (
 const getThreadAndMessagesByThreadIDAndFullnameByUserEmail = `-- name: GetThreadAndMessagesByThreadIDAndFullnameByUserEmail :many
 SELECT 
     threads.id AS thread_id, 
-    threads.firstname AS thread_firstname,
-    threads.lastname AS thread_lastname, 
     threads.title AS thread_title, 
     threads.content AS thread_content, 
     threads.category AS thread_category,
     threads.uuid AS thread_uuid,
     threads.created_at AS thread_created_at,
+    threads.user_email AS thread_user_email,
     -- Messages in the thread
     messages.id AS message_id,
     messages.firstname AS message_firstname,
@@ -61,13 +60,12 @@ type GetThreadAndMessagesByThreadIDAndFullnameByUserEmailParams struct {
 
 type GetThreadAndMessagesByThreadIDAndFullnameByUserEmailRow struct {
 	ThreadID         int32
-	ThreadFirstname  string
-	ThreadLastname   string
 	ThreadTitle      string
 	ThreadContent    string
 	ThreadCategory   string
 	ThreadUuid       pgtype.UUID
 	ThreadCreatedAt  pgtype.Timestamp
+	ThreadUserEmail  pgtype.Text
 	MessageID        pgtype.Int4
 	MessageFirstname pgtype.Text
 	MessageLastname  pgtype.Text
@@ -95,13 +93,12 @@ func (q *Queries) GetThreadAndMessagesByThreadIDAndFullnameByUserEmail(ctx conte
 		var i GetThreadAndMessagesByThreadIDAndFullnameByUserEmailRow
 		if err := rows.Scan(
 			&i.ThreadID,
-			&i.ThreadFirstname,
-			&i.ThreadLastname,
 			&i.ThreadTitle,
 			&i.ThreadContent,
 			&i.ThreadCategory,
 			&i.ThreadUuid,
 			&i.ThreadCreatedAt,
+			&i.ThreadUserEmail,
 			&i.MessageID,
 			&i.MessageFirstname,
 			&i.MessageLastname,
@@ -141,7 +138,7 @@ func (q *Queries) GetThreadUpvotesCount(ctx context.Context, threadID int32) (in
 }
 
 const getThreadsByCategory = `-- name: GetThreadsByCategory :many
-SELECT id, firstname, lastname, title, content, category, created_at, uuid 
+SELECT id, title, content, category, created_at, uuid, user_email 
 FROM threads
 WHERE category = $1
 ORDER BY created_at DESC
@@ -158,13 +155,12 @@ func (q *Queries) GetThreadsByCategory(ctx context.Context, category string) ([]
 		var i Thread
 		if err := rows.Scan(
 			&i.ID,
-			&i.Firstname,
-			&i.Lastname,
 			&i.Title,
 			&i.Content,
 			&i.Category,
 			&i.CreatedAt,
 			&i.Uuid,
+			&i.UserEmail,
 		); err != nil {
 			return nil, err
 		}
@@ -178,7 +174,7 @@ func (q *Queries) GetThreadsByCategory(ctx context.Context, category string) ([]
 
 const getThreadsByCategorySortedByLeastUpvotes = `-- name: GetThreadsByCategorySortedByLeastUpvotes :many
 SELECT
-    threads.id, threads.firstname, threads.lastname, threads.title, threads.content, threads.category, threads.created_at, threads.uuid,
+    threads.id, threads.title, threads.content, threads.category, threads.created_at, threads.uuid, threads.user_email,
     COUNT(thread_upvotes.id) AS upvote_count
 FROM 
     threads
@@ -194,13 +190,12 @@ ORDER BY
 
 type GetThreadsByCategorySortedByLeastUpvotesRow struct {
 	ID          int32
-	Firstname   string
-	Lastname    string
 	Title       string
 	Content     string
 	Category    string
 	CreatedAt   pgtype.Timestamp
 	Uuid        pgtype.UUID
+	UserEmail   pgtype.Text
 	UpvoteCount int64
 }
 
@@ -215,13 +210,12 @@ func (q *Queries) GetThreadsByCategorySortedByLeastUpvotes(ctx context.Context, 
 		var i GetThreadsByCategorySortedByLeastUpvotesRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Firstname,
-			&i.Lastname,
 			&i.Title,
 			&i.Content,
 			&i.Category,
 			&i.CreatedAt,
 			&i.Uuid,
+			&i.UserEmail,
 			&i.UpvoteCount,
 		); err != nil {
 			return nil, err
@@ -236,7 +230,7 @@ func (q *Queries) GetThreadsByCategorySortedByLeastUpvotes(ctx context.Context, 
 
 const getThreadsByCategorySortedByMostUpvotes = `-- name: GetThreadsByCategorySortedByMostUpvotes :many
 SELECT
-    threads.id, threads.firstname, threads.lastname, threads.title, threads.content, threads.category, threads.created_at, threads.uuid,
+    threads.id, threads.title, threads.content, threads.category, threads.created_at, threads.uuid, threads.user_email,
     COUNT(thread_upvotes.id) AS upvote_count 
 FROM 
     threads
@@ -252,13 +246,12 @@ ORDER BY
 
 type GetThreadsByCategorySortedByMostUpvotesRow struct {
 	ID          int32
-	Firstname   string
-	Lastname    string
 	Title       string
 	Content     string
 	Category    string
 	CreatedAt   pgtype.Timestamp
 	Uuid        pgtype.UUID
+	UserEmail   pgtype.Text
 	UpvoteCount int64
 }
 
@@ -273,13 +266,12 @@ func (q *Queries) GetThreadsByCategorySortedByMostUpvotes(ctx context.Context, c
 		var i GetThreadsByCategorySortedByMostUpvotesRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Firstname,
-			&i.Lastname,
 			&i.Title,
 			&i.Content,
 			&i.Category,
 			&i.CreatedAt,
 			&i.Uuid,
+			&i.UserEmail,
 			&i.UpvoteCount,
 		); err != nil {
 			return nil, err
@@ -294,7 +286,7 @@ func (q *Queries) GetThreadsByCategorySortedByMostUpvotes(ctx context.Context, c
 
 const getThreadsByNameSortedByLeastUpvotes = `-- name: GetThreadsByNameSortedByLeastUpvotes :many
 SELECT
-    threads.id, threads.firstname, threads.lastname, threads.title, threads.content, threads.category, threads.created_at, threads.uuid,
+    threads.id, threads.title, threads.content, threads.category, threads.created_at, threads.uuid, threads.user_email,
     COUNT(thread_upvotes.id) AS upvote_count 
 FROM 
     threads
@@ -310,13 +302,12 @@ ORDER BY
 
 type GetThreadsByNameSortedByLeastUpvotesRow struct {
 	ID          int32
-	Firstname   string
-	Lastname    string
 	Title       string
 	Content     string
 	Category    string
 	CreatedAt   pgtype.Timestamp
 	Uuid        pgtype.UUID
+	UserEmail   pgtype.Text
 	UpvoteCount int64
 }
 
@@ -331,13 +322,12 @@ func (q *Queries) GetThreadsByNameSortedByLeastUpvotes(ctx context.Context, titl
 		var i GetThreadsByNameSortedByLeastUpvotesRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Firstname,
-			&i.Lastname,
 			&i.Title,
 			&i.Content,
 			&i.Category,
 			&i.CreatedAt,
 			&i.Uuid,
+			&i.UserEmail,
 			&i.UpvoteCount,
 		); err != nil {
 			return nil, err
@@ -352,7 +342,7 @@ func (q *Queries) GetThreadsByNameSortedByLeastUpvotes(ctx context.Context, titl
 
 const getThreadsByNameSortedByMostUpvotes = `-- name: GetThreadsByNameSortedByMostUpvotes :many
 SELECT
-    threads.id, threads.firstname, threads.lastname, threads.title, threads.content, threads.category, threads.created_at, threads.uuid,
+    threads.id, threads.title, threads.content, threads.category, threads.created_at, threads.uuid, threads.user_email,
     COUNT(thread_upvotes.id) AS upvote_count 
 FROM 
     threads
@@ -368,13 +358,12 @@ ORDER BY
 
 type GetThreadsByNameSortedByMostUpvotesRow struct {
 	ID          int32
-	Firstname   string
-	Lastname    string
 	Title       string
 	Content     string
 	Category    string
 	CreatedAt   pgtype.Timestamp
 	Uuid        pgtype.UUID
+	UserEmail   pgtype.Text
 	UpvoteCount int64
 }
 
@@ -389,13 +378,12 @@ func (q *Queries) GetThreadsByNameSortedByMostUpvotes(ctx context.Context, title
 		var i GetThreadsByNameSortedByMostUpvotesRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Firstname,
-			&i.Lastname,
 			&i.Title,
 			&i.Content,
 			&i.Category,
 			&i.CreatedAt,
 			&i.Uuid,
+			&i.UserEmail,
 			&i.UpvoteCount,
 		); err != nil {
 			return nil, err
@@ -410,7 +398,7 @@ func (q *Queries) GetThreadsByNameSortedByMostUpvotes(ctx context.Context, title
 
 const getThreadsSortedByLeastUpvotes = `-- name: GetThreadsSortedByLeastUpvotes :many
 SELECT
-    threads.id, threads.firstname, threads.lastname, threads.title, threads.content, threads.category, threads.created_at, threads.uuid,
+    threads.id, threads.title, threads.content, threads.category, threads.created_at, threads.uuid, threads.user_email,
     COUNT(thread_upvotes.id) AS upvote_count
 FROM 
     threads
@@ -424,13 +412,12 @@ ORDER BY
 
 type GetThreadsSortedByLeastUpvotesRow struct {
 	ID          int32
-	Firstname   string
-	Lastname    string
 	Title       string
 	Content     string
 	Category    string
 	CreatedAt   pgtype.Timestamp
 	Uuid        pgtype.UUID
+	UserEmail   pgtype.Text
 	UpvoteCount int64
 }
 
@@ -445,13 +432,12 @@ func (q *Queries) GetThreadsSortedByLeastUpvotes(ctx context.Context) ([]GetThre
 		var i GetThreadsSortedByLeastUpvotesRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Firstname,
-			&i.Lastname,
 			&i.Title,
 			&i.Content,
 			&i.Category,
 			&i.CreatedAt,
 			&i.Uuid,
+			&i.UserEmail,
 			&i.UpvoteCount,
 		); err != nil {
 			return nil, err
@@ -466,7 +452,7 @@ func (q *Queries) GetThreadsSortedByLeastUpvotes(ctx context.Context) ([]GetThre
 
 const getThreadsSortedByMostUpvotes = `-- name: GetThreadsSortedByMostUpvotes :many
 SELECT
-    threads.id, threads.firstname, threads.lastname, threads.title, threads.content, threads.category, threads.created_at, threads.uuid,
+    threads.id, threads.title, threads.content, threads.category, threads.created_at, threads.uuid, threads.user_email,
     COUNT(thread_upvotes.id) AS upvote_count
 FROM 
     threads
@@ -480,13 +466,12 @@ ORDER BY
 
 type GetThreadsSortedByMostUpvotesRow struct {
 	ID          int32
-	Firstname   string
-	Lastname    string
 	Title       string
 	Content     string
 	Category    string
 	CreatedAt   pgtype.Timestamp
 	Uuid        pgtype.UUID
+	UserEmail   pgtype.Text
 	UpvoteCount int64
 }
 
@@ -501,13 +486,12 @@ func (q *Queries) GetThreadsSortedByMostUpvotes(ctx context.Context) ([]GetThrea
 		var i GetThreadsSortedByMostUpvotesRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Firstname,
-			&i.Lastname,
 			&i.Title,
 			&i.Content,
 			&i.Category,
 			&i.CreatedAt,
 			&i.Uuid,
+			&i.UserEmail,
 			&i.UpvoteCount,
 		); err != nil {
 			return nil, err
@@ -521,7 +505,7 @@ func (q *Queries) GetThreadsSortedByMostUpvotes(ctx context.Context) ([]GetThrea
 }
 
 const getUpvotedThreadsByUserEmail = `-- name: GetUpvotedThreadsByUserEmail :many
-SELECT threads.id, firstname, lastname, title, content, category, threads.created_at, uuid, thread_upvotes.id, thread_id, thread_upvotes.created_at, user_email
+SELECT threads.id, title, content, category, threads.created_at, uuid, threads.user_email, thread_upvotes.id, thread_id, thread_upvotes.created_at, thread_upvotes.user_email
 FROM threads
 JOIN thread_upvotes ON threads.id = thread_upvotes.thread_id
 WHERE thread_upvotes.user_email = $1
@@ -530,17 +514,16 @@ ORDER BY thread_upvotes.created_at DESC
 
 type GetUpvotedThreadsByUserEmailRow struct {
 	ID          int32
-	Firstname   string
-	Lastname    string
 	Title       string
 	Content     string
 	Category    string
 	CreatedAt   pgtype.Timestamp
 	Uuid        pgtype.UUID
+	UserEmail   pgtype.Text
 	ID_2        int32
 	ThreadID    int32
 	CreatedAt_2 pgtype.Timestamp
-	UserEmail   string
+	UserEmail_2 string
 }
 
 func (q *Queries) GetUpvotedThreadsByUserEmail(ctx context.Context, userEmail string) ([]GetUpvotedThreadsByUserEmailRow, error) {
@@ -554,17 +537,16 @@ func (q *Queries) GetUpvotedThreadsByUserEmail(ctx context.Context, userEmail st
 		var i GetUpvotedThreadsByUserEmailRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Firstname,
-			&i.Lastname,
 			&i.Title,
 			&i.Content,
 			&i.Category,
 			&i.CreatedAt,
 			&i.Uuid,
+			&i.UserEmail,
 			&i.ID_2,
 			&i.ThreadID,
 			&i.CreatedAt_2,
-			&i.UserEmail,
+			&i.UserEmail_2,
 		); err != nil {
 			return nil, err
 		}
@@ -577,17 +559,16 @@ func (q *Queries) GetUpvotedThreadsByUserEmail(ctx context.Context, userEmail st
 }
 
 const insertThread = `-- name: InsertThread :one
-INSERT INTO threads (firstname, lastname, title, content, category, created_at)
-VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+INSERT INTO threads (title, content, category, user_email, created_at)
+VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
 RETURNING id, uuid
 `
 
 type InsertThreadParams struct {
-	Firstname string
-	Lastname  string
 	Title     string
 	Content   string
 	Category  string
+	UserEmail pgtype.Text
 }
 
 type InsertThreadRow struct {
@@ -597,11 +578,10 @@ type InsertThreadRow struct {
 
 func (q *Queries) InsertThread(ctx context.Context, arg InsertThreadParams) (InsertThreadRow, error) {
 	row := q.db.QueryRow(ctx, insertThread,
-		arg.Firstname,
-		arg.Lastname,
 		arg.Title,
 		arg.Content,
 		arg.Category,
+		arg.UserEmail,
 	)
 	var i InsertThreadRow
 	err := row.Scan(&i.ID, &i.Uuid)

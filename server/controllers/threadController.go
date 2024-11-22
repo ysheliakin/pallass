@@ -79,6 +79,8 @@ func ThreadController(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Invalid inputs")
 	}
 
+	fmt.Println("thread.UserEmail: ", thread.UserEmail)
+
 	//parameters for the database insertion
 	var categoryParam pgtype.Text
 	if thread.Category != "" {
@@ -87,12 +89,18 @@ func ThreadController(c echo.Context) error {
 		categoryParam = pgtype.Text{Valid: false}
 	}
 
+	var userEmailParam pgtype.Text
+	if thread.UserEmail != "" {
+		userEmailParam = pgtype.Text{String: thread.UserEmail, Valid: true}
+	} else {
+		userEmailParam = pgtype.Text{Valid: false}
+	}
+
 	threadParams := queries.InsertThreadParams{
-		Firstname: thread.Firstname,
-		Lastname:  thread.Lastname,
 		Title:     thread.Title,
 		Content:   thread.Content,
 		Category:  categoryParam.String,
+		UserEmail: userEmailParam,
 	}
 
 	threadUUID, err := sql.InsertThread(context.Background(), threadParams)
@@ -149,6 +157,8 @@ func GetUpvotedThreadsController(c echo.Context) error {
 
 	email := c.Param("email")
 
+	fmt.Println("email: ", 	email)
+
 	// Query the database to retrieve information from all of the upvoted threads
 	threads, err := sql.GetUpvotedThreadsByUserEmail(context.Background(), email)
 	if err != nil {
@@ -157,6 +167,7 @@ func GetUpvotedThreadsController(c echo.Context) error {
 		}
 		return c.JSON(http.StatusInternalServerError, "Error retrieving upvoted threads")
 	}
+	fmt.Println("threads: ", threads)
 	return c.JSON(http.StatusOK, threads)
 }
 
