@@ -136,8 +136,17 @@ func LoginUser(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Invalid token"})
 	}
 
-	// Return the signed token via a JSON response
-	return c.JSON(http.StatusOK, map[string]string{"token": signedToken})
+	// Return the user and signed token via a JSON response
+	return c.JSON(http.StatusOK, User{
+		ID:           dbUser.ID,
+		Firstname:    dbUser.Firstname,
+		Lastname:     dbUser.Lastname,
+		Email:        dbUser.Email,
+		Organization: dbUser.Organization.String,
+		Token:        signedToken,
+		Jobtitle:     dbUser.JobTitle.String,
+		Fieldofstudy: dbUser.FieldOfStudy,
+	})
 }
 
 func Authenticate(next echo.HandlerFunc) echo.HandlerFunc {
@@ -353,7 +362,6 @@ func ValidateResetCode(c echo.Context) error {
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful code verification"})
 }
 
-// TODO
 func GetUser(c echo.Context) error {
 	fmt.Println("GetUser")
 	return c.JSON(http.StatusOK, nil)

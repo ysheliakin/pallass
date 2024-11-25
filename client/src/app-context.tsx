@@ -1,12 +1,5 @@
-import React, {
-  createContext,
-  Dispatch,
-  ReactNode,
-  SetStateAction,
-  useContext,
-  useMemo,
-  useState,
-} from 'react';
+import React, { createContext, Dispatch, ReactNode, SetStateAction, useContext, useMemo, useState } from 'react';
+
 
 export type User = {
   id: number;
@@ -17,6 +10,7 @@ export type User = {
   organization: string;
   jobTitle: string;
   createdAt: Date;
+  token: string;
 };
 
 type AppContextType = {

@@ -1,53 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Title, Button, Group, Paper, SimpleGrid } from '@mantine/core';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button, Container, Group, Paper, SimpleGrid, Title } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
-import { useNavigate } from 'react-router-dom';
 
 interface Threads {
-  ID: number, 
-  Firstname: string, 
-  Lastname: string, 
-  Title: string, 
-  Content: string, 
-  Category: string, 
-  Upvotes: number, 
-  Uuid: number
+  ID: number;
+  Firstname: string;
+  Lastname: string;
+  Title: string;
+  Content: string;
+  Category: string;
+  Upvotes: number;
+  Uuid: number;
 }
 
 export function LoggedInHomePage() {
   const styles = useStyles();
   const [threadsData, setThreadsData] = useState<Threads[]>([]);
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token');
 
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchThreadData = async () => {
-        const response = await fetch(`http://localhost:5000/getThreads`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            }
-        });
-    
-        // Check if the response is ok
-        if (!response.ok) {
-            throw new Error('Error in the response');
-        }
+      const response = await fetch(`http://localhost:5000/getThreads`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-        const data = await response.json();
-        setThreadsData(data);
+      // Check if the response is ok
+      if (!response.ok) {
+        throw new Error('Error in the response');
       }
 
-      fetchThreadData();
-  }, [])
+      const data = await response.json();
+      setThreadsData(data);
+    };
 
-  const handleViewThread = (threadID: number, threadUuid: number) => {{
-    localStorage.setItem("threadID", threadID.toString());
-    navigate(`/thread/${threadUuid}`);
-  }}
+    fetchThreadData();
+  }, []);
+
+  const handleViewThread = (threadID: number, threadUuid: number) => {
+    {
+      localStorage.setItem('threadID', threadID.toString());
+      navigate(`/thread/${threadUuid}`);
+    }
+  };
 
   return (
     <Layout>
@@ -76,10 +77,16 @@ export function LoggedInHomePage() {
           </Button>
         </Group>
 
-        <Title order={3} mb="md" style={styles.title}>Discussion Forum threads you follow</Title>
-        <SimpleGrid cols={2} spacing="md" mb="xl">          
+        <Title order={3} mb="md" style={styles.title}>
+          Discussion Forum threads you follow
+        </Title>
+        <SimpleGrid cols={2} spacing="md" mb="xl">
           {threadsData.map((threadData) => (
-            <Button key={threadData.ID} style={{ margin: '5px' }} onClick={() => handleViewThread(threadData.ID, threadData.Uuid)}>
+            <Button
+              key={threadData.ID}
+              style={{ margin: '5px' }}
+              onClick={() => handleViewThread(threadData.ID, threadData.Uuid)}
+            >
               {threadData.Title}
             </Button>
           ))}

@@ -2,22 +2,22 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"fmt"
 	"sync"
 
 	controller "sih/pallass/controllers"
 	queries "sih/pallass/generated"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/labstack/echo/v4"
 	"github.com/gorilla/websocket"
+	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
+	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
-	"github.com/joho/godotenv"
 )
 
 var e *echo.Echo
@@ -40,7 +40,7 @@ type Message struct {
 	Sender  string `json:"sender"`
 	Content string `json:"content"`
 	Date    string `json:"date"`
-	Type    string 	`json:"type"`
+	Type    string `json:"type"`
 }
 
 type RegisterResponse struct {
@@ -100,7 +100,7 @@ func main() {
 	// Get handlers
 	authGroup.GET("/group/:id", controller.GetGroupController)
 	authGroup.GET("/playlist", controller.PlaylistController)
-	//authGroup.GET("/user", controller.GetUserController)
+	authGroup.GET("/user", controller.GetUser)
 	authGroup.GET("/getThreads", controller.GetThreadsController)
 	// Post handlers
 	authGroup.POST("/postThread", controller.ThreadController)
@@ -195,26 +195,26 @@ func webSocket(c echo.Context) error {
 		// If the message is of type EDIT_MESSAGE, create an edit message with the ID, Content, and Type fields
 		if msg.Type == "EDIT_MESSAGE" {
 			editMessage := Message{
-                ID: msg.ID,
+				ID:      msg.ID,
 				Content: msg.Content,
-				Type: "EDIT_MESSAGE",
-            }
+				Type:    "EDIT_MESSAGE",
+			}
 
-            // Broadcast the edit message to all clients
-            broadcast <- editMessage
+			// Broadcast the edit message to all clients
+			broadcast <- editMessage
 		} else if msg.Type == "DELETE_MESSAGE" {
 			// If the message is of type DELETE_MESSAGE, create a delete message with the ID and Type fields
-            deleteMessage := Message{
-                ID: msg.ID,
+			deleteMessage := Message{
+				ID:   msg.ID,
 				Type: "DELETE_MESSAGE",
-            }
+			}
 
-            // Broadcast the delete message to all clients
-            broadcast <- deleteMessage
-        } else {
-            // Broadcast the normal messages
-            broadcast <- msg
-        }
+			// Broadcast the delete message to all clients
+			broadcast <- deleteMessage
+		} else {
+			// Broadcast the normal messages
+			broadcast <- msg
+		}
 	}
 
 	return nil
@@ -237,7 +237,6 @@ func handleMessages() {
 		mu.Unlock()
 	}
 }
-
 
 // func addMessage(c echo.Context) error {
 // 	postID := c.Param("id") // Change the route to expect post ID
