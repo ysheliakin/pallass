@@ -29,11 +29,22 @@ type Group struct {
 }
 
 type GroupMember struct {
-	ID       int32
-	GroupID  int32
-	UserID   int32
-	Role     string
-	JoinedAt pgtype.Timestamp
+	ID        int32
+	GroupID   int32
+	Role      string
+	JoinedAt  pgtype.Timestamp
+	UserEmail pgtype.Text
+}
+
+type GroupMessage struct {
+	ID             int32
+	Firstname      string
+	Lastname       string
+	Content        string
+	GroupID        int32
+	GroupMessageID pgtype.Int4
+	Reply          pgtype.Bool
+	CreatedAt      pgtype.Timestamp
 }
 
 type Message struct {

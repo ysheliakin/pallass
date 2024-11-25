@@ -32,10 +32,24 @@ var upgrader = websocket.Upgrader{
 var clients = make(map[*websocket.Conn]bool)
 
 // Broadcast messages
-var broadcast = make(chan Message)
+var broadcastThreadMessage = make(chan Message)
+var broadcastGroupMessage = make(chan GroupMessage)
 var mu sync.Mutex
 
 type Message struct {
+	ID                 string `json:"id"`
+	Sender             string `json:"sender"`
+	Content            string `json:"content"`
+	Date               string `json:"date"`
+	Type               string `json:"type"`
+	Reply              string `json:"reply"`
+	ReplyingMsgID      string `json:"replyingmsgid"`
+	ReplyingMsgSender  string `json:"replyingmsgsender"`
+	ReplyingMsgContent string `json:"replyingmsgcontent"`
+	ReplyingMsgDate    string `json:"replyingmsgdate"`
+}
+
+type GroupMessage struct {
 	ID                 string `json:"id"`
 	Sender             string `json:"sender"`
 	Content            string `json:"content"`
@@ -88,7 +102,8 @@ func main() {
 	/* Public routes */
 	// Get handlers
 	e.GET("/funding", controller.GetFundingOpportunities)
-	e.GET("/ws/:email", webSocket)
+	e.GET("/wsthread/:email", webSocketThread)
+	e.GET("/wsgroup/:email", webSocketGroup)
 	// Post handlers
 	e.POST("/request-reset", controller.RequestPasswordReset)
 	e.POST("/registeruser", controller.RegisterUser)
@@ -104,7 +119,6 @@ func main() {
 
 	/* Private routes requiring bearer token */
 	// Get handlers
-	authGroup.GET("/group/:id", controller.GetGroupController)
 	authGroup.GET("/playlist", controller.PlaylistController)
 	//authGroup.GET("/user", controller.GetUserController)
 	authGroup.GET("/getThreadsSortedByMostUpvotes", controller.GetThreadsSortedByMostUpvotes)
@@ -115,6 +129,11 @@ func main() {
 	authGroup.POST("/postThread", controller.ThreadController)
 	authGroup.POST("/threads/:id", controller.GetThreadController)
 	authGroup.POST("/newgroup", controller.CreateGroup)
+	authGroup.POST("/addgroupmembers", controller.AddGroupMembers)
+	authGroup.POST("/groups/:id", controller.GetGroupController)
+	authGroup.POST("/getMembers", controller.GetGroupMembers)
+	authGroup.POST("/exitGroup/:groupid", controller.ExitGroup)
+	authGroup.POST("/changeOwner/:email", controller.ChangeOwner)
 	authGroup.POST("/flag", controller.FlagController)
 	authGroup.POST("/threads/upvote/:threadID", controller.UpvoteThread)
 	authGroup.POST("/downvote", controller.DownvoteController)
@@ -135,12 +154,13 @@ func main() {
 	authGroup.POST("/storeThreadMessage", controller.StoreThreadMessage)
 	authGroup.POST("/editThreadMessage", controller.EditThreadMessage)
 	authGroup.POST("/getReplyingMessageData", controller.GetReplyingMessageData)
-
 	authGroup.POST("/getThreadsByNameSortedByMostUpvotes", controller.GetThreadsByNameSortedByMostUpvotes)
 	authGroup.POST("/getThreadsByNameSortedByLeastUpvotes", controller.GetThreadsByNameSortedByLeastUpvotes)
-
 	authGroup.POST("/getThreadsByCategorySortedByMostUpvotes", controller.GetThreadsByCategorySortedByMostUpvotes)
 	authGroup.POST("/getThreadsByCategorySortedByLeastUpvotes", controller.GetThreadsByCategorySortedByLeastUpvotes)
+	authGroup.POST("/storeGroupMessage", controller.StoreGroupMessage)
+	authGroup.POST("/getGroupReplyingMessageData", controller.GetGroupReplyingMessageData)
+	authGroup.POST("/editGroupMessage", controller.EditGroupMessage)
 	// Put handlers
 	authGroup.PUT("/message", controller.UpdateMessageController)
 	authGroup.PUT("/user", func(c echo.Context) error {
@@ -153,6 +173,8 @@ func main() {
 	// Delete handlers
 	authGroup.DELETE("/deleteThread", controller.DeleteThreadController)
 	authGroup.DELETE("/deleteThreadMessage/:messageID", controller.DeleteThreadMessage)
+	authGroup.DELETE("/deleteGroupMessage/:messageID", controller.DeleteGroupMessage)
+	authGroup.DELETE("/deleteGroup/:groupID", controller.DeleteGroup)
 	authGroup.DELETE("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post deleted")
 	})
@@ -182,8 +204,8 @@ var director = func(req *http.Request) {
 // AngularHandler loads Angular assets
 var AngularHandler = &httputil.ReverseProxy{Director: director}
 
-func webSocket(c echo.Context) error {
-	fmt.Println("webSocket")
+func webSocketThread(c echo.Context) error {
+	fmt.Println("webSocketThread")
 
 	conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
@@ -217,7 +239,7 @@ func webSocket(c echo.Context) error {
             }
 
             // Broadcast the edit message to all clients
-            broadcast <- editMessage
+            broadcastThreadMessage <- editMessage
 		} else if msg.Type == "DELETE_MESSAGE" {
 			// If the message is of type DELETE_MESSAGE, create a delete message with the ID and Type fields
             deleteMessage := Message{
@@ -227,10 +249,65 @@ func webSocket(c echo.Context) error {
             }
 
             // Broadcast the delete message to all clients
-            broadcast <- deleteMessage
+            broadcastThreadMessage <- deleteMessage
         } else {
             // Broadcast the normal messages
-            broadcast <- msg
+            broadcastThreadMessage <- msg
+        }
+	}
+
+	return nil
+}
+
+func webSocketGroup(c echo.Context) error {
+	fmt.Println("webSocketGroup")
+
+	conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	// Lock the mutex
+	mu.Lock()
+	clients[conn] = true
+	// Unlock the mutex
+	mu.Unlock()
+
+	for {
+		var msg GroupMessage
+
+		err := conn.ReadJSON(&msg)
+		if err != nil {
+			mu.Lock()
+			delete(clients, conn)
+			mu.Unlock()
+			break
+		}
+
+		// If the message is of type EDIT_MESSAGE, create an edit message with the ID, Content, and Type fields
+		if msg.Type == "EDIT_MESSAGE" {
+			editMessage := GroupMessage{
+                ID: msg.ID,
+				Content: msg.Content,
+				Type: "EDIT_MESSAGE",
+            }
+
+            // Broadcast the edit message to all clients
+            broadcastGroupMessage <- editMessage
+		} else if msg.Type == "DELETE_MESSAGE" {
+			// If the message is of type DELETE_MESSAGE, create a delete message with the ID and Type fields
+            deleteMessage := GroupMessage{
+                ID: msg.ID,
+				Type: "DELETE_MESSAGE",
+				ReplyingMsgID: msg.ReplyingMsgID,
+            }
+
+            // Broadcast the delete message to all clients
+            broadcastGroupMessage <- deleteMessage
+        } else {
+            // Broadcast the normal messages
+            broadcastGroupMessage <- msg
         }
 	}
 
@@ -239,19 +316,33 @@ func webSocket(c echo.Context) error {
 
 func handleMessages() {
 	for {
-		// Wait for a new broadcasted message
-		msg := <-broadcast
-		mu.Lock()
-		// Go through each connected client and send the message
-		for client := range clients {
-			err := client.WriteJSON(msg)
-			// If an error occurs, close the client connection and remove the client from the list of connected clients
-			if err != nil {
-				client.Close()
-				delete(clients, client)
-			}
+		select {
+			case msg := <-broadcastThreadMessage:
+				mu.Lock()
+				// Go through each connected client and send the message
+				for client := range clients {
+					err := client.WriteJSON(msg)
+					// If an error occurs, close the client connection and remove the client from the list of connected clients
+					if err != nil {
+						client.Close()
+						delete(clients, client)
+					}
+				}
+				mu.Unlock()
+
+			case msg := <-broadcastGroupMessage:
+				mu.Lock()
+				// Go through each connected client and send the message
+				for client := range clients {
+					err := client.WriteJSON(msg)
+					// If an error occurs, close the client connection and remove the client from the list of connected clients
+					if err != nil {
+						client.Close()
+						delete(clients, client)
+					}
+				}
+				mu.Unlock()
 		}
-		mu.Unlock()
 	}
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal } from '@mantine/core';
+import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal, Divider, Loader, Stack } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { EditorConsumer } from '@tiptap/react';
@@ -8,20 +8,6 @@ import { IconVideo } from '@tabler/icons-react';
 interface User {
   id: string;
   name: string;
-}
-
-interface Article {
-  id: string;
-  title: string;
-  url: string;
-  urlToImage: string;
-}
-
-interface Paper {
-  title: string;
-  Author: string;
-  organization: string;
-  paperLink: string; 
 }
 
 interface Reply {
@@ -48,31 +34,37 @@ interface Message {
   replyingmsgdate: string,
 }
 
-interface Thread {
-  ThreadID: string,
-  ThreadTitle: string,
-  ThreadContent: string,
-  ThreadCategory: string,
-  UpvoteCount: string,
-  ThreadUuid: string,
-  ThreadCreatedAt: string,
-  ThreadUserEmail: string,
-  MessageID: string,
-  MessageFirstname: string,
-  MessageLastname: string,
-  MessageContent: string,
-  MessageCreatedAt: string,
-  MessageReply: string,
+interface ChosenGroup {
+  GroupID: string,
+  GroupName: string,
+  GroupDescription: string,
+  GroupUuid: string,
+  GroupCreatedAt: string,
+  GroupMessageID: string,
+  GroupMessageFirstname: string,
+  GroupMessageLastname: string,
+  GroupMessageGroupID: string,
+  GroupMessageContent: string,
+  GroupMessageCreatedAt: string,
   ReplyID: string,
   ReplyFirstname: string,
   ReplyLastname: string,
   ReplyContent: string,
   ReplyCreatedAt: string,
   UserFullname: string,
-  UpvoteEmails: Array<String>
 }
 
-export function ThreadView() {
+interface GroupMember {
+  ID: string,
+	GroupID: string,
+	UserEmail: string,
+	Role: string,
+	JoinedAt: string,
+	Firstname: string,
+	Lastname: string,
+}
+
+export function GroupView() {
   const styles = useStyles();
   const navigate = useNavigate();
 
@@ -86,141 +78,25 @@ export function ThreadView() {
   const [replyingToMessageDate, setReplyingToMessageDate] = useState<string | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
-  const [threadData, setThreadData] = useState<Thread[] | null>(null);
-  const [upvoteState, setUpvoteState] = useState(false);
+  const [groupData, setGroupData] = useState<ChosenGroup[] | null>(null);
   const [userName, setUserName] = useState('');
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [papers, setPapers] = useState<Paper[]>([]);
+  const [modalOpened, setModalOpened] = useState(false);
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+  const [groupOwner, setGroupOwner] = useState('');
 
   const email = localStorage.getItem('email');
   // Get the JWT token
   const token = localStorage.getItem('token');
 
   const ws = useRef<WebSocket | null>(null);
-  const threadID = localStorage.getItem("threadID");
+  const groupID = localStorage.getItem("groupID");
+  console.log("groupID: ", groupID)
   var getUserName = "";
 
-  const fetchArticles = async () => {
-    const today = new Date();
-
-    const yesterday = new Date(today);
-
-    yesterday.setDate(today.getDate() - 1);
-
-    // Formatting
-    const formattedDate = yesterday.toISOString().split('T')[0];
-    // console.log(formattedDate);
-    // console.log("testing");
-    var filteredQuery;
-
-    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'benefits', 'like', 'so', 'or',
-      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we', 'all',
-      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it'
-    ];
-
-    console.log("threadData (fetchArticles): ", threadData)
-
-    // filter out filler words
-    if (threadData && threadData.length > 0 && threadData[0].ThreadTitle) {
-      const query = threadData[0].ThreadTitle;
-      filteredQuery = query
-        .split(' ')
-        .filter(word => !fillerWords.includes(word.toLowerCase()))
-        .join(' ');
-      
-      console.log('Filtered Query:', filteredQuery);
-    } else {
-      console.error('ThreadTitle is null or undefined');
-    }
-    try {
-      if (threadData && threadData.length > 0) {
-        const response = await fetch(
-          `https://newsapi.org/v2/everything?q=${filteredQuery}&from=${formattedDate}&to=${formattedDate}&sortBy=popularity&language=en&apiKey=3457f090118c4f92a4eab998982c7457`
-        );
-        const data = await response.json();
-        if (data.articles && Array.isArray(data.articles)) {
-          // Show the first 3 articles
-          setArticles(data.articles.slice(0, 3));
-        } else {
-          console.error('Articles not found in response', data);
-        }
-      } 
-      } catch (error) {
-        console.error("Error fetching articles:", error);
-      }
-  
-
-
-  };
-
-  const fetchPapers = async () => {
-    const today = new Date();
-
-    const yesterday = new Date(today);
-
-    yesterday.setDate(today.getDate() - 1);
-
-    // Formatting
-    const formattedDate = yesterday.toISOString().split('T')[0];
-    // console.log(formattedDate);
-    // console.log("testing");
-    var filteredQuery;
-
-    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'benefits', 'like', 'so', 'or',
-      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we', 'all',
-      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it'
-    ];
-    // filter out filler words
-    if (threadData && threadData.length > 0 && threadData[0].ThreadTitle) {
-      const query = threadData[0].ThreadCategory;
-      filteredQuery = query
-        .split(' ')
-        .filter(word => !fillerWords.includes(word.toLowerCase()))
-        .join(' ');
-      
-      console.log('Filtered Query:', filteredQuery);
-    } else {
-      console.error('ThreadTitle is null or undefined');
-    }
-    const safeQuery = filteredQuery || '';
-    try {
-      if (threadData && threadData.length > 0) {
-        const response = await fetch(
-          `https://doaj.org/api/search/journals/${filteredQuery}?page=1&pageSize=3`
-          // q=${encodeURIComponent(safeQuery)}&fromDate=${formattedDate}&toDate=${formattedDate}&size=3&lang=en`
-        );
-        // const textResponse = await response.text();
-        // console.log(textResponse);
-        const data = await response.json();
-        // console.log('API Response:', JSON.stringify(data, null, 2));
-
-        if (data && data.results && data.results.length > 0) {
-          const papers: Paper[] = data.results.map((paper: any) => ({
-            title: paper.bibjson.title.exact,
-            Author: paper.bibjson.author,  
-            organization: paper.bibjson.publisher.name || ' ', // Publisher name as organization
-            paperLink: paper.bibjson.article.license_display_example_url || 'N/A', // Link to article
-          }));
-    
-  
-          setPapers(papers.slice(0, 3));
-        } else {
-          console.error('Papers not found in response', data);
-        }
-      } 
-      } catch (error) {
-        console.error("Error fetching Papers:", error);
-      }
-  
-
-
-  };
-
-
-  const fetchThread = async() => {
-    // Get the discussion thread's information (including its messages)
-    const fetchThreadData = async () => {
-      const response = await fetch(`http://localhost:5000/threads/${threadID}`, {
+  const fetchGroup = async() => {
+    // Get the discussion group's information (including its messages)
+    const fetchGroupData = async () => {
+      const response = await fetch(`http://localhost:5000/groups/${groupID}`, {
           method: 'POST',
           headers: {
               'Authorization': `Bearer ${token}`,
@@ -235,24 +111,28 @@ export function ThreadView() {
       }
 
       const data = await response.json();
+      console.log("data: ", data)
 
-      if (data != null) { 
-        // If the user upvoted the thread, do not allow the user to click on the "Upvote" button again
-        data[0].UpvoteEmails.map((user_email: String) => {
-          if (user_email == email) {
-            setUpvoteState(true)
-          }
-        })
+      /*for (let i = 0; i < data[0].MemberEmails.length; i++) {
+        if (email != data[0].MemberEmails[i]) {
+          return <Text>You are not a member of this group.</Text>;
+        }
+      }*/
+
+      for (let i = 0; i < data[0].MemberEmails.length; i++) {
+        if (data[0].MemberRoles[i] == "Owner") {
+          setGroupOwner(data[0].MemberEmails[i])
+        }
       }
 
-      setThreadData(data);
+      setGroupData(data);
     }
     
-    fetchThreadData();
+    fetchGroupData();
     // fetchArticles();
 
     // Websocket connection
-    ws.current = new WebSocket(`ws://localhost:5000/wsthread/${email}`)
+    ws.current = new WebSocket(`ws://localhost:5000/wsgroup/${email}`)
 
     ws.current.onopen = () => {
         console.log("Websocket connected");
@@ -268,13 +148,13 @@ export function ThreadView() {
         setMessages((prevMessages) => prevMessages.map((msg) => msg.id == message.id ? { ...msg, content : message.content } : msg));
 
         // Edit the message (if it was an older message displayed during the page initialization)
-        setThreadData((prevMessages) => {
+        setGroupData((prevMessages) => {
           if (prevMessages == null ) {
             return [];
           }
 
-          const updatedThreadMessages = prevMessages.map((msg) => msg.MessageID == message.id ? { ...msg, MessageContent : message.content } : msg);
-          return updatedThreadMessages;
+          const updatedGroupMessages = prevMessages.map((msg) => msg.GroupMessageID == message.id ? { ...msg, MessageContent : message.content } : msg);
+          return updatedGroupMessages;
         })
       }
       // Remove the message and its nested replies if the type is 'DELETE_MESSAGE'
@@ -302,33 +182,33 @@ export function ThreadView() {
         };
 
         // To delete a message and its nested replies that were displayed on page initialization
-        const deleteOldMessageAndReplies = (messages: Thread[], deletingMessageId: string): Thread[] => {
+        const deleteOldMessageAndReplies = (messages: ChosenGroup[], deletingMessageId: string): ChosenGroup[] => {
           const deletingMessages = new Set([Number(deletingMessageId)]);
       
           const deletingReplies = (messageId: string) => {
             const replies = messages.filter((msg) => msg.ReplyID == messageId);
             replies.forEach((reply) => {
-              deletingMessages.add(Number(reply.MessageID));
-              deletingReplies(reply.MessageID);
+              deletingMessages.add(Number(reply.GroupMessageID));
+              deletingReplies(reply.GroupMessageID);
             });
           };
       
           deletingReplies(deletingMessageId);
       
-          return messages.filter((msg) => !deletingMessages.has(Number(msg.MessageID)));
+          return messages.filter((msg) => !deletingMessages.has(Number(msg.GroupMessageID)));
         };
 
         // Remove the deleted message and its nested replies (if it was a newly sent message)
         setMessages((prevMessages) => deleteNewMessageAndReplies(prevMessages, message.id));
 
         // Remove the deleted message and its nested replies (if it was an older message displayed during the page initialization)
-        setThreadData((prevMessages) => {
+        setGroupData((prevMessages) => {
           if (prevMessages == null ) {
             return [];
           }
 
-          const updatedThreadMessages = deleteOldMessageAndReplies(prevMessages, message.id);
-          return updatedThreadMessages;
+          const updatedGroupMessages = deleteOldMessageAndReplies(prevMessages, message.id);
+          return updatedGroupMessages;
         })
       }
       // Render the list of messages with the new message included 
@@ -352,17 +232,9 @@ export function ThreadView() {
 
   // Runs on initialization of the page
   useEffect(() => {
-    fetchThread();
+    fetchGroup();
     //fetchArticles();
-  }, [email, threadID]);
-
-  useEffect(() => {
-    if (threadData && threadData.length > 0) {
-      fetchArticles();
-      fetchPapers();
-    }
-  }, [email, threadID, threadData]);
-
+  }, [email, groupID]);
 
   const sendMessage = async () => {
     // Get the sender's information
@@ -385,28 +257,28 @@ export function ThreadView() {
     const lastname = userData.Lastname
     getUserName = "" + firstname + " " + lastname
 
-    const threadid = threadID
+    const groupid = groupID
     const content = newMessage
     const replymessageid = replyingToMessageId
 
     // Store the message being sent
-    const storeThreadMessage = await fetch('http://localhost:5000/storeThreadMessage', {
+    const storeGroupMessage = await fetch('http://localhost:5000/storeGroupMessage', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ firstname, lastname, threadid, content, replymessageid }),
+      body: JSON.stringify({ firstname, lastname, groupid, content, replymessageid }),
     });
 
-    if (!storeThreadMessage.ok) {
+    if (!storeGroupMessage.ok) {
       throw new Error('Network response was not ok');
     }
 
-    const threadMessageData = await storeThreadMessage.json()
-    const messageID = "" + threadMessageData.ID + ""
+    const groupMessageData = await storeGroupMessage.json()
+    const messageID = "" + groupMessageData.ID + ""
 
-    const message = { id: messageID, sender: getUserName, content: newMessage, date: threadMessageData.CreatedAt, reply: "false" } as Message;
+    const message = { id: messageID, sender: getUserName, content: newMessage, date: groupMessageData.CreatedAt, reply: "false" } as Message;
 
     localStorage.setItem("localName", getUserName)
 
@@ -430,58 +302,8 @@ export function ThreadView() {
     setEditedContent(content);    
   };
 
-  // Upvote the discussion thread
-  const handleUpvote = async () => { 
-    try {
-      const storeUpvote = await fetch(`http://localhost:5000/threads/upvote/${threadID}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-  
-      if (!storeUpvote.ok) {
-        throw new Error('Failed to upvote');
-      }
-
-      const getThreadUpvotes = await fetch(`http://localhost:5000/threads/getUpvotes/${threadID}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      if (!getThreadUpvotes.ok) {
-        throw new Error('Failed to upvote');
-      }
-
-      const data = await getThreadUpvotes.json();
-  
-      setThreadData((prevData) => {
-        if (!prevData) {
-          return prevData;
-        }
-        
-        const updatedThread = prevData.map((getData, index) => {
-          if (index === 0) {
-            return { ...getData, UpvoteCount: data };
-          }
-          return getData;
-        });
-
-        return updatedThread;
-      });
-    } catch (error) {
-      console.error('Error upvoting the thread:', error);
-    }
-    setUpvoteState(true);
-  };
-
-  const handleDeleteThreadMessage = async (messageId: string) => {    
-    const response = await fetch(`http://localhost:5000/deleteThreadMessage/${messageId}`, {
+  const handleDeleteGroupMessage = async (messageId: string) => { 
+    const response = await fetch(`http://localhost:5000/deleteGroupMessage/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -506,7 +328,7 @@ export function ThreadView() {
   const handleSaveEdit = async (messageId: string, content: string) => {
     const id = "" + messageId + ""
 
-    const response = await fetch(`http://localhost:5000/editThreadMessage`, {
+    const response = await fetch(`http://localhost:5000/editGroupMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -564,30 +386,32 @@ export function ThreadView() {
     const lastname = userData.Lastname
     getUserName = "" + firstname + " " + lastname
 
-    const threadid = threadID
+    const groupid = groupID
     const content = newMessage
     const replymessageid = "" + messageId + ""
 
     // Store the reply
-    const storeThreadMessage = await fetch('http://localhost:5000/storeThreadMessage', {
+    const storeGroupMessage = await fetch('http://localhost:5000/storeGroupMessage', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ firstname, lastname, threadid, content, replymessageid }),
+      body: JSON.stringify({ firstname, lastname, groupid, content, replymessageid }),
     });
 
-    if (!storeThreadMessage.ok) {
+    if (!storeGroupMessage.ok) {
       throw new Error('Network response was not ok');
     }
 
-    const threadMessageData = await storeThreadMessage.json()
-    const messageID = "" + threadMessageData.ID + ""
+    const groupMessageData = await storeGroupMessage.json()
+    const messageID = "" + groupMessageData.ID + ""
     const id = replymessageid
 
+    console.log("id: ", id)
+
     // Get the information of the message being replied to
-    const getReplyingMessageData = await fetch('http://localhost:5000/getReplyingMessageData', {
+    const getGroupReplyingMessageData = await fetch('http://localhost:5000/getGroupReplyingMessageData', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -596,7 +420,8 @@ export function ThreadView() {
       body: JSON.stringify({ id }),
     })
 
-    const replyingMessageData = await getReplyingMessageData.json()
+    const replyingMessageData = await getGroupReplyingMessageData.json()
+    console.log("replyingMessageData: ", replyingMessageData)
     const replyingMessageSender = replyingMessageData[0].Firstname + " " + replyingMessageData[0].Lastname
     const replyingMessageID = "" + replyingMessageData[0].ID + ""
 
@@ -609,7 +434,7 @@ export function ThreadView() {
         id: messageID, 
         sender: getUserName, 
         content: newMessage, 
-        date: threadMessageData.CreatedAt, 
+        date: groupMessageData.CreatedAt, 
         reply: 'true',
         replyingmsgid: replyingMessageID,
         replyingmsgsender: replyingMessageSender,
@@ -617,7 +442,7 @@ export function ThreadView() {
         replyingmsgdate: replyingMessageData[0].CreatedAt
       } as Message;
     } else {
-      message = { id: messageID, sender: getUserName, content: newMessage, date: threadMessageData.CreatedAt, reply: 'false' } as Message;
+      message = { id: messageID, sender: getUserName, content: newMessage, date: groupMessageData.CreatedAt, reply: 'false' } as Message;
     }
 
     localStorage.setItem("localName", getUserName)
@@ -651,8 +476,130 @@ export function ThreadView() {
   }  
 
   // Handle the loading state
-  if (!threadData) {
+  if (!groupData) {
     return <div>Loading...</div>;
+  }
+
+  const openMembersList = async() => {
+    const response = await fetch(`http://localhost:5000/getMembers`, {
+      method: 'POST',
+      headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ groupID }),
+    });
+
+    // Check if the response is ok (status code 200-299)
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+    console.log("data: ", data)
+    setGroupMembers(data)
+    setModalOpened(true)
+
+    console.log("Email: ", email)
+
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].Role == "Owner") {
+        setGroupOwner(data[i].UserEmail)
+      }
+    }
+  }
+
+  const closeMembersList = async() => {
+    console.log("Members list")
+    setModalOpened(false)
+  }
+
+  // Kick a member out of the group
+  const kickMemberOut = async(useremail: string) => {
+    console.log("kickMemberOut()")
+
+    console.log("groupID: ", groupID)
+    console.log("useremail: ", useremail)
+
+    const response = await fetch(`http://localhost:5000/exitGroup/${groupID}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ useremail }),
+    });
+
+    // Check if the response is ok (status code 200-299)
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    openMembersList()
+  }
+
+  const leaveGroup = async(useremail: string) => {
+    console.log("leaveGroup()")
+
+    console.log("groupID: ", groupID)
+    console.log("useremail: ", useremail)
+
+    const response = await fetch(`http://localhost:5000/exitGroup/${groupID}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ useremail }),
+    });
+
+    // Check if the response is ok (status code 200-299)
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    navigate("/dashboard")
+  }
+
+  const setNewOwner = async(email: string, useremail: string) => {
+    console.log("setNewOwner()")
+
+    console.log("groupID: ", groupID)
+    console.log("useremail: ", useremail)
+
+    const response = await fetch(`http://localhost:5000/changeOwner/${email}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ groupID, useremail }),
+    });
+
+    // Check if the response is ok (status code 200-299)
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    openMembersList()
+  }
+
+  const openDeleteGroupVerification = async() => {
+    console.log("openDeleteGroupVerification()")
+
+    const response = await fetch(`http://localhost:5000/deleteGroup/${groupID}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ groupID }),
+    });
+
+    // Check if the response is ok (status code 200-299)
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
   }
 
   return (
@@ -662,172 +609,117 @@ export function ThreadView() {
       </Link>
 
       <Container size="lg" mt={30}>
-        {/* Discussion thread's title, description, creation date, and upvotes */}
-        <Paper p="md" shadow="sm" radius="md" withBorder>
-          <MantineTitle order={2} style={styles.title} mb="xs">
-            {threadData[0].ThreadTitle}
-          </MantineTitle>
+        <Modal
+          opened={modalOpened}
+          onClose={closeMembersList}
+          title="Members"
+          size="lg"
+        >
+          <Title order={2} style={{ textAlign: "center", marginBottom: "20px" }}>Members</Title>
+
+          <Stack>
+            {/* If members list is empty or loading */}
+            {groupMembers.length === 0 ? (
+              <Loader variant="dots" />
+            ) : (
+              groupMembers.map((member, index) => (
+                <React.Fragment key={index}>
+                  <Group>
+                    {/* Display member name */}
+                    <Text>{member.Firstname} {member.Lastname}</Text>
+                    <Text style={{ fontWeight: 500, color: 'darkblue', marginLeft: 20, marginRight: 80 }}>{member.Role}</Text>
+                    {email == member.UserEmail && member.Role != "Owner" ? (
+                      <Button style={{ textAlign: 'right', flex: 1 }} variant="subtle" color="red" onClick={() => leaveGroup(member.UserEmail)}>Leave</Button>
+                    ) : (
+                      null
+                    )}
+
+                    {email == groupOwner && email != member.UserEmail ? (
+                      <Group>
+                        <Button variant="subtle" color="red" onClick={() => setNewOwner(email, member.UserEmail)}>Set as Owner</Button>
+                        <Button variant="subtle" color="red" onClick={() => kickMemberOut(member.UserEmail)}>Kick Out</Button>
+                      </Group>
+                    ) : (
+                      null
+                    )}
+                  </Group>
+                  {/* Add a Divider after each member except the last one */}
+                  {index < groupMembers.length - 1 && <Divider />}
+                </React.Fragment>
+              ))
+            )}
+          </Stack>
+        </Modal>
+
+
+        {/* Discussion group's title, description, and creation date */}
+        <Paper 
+          shadow="sm"
+          radius="xl"
+          style={{
+            backgroundColor: '#f0f0f0',
+            border: '1px solid #ddd',  
+            padding: '20px', 
+            marginBottom: 30
+          }}
+        >
+          <Group justify="space-between" align="center">
+            <MantineTitle order={2} style={styles.title} mb="xs">
+              {groupData[0].GroupName}
+            </MantineTitle>
+
+            {/* Members list button */}
+            <Button variant="outline" color="teal" onClick={openMembersList}>
+              Members
+            </Button>
+          </Group>
           
           <Group justify="space-between" align="center">
             <Text size="sm" color="dimmed">
-              Created on: <strong>{new Date(threadData[0].ThreadCreatedAt).toLocaleDateString()}</strong>
-            </Text>
-            <Text size="sm" color="dimmed">
-              Upvotes: <strong>{threadData[0].UpvoteCount}</strong>
+              Created on: <strong>{new Date(groupData[0].GroupCreatedAt).toLocaleDateString()}</strong>
             </Text>
           </Group>
 
           <Text mb="lg" size="md" style={{ lineHeight: 1.6 }}>
-            {threadData[0].ThreadContent}
+            {groupData[0].GroupDescription}
           </Text>
 
-          {/* Upvote button */}
-          <Group>
-            <Button variant="outline" color="blue" onClick={handleUpvote} disabled={upvoteState}>
-              👍 Upvote
+          {email == groupOwner && (
+          <div style={{ textAlign: 'right' }}>
+            {/* Members list button */}
+            <Button variant="subtle" color="red" onClick={openDeleteGroupVerification}>
+              Delete Group
             </Button>
-          </Group>
+          </div>
+          )}
         </Paper>
 
-        <Box mt="xl">
-          <Title mb="md" order={3}>Latest News On The Subject</Title>
-          {articles.length > 0 ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
-              {articles.map((article, index) => (
-                <Card key={index} shadow="sm" padding="lg" style={{ width: '350px' }}>
-                  {article.urlToImage && (
-                    <Image src={article.urlToImage} alt={article.title} height={200} fit="cover" />
-                  )}
-                  <Text size="lg" mt="md">{article.title}</Text>
-                  <Button
-                    variant="light"
-                    color="blue"
-                    fullWidth
-                    mt="md"
-                    component="a"
-                    href={article.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Read more
-                  </Button>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Text>No articles available.</Text>
-          )}
-        </Box>
-
-        <Box mt="xl">
-          <Title order={3}>Interesting Journals In The Field</Title>
-
-          {papers.length > 0 ? (
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '20px',
-                justifyContent: 'center',
-                marginTop: '20px',
-              }}
-            >
-              {papers.map((paper, index) => (
-                <Card
-                  key={index}
-                  shadow="sm"
-                  padding="lg"
-                  style={{
-                    width: '300px',
-                    borderRadius: '10px',
-                    backgroundColor: '#fff',
-                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                    cursor: 'pointer',
-                    overflow: 'hidden',
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  <Text
-                    size="lg"
-                    mt="md"
-                    style={{
-                      fontSize: '1.2rem',
-                      fontWeight: 'bold',
-                      color: '#333',
-                      marginBottom: '10px',
-                      lineHeight: '1.5',
-                    }}
-                  >
-                    {paper.title}
-                  </Text>
-
-                  <Text>
-                    {paper.Author}
-                  </Text>
-
-                  <Text>
-                    {paper.organization}
-                  </Text>
-                  
-                  <Button
-                    variant="light"
-                    color="blue"
-                    fullWidth
-                    mt="md"
-                    component="a"
-                    href={paper.paperLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      backgroundColor: '#1E90FF',
-                      color: '#fff',
-                      fontWeight: 'bold',
-                      textTransform: 'uppercase',
-                      padding: '12px',
-                      borderRadius: '5px',
-                      transition: 'background-color 0.3s ease',
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4682B4'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1E90FF'}
-                  >
-                    Read more
-                  </Button>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Text style={{fontSize: '1.2rem', color: '#777' }}>No articles available.</Text>
-          )}
-        </Box>
-
-        <Title mt="xl" order={3}>Messages</Title>
+        <Title order={3}>Messages</Title>
         {/* Messages displayed on page initialization */}
         <div style={{ paddingBottom: replyingToMessageId ? '220px' : '130px' }}>
-          {threadData && threadData[0].MessageID ? (
-            threadData.map((threadMessage) => (
-              <React.Fragment key={threadMessage.MessageID}>
+          {groupData && groupData[0].GroupMessageID ? (
+            groupData.map((groupMessage) => (
+              <React.Fragment key={groupMessage.GroupMessageID}>
                 {/* If the message is a reply, display the message being replied to */}
-                {threadMessage.ReplyContent && (
-                  <Card shadow="sm" padding="xs" radius="md" style={{ backgroundColor: '#D7C6B4', marginTop: '10px', ...(threadMessage.ReplyContent != '' ? { borderBottomLeftRadius: '0', borderBottomRightRadius: '0' } : {}) }}>
+                {groupMessage.ReplyContent && (
+                  <Card shadow="sm" padding="xs" radius="md" style={{ backgroundColor: '#D7C6B4', marginTop: '10px', ...(groupMessage.ReplyContent != '' ? { borderBottomLeftRadius: '0', borderBottomRightRadius: '0' } : {}) }}>
                     <Group>
                       <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                        <Text><span style={{ color: '#BE4BDB', fontWeight: 700, fontSize: 14 }}>Reply To </span> | <span style={{ fontSize: 12, fontWeight: 700 }}>{ threadMessage.ReplyFirstname } { threadMessage.ReplyLastname }</span> <span style={{ fontSize: 10, float: 'right' }}>{new Date(threadMessage.ReplyCreatedAt).toLocaleDateString()} {new Date(threadMessage.ReplyCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
-                        <Text style={{ fontSize: 12 }}>{ threadMessage.ReplyContent }</Text>
+                        <Text><span style={{ color: '#BE4BDB', fontWeight: 700, fontSize: 14 }}>Reply To </span> | <span style={{ fontSize: 12, fontWeight: 700 }}>{ groupMessage.ReplyFirstname } { groupMessage.ReplyLastname }</span> <span style={{ fontSize: 10, float: 'right' }}>{new Date(groupMessage.ReplyCreatedAt).toLocaleDateString()} {new Date(groupMessage.ReplyCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
+                        <Text style={{ fontSize: 12 }}>{ groupMessage.ReplyContent }</Text>
                       </Box>
                     </Group>
                   </Card>
                 )}
 
-                <Card key={threadMessage.MessageID} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
+                <Card key={groupMessage.GroupMessageID} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
                   <Group>
                     {/* Display the 'Edit' and 'Delete' buttons if the user is the one who sent the message */}
-                    {threadMessage.MessageFirstname + " " + threadMessage.MessageLastname == threadData[0].UserFullname ? (
+                    {groupMessage.GroupMessageFirstname + " " + groupMessage.GroupMessageLastname == groupData[0].UserFullname ? (
                       <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                        <Text><span style={{ fontWeight: 700 }}>{threadMessage.MessageFirstname} {threadMessage.MessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(threadMessage.MessageCreatedAt).toLocaleDateString()} {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
+                        <Text><span style={{ fontWeight: 700 }}>{groupMessage.GroupMessageFirstname} {groupMessage.GroupMessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(groupMessage.GroupMessageCreatedAt).toLocaleDateString()} {new Date(groupMessage.GroupMessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
 
-                        {editingMessageId == threadMessage.MessageID ? (
+                        {editingMessageId == groupMessage.GroupMessageID ? (
                           // In-place edit mode: Display a Textarea
                           <div style={{ flex: 1 }}>
                             <Textarea
@@ -843,11 +735,11 @@ export function ThreadView() {
                         ) : (
                           // Display message content normally
                           <Text style={{ flex: 1 }}>
-                            {threadMessage.MessageContent}
+                            {groupMessage.GroupMessageContent}
                           </Text>
                         )}
 
-                        {editingMessageId == threadMessage.MessageID ? (
+                        {editingMessageId == groupMessage.GroupMessageID ? (
                           // Show "Save" and "Cancel" buttons when editing
                           <>
                             <Button
@@ -873,7 +765,7 @@ export function ThreadView() {
                           // Show "Edit" button when not editing
                           <>
                             <Button 
-                              onClick={() => handleEditMessage(threadMessage.MessageID, threadMessage.MessageContent)} 
+                              onClick={() => handleEditMessage(groupMessage.GroupMessageID, groupMessage.GroupMessageContent)} 
                               variant="subtle" 
                               color="blue" 
                               size="sm"
@@ -883,7 +775,7 @@ export function ThreadView() {
                             </Button>
 
                             <Button
-                              onClick={() => handleReply(threadMessage.MessageID, threadMessage.MessageFirstname + " " + threadMessage.MessageLastname, threadMessage.MessageContent, threadMessage.MessageCreatedAt)}
+                              onClick={() => handleReply(groupMessage.GroupMessageID, groupMessage.GroupMessageFirstname + " " + groupMessage.GroupMessageLastname, groupMessage.GroupMessageContent, groupMessage.GroupMessageCreatedAt)}
                               variant="subtle" 
                               color="grape" 
                               size="sm"
@@ -893,7 +785,7 @@ export function ThreadView() {
                             </Button>
 
                             <Button 
-                              onClick={() => handleDeleteThreadMessage(threadMessage.MessageID)}
+                              onClick={() => handleDeleteGroupMessage(groupMessage.GroupMessageID)}
                               variant="subtle" 
                               color="red" 
                               size="sm"
@@ -907,11 +799,11 @@ export function ThreadView() {
                     ) : (
                       // Do not display the 'Edit' and 'Delete' buttons if the user is not the one who sent the message
                       <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                        <Text><span style={{ fontWeight: 700 }}>{threadMessage.MessageFirstname} {threadMessage.MessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(threadMessage.MessageCreatedAt).toLocaleDateString()} {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
-                        <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{threadMessage.MessageContent}</Text>
+                        <Text><span style={{ fontWeight: 700 }}>{groupMessage.GroupMessageFirstname} {groupMessage.GroupMessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(groupMessage.GroupMessageCreatedAt).toLocaleDateString()} {new Date(groupMessage.GroupMessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
+                        <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{groupMessage.GroupMessageContent}</Text>
 
                         <Button 
-                          onClick={() => handleReply(threadMessage.MessageID, threadMessage.MessageFirstname + " " + threadMessage.MessageLastname, threadMessage.MessageContent, threadMessage.MessageCreatedAt)}
+                          onClick={() => handleReply(groupMessage.GroupMessageID, groupMessage.GroupMessageFirstname + " " + groupMessage.GroupMessageLastname, groupMessage.GroupMessageContent, groupMessage.GroupMessageCreatedAt)}
                           variant="subtle" 
                           color="grape" 
                           size="sm"
@@ -1018,7 +910,7 @@ export function ThreadView() {
                           </Button>
 
                           <Button 
-                            onClick={() => handleDeleteThreadMessage(msg.id)}
+                            onClick={() => handleDeleteGroupMessage(msg.id)}
                             variant="subtle" 
                             color="red" 
                             size="sm"

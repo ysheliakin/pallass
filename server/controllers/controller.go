@@ -45,10 +45,19 @@ type ThreadMessage struct {
 	ReplyMessageID string `json:"replymessageid"`
 }
 
+type GroupMessage struct {
+	ID             string `json:"id"`
+	Firstname      string `json:"firstname"`
+	Lastname       string `json:"lastname"`
+	GroupID        string `json:"groupid"`
+	Content        string `json:"content"`
+	ReplyMessageID string `json:"replymessageid"`
+}
+
 type GroupMember struct {
-	GroupID string `json:"groupid"`
-	UserID  string `json:"userid"`
-	Role    string `json:"role"`
+	GroupID   string `json:"groupid"`
+	UserEmail string `json:"useremail"`
+	Role      string `json:"role"`
 }
 
 type User struct {
@@ -69,6 +78,7 @@ type LogInUser struct {
 }
 
 type Group struct {
+	ID            string `json:"id"`
 	Name          string `json:"name"`
 	Description   string `json:"description"`
 	Privacy       bool   `json:"privacy"`

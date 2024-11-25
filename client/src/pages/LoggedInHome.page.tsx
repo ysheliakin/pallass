@@ -17,6 +17,9 @@ interface Threads {
 export function LoggedInHomePage() {
   const styles = useStyles();
   const [threadsData, setThreadsData] = useState<Threads[]>([]);
+  // Temporary
+  const [groupUuid, setGroupUuid] = useState("")
+
   const token = localStorage.getItem('token');
   const email = localStorage.getItem('email');
 
@@ -41,11 +44,17 @@ export function LoggedInHomePage() {
         setThreadsData(data);
       }
 
+      setGroupUuid("cfc53e71-1958-4137-b12c-ac2757b59761")
+
       fetchThreadData();
   }, [])
 
   const handleViewThread = (threadID: number) => {{
     localStorage.setItem("threadID", threadID.toString());
+  }}
+
+  const handleViewGroup = (groupID: number) => {{
+    localStorage.setItem("groupID", groupID.toString());
   }}
 
   return (
@@ -58,8 +67,8 @@ export function LoggedInHomePage() {
         </Group>
 
         <SimpleGrid cols={2} spacing="md" mb="xl">
-          <Paper p="md" withBorder>
-            Group name 1
+          <Paper p="md" withBorder component={Link} onClick={() => handleViewGroup(25)} to={`/group/${groupUuid}`}>
+            Group ID 6
           </Paper>
           <Paper p="md" withBorder>
             Group name 2

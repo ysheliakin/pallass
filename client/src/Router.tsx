@@ -15,6 +15,7 @@ import { LoginPage } from './pages/Login.page';
 import { PostPage } from './pages/Post.page';
 import { SignUpPage } from './pages/SignUp.page';
 import { ThreadView } from './pages/ThreadView';
+import { GroupView } from './pages/GroupView';
 import { ForgotPasswordPage } from './pages/ForgotPassword.page';
 import { ResetPasswordPage } from './pages/ResetPassword.page';
 
@@ -76,6 +77,10 @@ const router = createHashRouter([
   {
     path: '/thread/:threadUuid',
     element: <ThreadView />,
+  },
+  {
+    path: '/group/:groupUuid',
+    element: <GroupView />,
   },
   {
     path: '/funding-opportunities',

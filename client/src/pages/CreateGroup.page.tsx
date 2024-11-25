@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Container, Title, TextInput, Select, Radio, Textarea, Button, Paper, Group, Stack, Box } from '@mantine/core';
+import { Container, Title, TextInput, Select, Radio, Textarea, Button, Paper, Group, Stack, Box, Text, useSafeMantineTheme } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export function CreateGroup() {
   const styles = useStyles();
@@ -12,9 +12,12 @@ export function CreateGroup() {
   const [privacy, setPrivacy] = useState('private');
   const [notifications, setNotifications] = useState('on');
   const [description, setDescription] = useState('');
+  const [error, setError] = useState('');
+  const [groupUuid, setGroupUuid] = useState('')
 
   const token = localStorage.getItem('token');
   const email = localStorage.getItem('email');
+  const navigate = useNavigate();
   var getUserName = "";
 
   const handleCreateGroup = async () => {
@@ -48,17 +51,98 @@ export function CreateGroup() {
         // Access both the 'id' and 'uuid' fields from the response
         const groupId = data.id;
         const groupUuid = data.uuid;
+        setGroupUuid(data.uuid);
 
         // Log or use the groupId and groupUuid
         console.log('Group created successfully');
         console.log('Group ID:', groupId);
-        console.log('Group UUID:', groupUuid);
+
+
+
+        const groupMembersData = {
+          GroupID: groupId,
+          UserEmail: email,
+          Role: "Owner"
+        }
+
+        console.log('groupMembersData:', groupMembersData);
+
+        try {
+          const response = await fetch('http://localhost:5000/addgroupmembers', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(groupMembersData)
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log("data: ", data)
+            console.log('Group UUID:', groupUuid);
+          } else {
+            console.error('Failed to add members to group');
+            const getError = await response.json();
+            setError(getError.message);
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+        
+        // If no users were added to the group, navigate to the group's page
+        if (users.length == 0) {
+          console.log("groupUuid: ", groupUuid)
+
+          localStorage.setItem("groupID", groupId);
+          navigate(`/group/${groupUuid}`);
+        }
+
+        // Add group members
+        for (let i = 0; i < users.length; i++) {
+          const groupMembersData = {
+            GroupID: groupId,
+            UserEmail: users[i],
+            Role: "Member"
+          }
+
+          console.log('groupMembersData', i,  ':, ', groupMembersData);
+
+          try {
+            const response = await fetch('http://localhost:5000/addgroupmembers', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(groupMembersData)
+            });
+  
+            if (response.ok) {
+              const data = await response.json();
+              console.log("data (loop): ", data)
+              console.log("groupUuid: ", groupUuid)
+
+              // Navigate to the group's page
+              localStorage.setItem("groupID", groupId);
+              navigate(`/group/${groupUuid}`);
+            } else {
+              console.error('Failed to add members to group');
+              const getError = await response.json();
+              setError(getError.message);
+            }
+          } catch (error) {
+            console.error('Error:', error);
+          } 
+        }
       } else {
-        console.error('Failed to create group');
+        console.error('Failed to add members to group');
+        const getError = await response.json();
+        setError(getError.message);
       }
     } catch (error) {
       console.error('Error:', error);
-    }
+    }   
   };
 
   const handleAddUser = () => {
@@ -77,6 +161,13 @@ export function CreateGroup() {
       <Container size="sm" mt={30}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>Create Group</Title>
         
+        {error && (
+          <Group>
+            <p style={{ color: 'red' }}>{error}</p>
+            <Link to={`/group/${groupUuid}`}>Go to Your Group Page</Link>
+          </Group>
+        )}
+
         <Paper 
           withBorder 
           shadow="md" 
@@ -95,16 +186,20 @@ export function CreateGroup() {
           />
 
           <Box mt="md">
-            <TextInput
-              label="Add Users"
-              placeholder="Enter user email"
-              value={newUser}
-              onChange={(event) => setNewUser(event.currentTarget.value)}
-              styles={{ input: styles.input }}
-              rightSection={
-                <Button onClick={handleAddUser} size="xs">Add</Button>
-              }
-            />
+            <Text size="sm" style={{ fontWeight: 600, marginBottom: 2 }}>Add Users</Text>
+
+            <Group>
+              <TextInput
+                placeholder="Enter user email"
+                value={newUser}
+                onChange={(event) => setNewUser(event.currentTarget.value)}
+                styles={{ input: styles.input }}
+                style={{ width: 550 }}
+              />
+              
+              <Button onClick={handleAddUser} size="xs">Add</Button>
+            </Group>
+
             {users.length > 0 && (
               <Box mt="xs">
                 <Title order={6}>Added Users:</Title>
@@ -156,7 +251,7 @@ export function CreateGroup() {
             style={styles.primaryButton}
             onClick={handleCreateGroup}
           >
-            Create Group and GroupID
+            Create Group
           </Button>
         </Paper>
       </Container>
