@@ -11,6 +11,7 @@ import {
   Title,
 } from '@mantine/core';
 import { login } from '@/api/user';
+import { useAppContext } from '@/app-context';
 import { Layout, useStyles } from '@/components/layout';
 
 export function LoginPage() {
@@ -18,24 +19,27 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const appContext = useAppContext();
 
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    const response = await login(email, password);
+    const user = await login(email, password);
     // Log the user in if it succeeded, otherwise return an error
-    if (response.ok) {
+    if (user.ok) {
+      appContext.setUser(user);
+
       setError('');
 
       // Store the token in the local storage
-      localStorage.setItem('token', response.token);
+      localStorage.setItem('token', user.token);
 
       // TODO: set user in context
       localStorage.setItem('email', email);
 
       navigate('/dashboard');
     } else {
-      setError(response.message);
+      setError(user.message);
     }
   };
 
@@ -54,7 +58,7 @@ export function LoginPage() {
           Log in
         </Title>
 
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error !== '' && <p style={{ color: 'red' }}>{error}</p>}
 
         <Paper withBorder shadow="md" p={30} mt={30} radius="md">
           <TextInput

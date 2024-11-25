@@ -52,15 +52,17 @@ type GroupMember struct {
 }
 
 type User struct {
-	Firstname    string   `json:"firstname"`
-	Lastname     string   `json:"lastname"`
+	ID           int32    `json:"id"`
+	Firstname    string   `json:"firstName"`
+	Lastname     string   `json:"lastName"`
 	Email        string   `json:"email"`
 	Password     string   `json:"password"`
 	Organization string   `json:"organization"`
-	Fieldofstudy string   `json:"fieldofstudy"`
-	Jobtitle     string   `json:"jobtitle"`
-	SocialLinks  []string `json:"sociallinks"`
-	TempCode     string   `json:"tempcode"`
+	Fieldofstudy string   `json:"fieldOfStudy"`
+	Jobtitle     string   `json:"jobtItle"`
+	SocialLinks  []string `json:"socialLinks"`
+	TempCode     string   `json:"tempCode"`
+	Token        string   `json:"token"`
 }
 
 type LogInUser struct {

@@ -1,52 +1,56 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Title, Button, Group, Paper, SimpleGrid, Text } from '@mantine/core';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Button, Container, Group, Paper, SimpleGrid, Title } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 
 interface Threads {
-  ID: number, 
-  Firstname: string, 
-  Lastname: string, 
-  Title: string, 
-  Content: string, 
-  Category: string, 
-  Uuid: number,
-  UserEmail: string
+  ID: number;
+  Firstname: string;
+  Lastname: string;
+  Title: string;
+  Content: string;
+  Category: string;
+  Upvotes: number;
+  Uuid: number;
+  UserEmail: string;
 }
 
 export function LoggedInHomePage() {
   const styles = useStyles();
   const [threadsData, setThreadsData] = useState<Threads[]>([]);
   const token = localStorage.getItem('token');
-  const email = localStorage.getItem('email');
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Get the threads upvoted by the user
     const fetchThreadData = async () => {
-        const response = await fetch(`http://localhost:5000/getUpvotedThreads/${email}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            }
-        });
-    
-        // Check if the response is ok
-        if (!response.ok) {
-            throw new Error('Error in the response');
-        }
+      const response = await fetch(`http://localhost:5000/getThreads`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-        const data = await response.json();
-        console.log("data: ", data)
-        setThreadsData(data);
+      // Check if the response is ok
+      if (!response.ok) {
+        throw new Error('Error in the response');
       }
 
-      fetchThreadData();
-  }, [])
+      const data = await response.json();
+      setThreadsData(data);
+    };
 
-  const handleViewThread = (threadID: number) => {{
-    localStorage.setItem("threadID", threadID.toString());
-  }}
+    fetchThreadData();
+  }, []);
+
+  const handleViewThread = (threadID: number, threadUuid: number) => {
+    {
+      localStorage.setItem('threadID', threadID.toString());
+      navigate(`/thread/${threadUuid}`);
+    }
+  };
 
   return (
     <Layout>
@@ -75,29 +79,20 @@ export function LoggedInHomePage() {
           </Button>
         </Group>
 
-        <Title order={3} mb="md" style={styles.title}>Discussion Forum threads you upvoted</Title>
-        {/* If the user upvoted threads, display them. Otherwise, display a message. */}
-        {threadsData ? (
-          <SimpleGrid cols={2} spacing="md" mb="xl">          
-            {threadsData.map((threadData) => (
-              <Paper 
-                key={threadData.ID}
-                p="md" 
-                withBorder
-                component={Link}
-                onClick={() => handleViewThread(threadData.ID)}
-                to={`/thread/${threadData.Uuid}`}
-              >
-                <Text fw={500} color="black">{threadData.Title}</Text>
-                <Text size="sm" color="dimmed" mt="xs">
-                  Category: {threadData.Category}
-                </Text>            
-              </Paper>
-            ))}
-          </SimpleGrid>
-        ) : (
-          <Text mb="md">You have not upvoted any discussion threads yet.</Text>
-        )}
+        <Title order={3} mb="md" style={styles.title}>
+          Discussion Forum threads you follow
+        </Title>
+        <SimpleGrid cols={2} spacing="md" mb="xl">
+          {threadsData.map((threadData) => (
+            <Button
+              key={threadData.ID}
+              style={{ margin: '5px' }}
+              onClick={() => handleViewThread(threadData.ID, threadData.Uuid)}
+            >
+              {threadData.Title}
+            </Button>
+          ))}
+        </SimpleGrid>
 
         <Group mb="xl">
           <Button component={Link} to="/create-thread" variant="subtle" color="violet">

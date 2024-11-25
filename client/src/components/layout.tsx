@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { IconUserCircle } from '@tabler/icons-react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -13,6 +13,7 @@ import {
   Menu,
   Title,
 } from '@mantine/core';
+import { useAppContext } from '@/app-context';
 import logo from '../../logo.svg';
 
 const theme: MantineThemeOverride = createTheme({
@@ -146,28 +147,16 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const styles = useStyles();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Retrieve the token from the local storage
-    const token = localStorage.getItem('token');
-
-    // If the token was successfully retrieved, set the authentication state to true. Otherwise, set it to false
-    if (token) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
-  }, []);
+  const appContext = useAppContext();
 
   // Log the user out
   const handleLogout = () => {
     // Remove the token from the local storage
     localStorage.removeItem('token');
     // Set the authentication state to false
-    setIsAuthenticated(false);
+    appContext.setUser(null);
     // Navigate to the homepage
     navigate('/');
   };
@@ -183,7 +172,7 @@ export function Layout({ children }: LayoutProps) {
                 <Title order={1}>Pallas's Hub</Title>
               </Link>
               <Group>
-                {isAuthenticated ? (
+                {appContext.user?.id ? (
                   <Menu opened={isMenuOpen} onChange={setIsMenuOpen}>
                     <Menu.Target>
                       <ActionIcon size="lg" variant="subtle" color="gray">
