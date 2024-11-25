@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button, Container, Group, Paper, SimpleGrid, Title } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
+
 
 interface Threads {
   ID: number;

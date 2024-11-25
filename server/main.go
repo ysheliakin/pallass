@@ -220,11 +220,10 @@ func webSocket(c echo.Context) error {
 		} else if msg.Type == "DELETE_MESSAGE" {
 			// If the message is of type DELETE_MESSAGE, create a delete message with the ID and Type fields
 			deleteMessage := Message{
-				ID:   msg.ID,
-				Type: "DELETE_MESSAGE",
-			}
+				ID:            msg.ID,
+				Type:          "DELETE_MESSAGE",
 				ReplyingMsgID: msg.ReplyingMsgID,
-            }
+			}
 
 			// Broadcast the delete message to all clients
 			broadcast <- deleteMessage
@@ -254,8 +253,6 @@ func handleMessages() {
 		mu.Unlock()
 	}
 }
-
-
 
 // func getNotifications(c echo.Context) error {
 // 	userID := c.Param("user_id")
