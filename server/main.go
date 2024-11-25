@@ -109,7 +109,6 @@ func main() {
 	e.POST("/registeruser", controller.RegisterUser)
 	e.POST("/loginuser", controller.LoginUser)
 
-
 	// routes registered after this will require authentication
 	authGroup := e.Group("")
 	authGroup.Use(middleware.Logger())

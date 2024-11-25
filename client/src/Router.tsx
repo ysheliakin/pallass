@@ -18,6 +18,7 @@ import { ResetPasswordPage } from './pages/ResetPassword.page';
 import { SignUpPage } from './pages/SignUp.page';
 import { ThreadView } from './pages/ThreadView';
 import { GroupView } from './pages/GroupView';
+import ProtectedRoute from './ProtectedRoute';
 
 const router = createHashRouter([
   {
@@ -31,13 +32,17 @@ const router = createHashRouter([
       {
         path: '/post/create',
         element: (
-          <CreatePostPage />
+          <ProtectedRoute>
+            <CreatePostPage />
+          </ProtectedRoute>
         ),
       },
       {
         path: '/post/:id',
         element: (
-          <PostPage />
+          <ProtectedRoute>
+            <PostPage />
+          </ProtectedRoute>
         ),
       },
     ],
@@ -53,54 +58,74 @@ const router = createHashRouter([
   {
     path: '/dashboard',
     element: (
+      <ProtectedRoute>
         <LoggedInHomePage />
+      </ProtectedRoute>
     ),
   },
   {
     path: '/host-qa',
     element: (
+      <ProtectedRoute>
         <HostQASession />
+      </ProtectedRoute>
     ),
   },
   {
     path: '/join-qa',
     element: (
+      <ProtectedRoute>
         <JoinQASession />
+      </ProtectedRoute>
     ),
   },
   {
-    path: '/create-group', // Add this new route
+    path: '/create-group',
     element: (
+      <ProtectedRoute>
         <CreateGroup />
+      </ProtectedRoute>
     ),
   },
   {
     path: '/join-group',
     element: (
+      <ProtectedRoute>
         <JoinGroup />
+      </ProtectedRoute>
     ),
   },
   {
     path: '/create-thread',
     element: (
+      <ProtectedRoute>
         <CreateThread />
+      </ProtectedRoute>
     ),
   },
   {
     path: '/discover-threads',
     element: (
+      <ProtectedRoute>
         <DiscoverThreads />
+      </ProtectedRoute>
     ),
   },
   {
     path: '/thread/:threadUuid',
     element: (
+      <ProtectedRoute>
         <ThreadView />
+      </ProtectedRoute>
     ),
   },
   {
     path: '/group/:groupUuid',
-    element: <GroupView />,
+    element: (
+      <ProtectedRoute>
+        <GroupView />
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/funding-opportunities',
@@ -109,7 +134,9 @@ const router = createHashRouter([
   {
     path: '/funding-opportunities/create',
     element: (
+      <ProtectedRoute>
         <CreateFunding />
+      </ProtectedRoute>
     ),
   },
   {
