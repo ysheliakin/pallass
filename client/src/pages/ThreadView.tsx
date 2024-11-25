@@ -114,12 +114,14 @@ export function ThreadView() {
     // console.log("testing");
     var filteredQuery;
 
-    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'benefits', 'like', 'so', 'or',
-      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we', 'all',
-      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it'
+    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'they', 'like', 'so', 'or',
+      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we',
+      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it',
+      'he', 'she', 'what', 'where', 'why', 'how', 'if', 'nor', 'when', 'too', 'see', 'saw', 'do',
+      'know', 'way', 'here', 'all'
     ];
 
-    console.log("threadData (fetchArticles): ", threadData)
+    // console.log("threadData (fetchArticles): ", threadData)
 
     // filter out filler words
     if (threadData && threadData.length > 0 && threadData[0].ThreadTitle) {
@@ -129,14 +131,14 @@ export function ThreadView() {
         .filter(word => !fillerWords.includes(word.toLowerCase()))
         .join(' ');
       
-      console.log('Filtered Query:', filteredQuery);
+      // console.log('Filtered Query:', filteredQuery);
     } else {
       console.error('ThreadTitle is null or undefined');
     }
     try {
       if (threadData && threadData.length > 0) {
         const response = await fetch(
-          `https://newsapi.org/v2/everything?q=${filteredQuery}&from=${formattedDate}&to=${formattedDate}&sortBy=popularity&language=en&apiKey=3457f090118c4f92a4eab998982c7457`
+          `https://newsapi.org/v2/everything?q=${filteredQuery}&from=2024-11-06&to=${formattedDate}&sortBy=popularity&language=en&apiKey=3457f090118c4f92a4eab998982c7457`
         );
         const data = await response.json();
         if (data.articles && Array.isArray(data.articles)) {
@@ -167,9 +169,11 @@ export function ThreadView() {
     // console.log("testing");
     var filteredQuery;
 
-    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'benefits', 'like', 'so', 'or',
-      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we', 'all',
-      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it'
+    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'they', 'like', 'so', 'or',
+      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we',
+      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it',
+      'he', 'she', 'what', 'where', 'why', 'how', 'if', 'nor', 'when', 'too', 'see', 'saw', 'do',
+      'know', 'way', 'here', 'all'
     ];
     // filter out filler words
     if (threadData && threadData.length > 0 && threadData[0].ThreadTitle) {
@@ -179,7 +183,7 @@ export function ThreadView() {
         .filter(word => !fillerWords.includes(word.toLowerCase()))
         .join(' ');
       
-      console.log('Filtered Query:', filteredQuery);
+      // console.log('Filtered Query:', filteredQuery);
     } else {
       console.error('ThreadTitle is null or undefined');
     }
@@ -187,7 +191,9 @@ export function ThreadView() {
     try {
       if (threadData && threadData.length > 0) {
         const response = await fetch(
-          `https://doaj.org/api/search/journals/${filteredQuery}?page=1&pageSize=3`
+          // `https://doaj.org/api/search/journals/keywords:${filteredQuery}?lang=en&page=1&pageSize=3`
+          `https://doaj.org/api/search/journals/${filteredQuery}?lang=en&page=1&pageSize=3`
+          // `https://doaj.org/api/search/journals/${filteredQuery}?page=1&pageSize=3`
           // q=${encodeURIComponent(safeQuery)}&fromDate=${formattedDate}&toDate=${formattedDate}&size=3&lang=en`
         );
         // const textResponse = await response.text();
@@ -197,14 +203,17 @@ export function ThreadView() {
 
         if (data && data.results && data.results.length > 0) {
           const papers: Paper[] = data.results.map((paper: any) => ({
-            title: paper.bibjson.title.exact,
-            Author: paper.bibjson.author,  
-            organization: paper.bibjson.publisher.name || ' ', // Publisher name as organization
-            paperLink: paper.bibjson.article.license_display_example_url || 'N/A', // Link to article
+            title: paper.bibjson?.title || ' ',
+            Author: paper.bibjson?.author?.name,  
+            organization: paper.bibjson?.publisher.name || ' ', // Publisher name as organization
+            paperLink: paper.bibjson.article.license_display_example_url || `https://www.google.com/search?q=article+has+no+link`, // Link to article
+
           }));
     
   
           setPapers(papers.slice(0, 3));
+          // console.log(JSON.stringify(papers));
+
         } else {
           console.error('Papers not found in response', data);
         }
@@ -699,13 +708,16 @@ export function ThreadView() {
   {articles.length > 0 ? (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
       {articles.map((article, index) => (
-        <Card key={index} shadow="sm" padding="lg" style={{ width: '350px' }}>
+        <Card key={index} shadow="sm" padding="lg" style={{ width: '350px' }} 
+        onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+        onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
           {article.urlToImage && (
             <Image src={article.urlToImage} alt={article.title} height={200} fit="cover" />
           )}
           <Text size="lg" mt="md">{article.title}</Text>
           <Button
-            variant="light"
+            // variant="light"
             color="blue"
             fullWidth
             mt="md"
@@ -713,8 +725,10 @@ export function ThreadView() {
             href={article.url}
             target="_blank"
             rel="noopener noreferrer"
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4DFF00'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2986CC'}
           >
-            Read more
+            READ MORE
           </Button>
         </Card>
       ))}
@@ -737,13 +751,14 @@ export function ThreadView() {
         marginTop: '20px',
       }}
     >
+
       {papers.map((paper, index) => (
         <Card
           key={index}
           shadow="sm"
           padding="lg"
           style={{
-            width: '300px',
+            width: '350px',
             borderRadius: '10px',
             backgroundColor: '#fff',
             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
@@ -777,8 +792,8 @@ export function ThreadView() {
           </Text>
           
           <Button
-            variant="light"
-            color="blue"
+            variant="dark"
+            color="red"
             fullWidth
             mt="md"
             component="a"
@@ -786,16 +801,16 @@ export function ThreadView() {
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              backgroundColor: '#1E90FF',
+              backgroundColor: '#CC0000',
               color: '#fff',
-              fontWeight: 'bold',
+              // fontWeight: 'bold',
               textTransform: 'uppercase',
               padding: '12px',
               borderRadius: '5px',
               transition: 'background-color 0.3s ease',
             }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4682B4'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1E90FF'}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4DFF00'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#CC0000'}
           >
             Read more
           </Button>
