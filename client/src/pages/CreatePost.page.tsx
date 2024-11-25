@@ -3,8 +3,11 @@ import { Button, Center, TextInput, Title } from '@mantine/core';
 import { createPost } from '@/api/post';
 import { createEditor } from '@/components/TextEditor/editor';
 import { TextEditor } from '@/components/TextEditor/TextEditor';
+import { useNavigate } from 'react-router-dom';
 
 export function CreatePostPage() {
+  const navigate = useNavigate();
+
   const [title, setTitle] = useState('');
   const editor = createEditor({});
 
@@ -14,8 +17,14 @@ export function CreatePostPage() {
     createPost(title, htmlContent);
   };
 
+  const handleBackToDashboard = () => {
+    navigate('/dashboard')
+  };
+
   return (
     <Center>
+      <Button onClick={handleBackToDashboard}>Back to Your Dashboard</Button>
+
       <div style={{ maxWidth: '800px' }}>
         <Title>New Post</Title>
         <br />

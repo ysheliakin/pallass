@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button, Container, Group, Paper, SimpleGrid, Title } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 
+
 interface Threads {
   ID: number;
   Firstname: string;
@@ -12,6 +13,7 @@ interface Threads {
   Category: string;
   Upvotes: number;
   Uuid: number;
+  UserEmail: string;
 }
 
 export function LoggedInHomePage() {
@@ -22,6 +24,7 @@ export function LoggedInHomePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Get the threads upvoted by the user
     const fetchThreadData = async () => {
       const response = await fetch(`http://localhost:5000/getThreads`, {
         method: 'GET',

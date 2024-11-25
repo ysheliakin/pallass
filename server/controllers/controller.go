@@ -14,11 +14,10 @@ var dbc context.Context
 var sql *queries.Queries
 
 type Thread struct {
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
 	Title     string `json:"title"`
 	Content   string `json:"content"`
 	Category  string `json:"category"`
+	UserEmail string `json:"useremail"`
 	Upvotes   int    `json:"upvotes"` // defaults to 0
 }
 
@@ -38,11 +37,12 @@ type ErrorPayload struct {
 }
 
 type ThreadMessage struct {
-	ID        string `json:"id"`
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
-	ThreadID  string `json:"threadid"`
-	Content   string `json:"content"`
+	ID             string `json:"id"`
+	Firstname      string `json:"firstname"`
+	Lastname       string `json:"lastname"`
+	ThreadID       string `json:"threadid"`
+	Content        string `json:"content"`
+	ReplyMessageID string `json:"replymessageid"`
 }
 
 type GroupMember struct {

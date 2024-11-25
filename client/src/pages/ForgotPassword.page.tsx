@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { TextInput, Button, Paper, Container, Title } from '@mantine/core';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Layout, useStyles } from '@/components/layout';
 
 export function ForgotPasswordPage() {
     const styles = useStyles();
+    const navigate = useNavigate();
+
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate();
     
     const handleSubmit = async () => {
         const response = await fetch('http://localhost:5000/request-reset', {
@@ -27,9 +28,13 @@ export function ForgotPasswordPage() {
             setError(errorData.message)
         }
     };
-
+    
     return (
         <Layout>
+            <Link to="/" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+                &lt; Back to Homepage
+            </Link>
+            
             <Container size="xs" mt={60}>
                 <Title order={2} ta="center" mt="xl" style={styles.title}>Enter your email address</Title>
             

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Container, Title, TextInput, Select, Radio, Textarea, Button, Paper, Group, Stack, Box } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
+import { Link } from 'react-router-dom';
 
 export function CreateGroup() {
   const styles = useStyles();
+
   const [name, setName] = useState('');
   const [users, setUsers] = useState<string[]>([]);
   const [newUser, setNewUser] = useState('');
@@ -68,6 +70,10 @@ export function CreateGroup() {
 
   return (
     <Layout>
+      <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Your Dashboard
+      </Link>
+
       <Container size="sm" mt={30}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>Create Group</Title>
         

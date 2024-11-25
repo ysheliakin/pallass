@@ -36,11 +36,16 @@ var broadcast = make(chan Message)
 var mu sync.Mutex
 
 type Message struct {
-	ID      string `json:"id"`
-	Sender  string `json:"sender"`
-	Content string `json:"content"`
-	Date    string `json:"date"`
-	Type    string `json:"type"`
+	ID                 string `json:"id"`
+	Sender             string `json:"sender"`
+	Content            string `json:"content"`
+	Date               string `json:"date"`
+	Type               string `json:"type"`
+	Reply              string `json:"reply"`
+	ReplyingMsgID      string `json:"replyingmsgid"`
+	ReplyingMsgSender  string `json:"replyingmsgsender"`
+	ReplyingMsgContent string `json:"replyingmsgcontent"`
+	ReplyingMsgDate    string `json:"replyingmsgdate"`
 }
 
 type RegisterResponse struct {
@@ -101,7 +106,10 @@ func main() {
 	authGroup.GET("/group/:id", controller.GetGroupController)
 	authGroup.GET("/playlist", controller.PlaylistController)
 	authGroup.GET("/user", controller.GetUser)
-	authGroup.GET("/getThreads", controller.GetThreadsController)
+	authGroup.GET("/getThreadsSortedByMostUpvotes", controller.GetThreadsSortedByMostUpvotes)
+	authGroup.GET("/getThreadsSortedByLeastUpvotes", controller.GetThreadsSortedByLeastUpvotes)
+	authGroup.GET("/getUpvotedThreads/:email", controller.GetUpvotedThreadsController)
+	authGroup.GET("/threads/getUpvotes/:threadID", controller.GetThreadUpvotes)
 	// Post handlers
 	authGroup.POST("/postThread", controller.ThreadController)
 	authGroup.POST("/threads/:id", controller.GetThreadController)
@@ -125,6 +133,13 @@ func main() {
 	authGroup.POST("/getUserName", controller.GetUserName)
 	authGroup.POST("/storeThreadMessage", controller.StoreThreadMessage)
 	authGroup.POST("/editThreadMessage", controller.EditThreadMessage)
+	authGroup.POST("/getReplyingMessageData", controller.GetReplyingMessageData)
+
+	authGroup.POST("/getThreadsByNameSortedByMostUpvotes", controller.GetThreadsByNameSortedByMostUpvotes)
+	authGroup.POST("/getThreadsByNameSortedByLeastUpvotes", controller.GetThreadsByNameSortedByLeastUpvotes)
+
+	authGroup.POST("/getThreadsByCategorySortedByMostUpvotes", controller.GetThreadsByCategorySortedByMostUpvotes)
+	authGroup.POST("/getThreadsByCategorySortedByLeastUpvotes", controller.GetThreadsByCategorySortedByLeastUpvotes)
 	// Put handlers
 	authGroup.PUT("/message", controller.UpdateMessageController)
 	authGroup.PUT("/user", func(c echo.Context) error {
@@ -205,8 +220,9 @@ func webSocket(c echo.Context) error {
 		} else if msg.Type == "DELETE_MESSAGE" {
 			// If the message is of type DELETE_MESSAGE, create a delete message with the ID and Type fields
 			deleteMessage := Message{
-				ID:   msg.ID,
-				Type: "DELETE_MESSAGE",
+				ID:            msg.ID,
+				Type:          "DELETE_MESSAGE",
+				ReplyingMsgID: msg.ReplyingMsgID,
 			}
 
 			// Broadcast the delete message to all clients
@@ -237,28 +253,6 @@ func handleMessages() {
 		mu.Unlock()
 	}
 }
-
-// func addMessage(c echo.Context) error {
-// 	postID := c.Param("id") // Change the route to expect post ID
-// 	var message Message
-// 	if err := c.Bind(&message); err != nil {
-// 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid input"})
-// 	}
-
-// 	// Insert message into database
-// 	_, err := sql.CreateMessage(context.Background(), message.Content, postID, message.UserID) // Use your query function
-// 	if err != nil {
-// 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "could not add message"})
-// 	}
-
-// 	// Notify users (for simplicity, notify all users)
-// 	_, err = sql.CreateNotification(context.Background(), message.UserID, message.Content+" was added to a post!", postID) // Use your query function
-// 	if err != nil {
-// 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "could not send notifications"})
-// 	}
-
-// 	return c.JSON(http.StatusCreated, message)
-// }
 
 // func getNotifications(c echo.Context) error {
 // 	userID := c.Param("user_id")

@@ -43,6 +43,8 @@ type Message struct {
 	ThreadID  int32
 	Content   string
 	CreatedAt pgtype.Timestamp
+	MessageID pgtype.Int4
+	Reply     pgtype.Bool
 }
 
 type SampleTable struct {
@@ -51,14 +53,19 @@ type SampleTable struct {
 
 type Thread struct {
 	ID        int32
-	Firstname string
-	Lastname  string
 	Title     string
 	Content   string
 	Category  string
-	Upvotes   pgtype.Int4
 	CreatedAt pgtype.Timestamp
 	Uuid      pgtype.UUID
+	UserEmail pgtype.Text
+}
+
+type ThreadUpvote struct {
+	ID        int32
+	ThreadID  int32
+	CreatedAt pgtype.Timestamp
+	UserEmail string
 }
 
 type User struct {

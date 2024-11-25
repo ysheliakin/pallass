@@ -14,9 +14,11 @@ import {
 import { DateTimePicker } from '@mantine/dates';
 import { createFundingOpportunity } from '@/api/funding';
 import { Layout, useStyles } from '@/components/layout';
+import { Link } from 'react-router-dom';
 
 export function CreateFunding() {
   const styles = useStyles();
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [link, setLink] = useState('');
@@ -45,6 +47,10 @@ export function CreateFunding() {
 
   return (
     <Layout>
+      <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Your Dashboard
+      </Link>
+
       {error !== '' && (
         <Notification color="red" title="Oops!" onClick={() => setError('')}>
           {error}

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Container, Title, TextInput, Radio, Button, Paper, Stack } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
+import { Link } from 'react-router-dom';
 
 export function JoinGroup() {
   const styles = useStyles();
+
   const [groupId, setGroupId] = useState('');
   const [notifications, setNotifications] = useState('on');
 
@@ -14,6 +16,10 @@ export function JoinGroup() {
 
   return (
     <Layout>
+      <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Your Dashboard
+      </Link>
+
       <Container size="sm" mt={30}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>Join Group</Title>
         

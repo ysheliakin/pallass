@@ -1,7 +1,19 @@
-import React, { useState } from 'react';
-import { Container, Title, TextInput, Checkbox, Radio, Paper, Grid, Card, Text, Button } from '@mantine/core';
+import React, { useState, useEffect } from 'react';
+import { Container, Title, TextInput, Checkbox, Radio, Paper, Grid, Card, Text, Button, Menu } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { Link } from 'react-router-dom';
+import { string } from 'prop-types';
+
+interface Threads {
+  ID: number, 
+  Firstname: string, 
+  Lastname: string, 
+  Title: string, 
+  Content: string, 
+  Category: string, 
+  Uuid: number,
+  UpvoteCount: number
+}
 
 // Mock data for threads (unchanged)
 const mockThreads = Array(12).fill(null).map((_, index) => ({
@@ -13,33 +25,200 @@ const mockThreads = Array(12).fill(null).map((_, index) => ({
 
 export function DiscoverThreads() {
   const styles = useStyles();
+
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [threadName, setThreadName] = useState('');
-  const [sortBy, setSortBy] = useState('mostRecentlyActive');
+  const [sortBy, setSortBy] = useState('mostUpvoted');
   const [lastActive, setLastActive] = useState('');
+  const [threadsData, setThreadsData] = useState<Threads[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
 
-  const filterThreads = () => {
-    return mockThreads.filter(thread => 
-      (selectedCategories.length === 0 || selectedCategories.includes(thread.category)) &&
-      (threadName === '' || thread.title.toLowerCase().includes(threadName.toLowerCase()))
-    ).sort((a, b) => {
-      if (sortBy === 'mostRecentlyActive') return b.lastActive.getTime() - a.lastActive.getTime();
-      if (sortBy === 'leastRecentlyActive') return a.lastActive.getTime() - b.lastActive.getTime();
-      return 0;
-    });
+  const token = localStorage.getItem('token')
+
+  useEffect(() => {
+    const fetchThreadData = async () => {
+      const threadsByMostUpvotes = await fetch(`http://localhost:5000/getThreadsSortedByMostUpvotes`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+  
+      // Check if the response is ok
+      if (!threadsByMostUpvotes.ok) {
+        throw new Error('Error in the response');
+      }
+
+      const threadsByMostUpvotesData = await threadsByMostUpvotes.json();
+      setThreadsData(threadsByMostUpvotesData);
+    }
+
+    fetchThreadData();
+  }, [])
+
+  let categories: string[] = [];
+  
+  if (threadsData != null) {
+    // Get unique categories from threads
+    categories = [...new Set(threadsData.map(thread => thread.Category))];
+  } else {
+    categories = []
+  }
+
+  const handleViewThread = (threadID: number) => {{
+    localStorage.setItem("threadID", threadID.toString());
+  }}
+
+  // Handle category selection
+  const handleCategorySelect = async (category: string) => {
+    // If "None" is selected, set selectedCategory to an empty string
+    // Otherwise, set selectedCategory to the selected category
+    if (category === 'None') {
+      setSelectedCategory('');    
+    } else {
+      setSelectedCategory(category);
+    }
   };
 
-  const resetFilters = () => {
-    setSelectedCategories([]);
-    setThreadName('');
-    setSortBy('mostRecentlyActive');
-    setLastActive('');
+  // Handle upvotes sorting selection
+  const handleSortByUpvotes = async (sortByUpvotes: string) => {
+    // If "Most upvoted" is chosen, set sortBy to 'mostUpvoted'
+    // Otherwise, set sortBy to 'leastUpvoted'
+    if (sortByUpvotes == 'mostUpvoted') {
+      setSortBy('mostUpvoted')
+    } else {
+      setSortBy('leastUpvoted')
+    }
   };
 
-  const filteredThreads = filterThreads();
+  const handleFilter = async (title: string, category: string, sortByUpvotes: string) => {
+    console.log("threadName: ", threadName)
+    if (threadName != '') {
+      // Display the threads, sorted by the most upvotes, whose title contains the input entered by the user
+      if (sortByUpvotes == 'mostUpvoted') {
+        const response = await fetch(`http://localhost:5000/getThreadsByNameSortedByMostUpvotes`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ title }),
+        });
+    
+        // Check if the response is ok
+        if (!response.ok) {
+          throw new Error('Error in the response');
+        }
+  
+        const responseData = await response.json();
+        console.log("responseData: ", responseData)
+        setThreadsData(responseData);
+      } else {
+        // Display the threads, sorted by the least upvotes, whose title contains the input entered by the user
+        const response = await fetch(`http://localhost:5000/getThreadsByNameSortedByLeastUpvotes`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ title }),
+        });
+    
+        // Check if the response is ok
+        if (!response.ok) {
+          throw new Error('Error in the response');
+        }
+  
+        const responseData = await response.json();
+        console.log("responseData: ", responseData)
+        setThreadsData(responseData);
+      }
+    } else {
+      if (sortByUpvotes == 'mostUpvoted') {
+        // Show all of the threads sorted by the most upvotes
+        if (category == '') {
+          const response = await fetch(`http://localhost:5000/getThreadsSortedByMostUpvotes`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          });
+      
+          // Check if the response is ok
+          if (!response.ok) {
+            throw new Error('Error in the response');
+          }
+    
+          const responseData = await response.json();
+          setThreadsData(responseData);
+        } else {
+          // Show all of the threads of a chosen category sorted by the most upvotes
+          const response = await fetch(`http://localhost:5000/getThreadsByCategorySortedByMostUpvotes`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ category }),
+          });
+      
+          // Check if the response is ok
+          if (!response.ok) {
+            throw new Error('Error in the response');
+          }
+    
+          const responseData = await response.json();
+          setThreadsData(responseData);
+        }
+      } else {
+        // Show all of the threads sorted by the least upvotes
+        if (category == '') {
+          const response = await fetch(`http://localhost:5000/getThreadsSortedByLeastUpvotes`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          });
+      
+          // Check if the response is ok
+          if (!response.ok) {
+            throw new Error('Error in the response');
+          }
+    
+          const responseData = await response.json();
+          setThreadsData(responseData);
+        } else {
+          // Show all of the threads of a chosen category sorted by the least upvotes
+          const response = await fetch(`http://localhost:5000/getThreadsByCategorySortedByLeastUpvotes`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ category }),
+          });
+      
+          // Check if the response is ok
+          if (!response.ok) {
+            throw new Error('Error in the response');
+          }
+    
+          const responseData = await response.json();
+          setThreadsData(responseData);
+        }
+      }
+    }
+  }
 
   return (
     <Layout>
+      <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Your Dashboard
+      </Link>
+
       <Container size="xl" mt={30}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>Discover Threads</Title>
         
@@ -49,24 +228,59 @@ export function DiscoverThreads() {
               <Title order={4} mb="md">Filters</Title>
               
               <Text fw={500} mb="xs">Category</Text>
-              {['Category 1', 'Category 2', 'Category 3'].map(category => (
-                <Checkbox
-                  key={category}
-                  label={category}
-                  checked={selectedCategories.includes(category)}
-                  onChange={(event) => {
-                    if (event.currentTarget.checked) {
-                      setSelectedCategories([...selectedCategories, category]);
-                    } else {
-                      setSelectedCategories(selectedCategories.filter(c => c !== category));
-                    }
-                  }}
-                  mb="xs"
-                />
-              ))}
+              {/* Dropdown menu to select a category */}
+              <Menu>
+                <Menu.Target>
+                  <div
+                    style={{
+                      padding: '10px',
+                      border: '1px solid #ccc',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {/* Conditionally render the selected category or placeholder */}
+                    <span
+                      style={{
+                        color: selectedCategory && selectedCategory !== 'No category' ? '#000' : '#aaa',
+                      }}
+                    >
+                      {/* If a category is selected, render that category. Otherwise, render the placeholder */}
+                      {selectedCategory && selectedCategory !== 'No category'
+                        ? `${selectedCategory}`
+                        : 'Select a Category'}
+                    </span>
+
+                    {/* To create the dropdown arrow */}
+                    <span
+                      style={{
+                        marginLeft: 10,
+                        borderLeft: '5px solid transparent',
+                        borderRight: '5px solid transparent',
+                        borderTop: '5px solid',
+                        width: 0,
+                        height: 0,
+                      }}
+                    />
+                  </div>
+                </Menu.Target>
+
+                <Menu.Dropdown>
+                  {categories.map((category) => (
+                    <Menu.Item 
+                      key={category} 
+                      onClick={() => handleCategorySelect(category)}
+                    >
+                      {category}
+                    </Menu.Item>
+                  ))}
+                  <Menu.Item style={{ color: 'red' }} onClick={() => handleCategorySelect("None")}>None</Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
 
               <TextInput
-                label="Thread Name"
+                label="Thread Name (any category)"
                 placeholder="Search by name"
                 value={threadName}
                 onChange={(event) => setThreadName(event.currentTarget.value)}
@@ -74,60 +288,62 @@ export function DiscoverThreads() {
                 styles={{ input: styles.input }}
               />
 
+              {/* Sort the threads by most upvoted or by least upvoted */}
               <Text fw={500} mt="md" mb="xs">Sort by</Text>
-              <Radio.Group value={sortBy} onChange={setSortBy}>
-                <Radio value="mostRecentlyActive" label="Most recently active" mb="xs" />
-                <Radio value="leastRecentlyActive" label="Least recently active" mb="xs" />
-                <Radio value="mostFollowed" label="Most followed" mb="xs" />
-                <Radio value="leastFollowed" label="Least followed" mb="xs" />
-              </Radio.Group>
-
-              <Text fw={500} mt="md" mb="xs">Last active</Text>
-              <Radio.Group value={lastActive} onChange={setLastActive}>
-                <Radio value="lastHour" label="Last hour" mb="xs" />
-                <Radio value="today" label="Today" mb="xs" />
-                <Radio value="thisWeek" label="This week" mb="xs" />
-                <Radio value="thisMonth" label="This month" mb="xs" />
-                <Radio value="thisYear" label="This year" mb="xs" />
+              <Radio.Group value={sortBy}>
+                <Radio value="mostUpvoted" label="Most upvoted" mb="xs" onClick={() => handleSortByUpvotes("mostUpvoted")} />
+                <Radio value="leastUpvoted" label="Least upvoted" mb="xs" onClick={() => handleSortByUpvotes("leastUpvoted")} />
               </Radio.Group>
 
               <Button 
-                onClick={resetFilters} 
+                onClick={() => handleFilter(threadName, selectedCategory, sortBy)} 
                 fullWidth 
                 variant="outline" 
                 color="gray" 
                 mt="xl"
               >
-                Reset Filters
+                Save
               </Button>
             </Paper>
           </Grid.Col>
 
+          {/* Display the threads based on the filters selected */}
+
           <Grid.Col span={9}>
-          <Grid>
-            {filteredThreads.map(thread => (
-              <Grid.Col key={thread.id} span={4}>
-                <Card 
-                  shadow="sm" 
-                  p="lg" 
-                  radius="md" 
-                  withBorder 
-                  component={Link} 
-                  to={`/thread/${thread.id}`}
-                  style={{ textDecoration: 'none', color: 'inherit' }}
-                >
-                  <Text fw={500}>{thread.title}</Text>
-                  <Text size="sm" color="dimmed" mt="xs">
-                    Category: {thread.category}
-                  </Text>
-                  <Text size="sm" color="dimmed" mt="xs">
-                    Last active: {thread.lastActive.toLocaleDateString()}
-                  </Text>
-                </Card>
-              </Grid.Col>
-            ))}
-          </Grid>
-        </Grid.Col>
+            {threadsData ? (
+              <Grid>
+                {threadsData.map(thread => (
+                  <Grid.Col key={thread.ID} span={4}>
+                    <Card 
+                      shadow="sm" 
+                      p="lg" 
+                      radius="md" 
+                      withBorder 
+                      component={Link}
+                      onClick={() => handleViewThread(thread.ID)}
+                      to={`/thread/${thread.Uuid}`}
+                      style={{ textDecoration: 'none', color: 'inherit' }}
+                    >
+                      <Text fw={500}>{thread.Title}</Text>
+                      <Text size="sm" color="dimmed" mt="xs">
+                        Category: {thread.Category}
+                      </Text>
+                      <Text size="sm" color="dimmed" mt="xs">Upvotes: {thread.UpvoteCount}</Text>
+                    </Card>
+                  </Grid.Col>
+                ))}
+              </Grid>
+            ) : (
+              <Text
+                style={{
+                  fontWeight: 500,
+                  letterSpacing: '1px',
+                }}
+              >
+                No threads were found.
+              </Text>
+            )}
+          </Grid.Col>
         </Grid>
       </Container>
     </Layout>

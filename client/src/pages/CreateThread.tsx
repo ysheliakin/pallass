@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Title, TextInput, Textarea, Select, Text, Button, Paper, Group } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export function CreateThread() {
   const styles = useStyles();
@@ -16,16 +16,16 @@ export function CreateThread() {
   ]);
 
   const token = localStorage.getItem('token')
+  const email = localStorage.getItem('email')
   const navigate = useNavigate();
 
   const handleCreateThread =  async () => {
     // Handle thread creation logic here
     const threadData = {
-      Firstname: "Guest",
-      Lastname: "Guest",
       Title: title,
       Content: description,
       Category: category,
+      UserEmail: email
     };
   
     try {
@@ -64,6 +64,10 @@ export function CreateThread() {
 
   return (
     <Layout>
+      <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Your Dashboard
+      </Link>
+      
       <Container size="sm" mt={30}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>Create a Thread</Title>
         
