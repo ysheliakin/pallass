@@ -5,6 +5,7 @@ import { CreateGroup } from './pages/CreateGroup.page';
 import { CreatePostPage } from './pages/CreatePost.page';
 import { CreateThread } from './pages/CreateThread';
 import { DiscoverThreads } from './pages/DiscoverThreads';
+import { ForgotPasswordPage } from './pages/ForgotPassword.page';
 import { FundingOpportunities } from './pages/FundingOpportunities.page';
 import { HomePage } from './pages/Home.page';
 import { HostQASession } from './pages/HostQA.page';
@@ -13,11 +14,10 @@ import { JoinQASession } from './pages/JoinQA.page';
 import { LoggedInHomePage } from './pages/LoggedInHome.page';
 import { LoginPage } from './pages/Login.page';
 import { PostPage } from './pages/Post.page';
+import { ResetPasswordPage } from './pages/ResetPassword.page';
 import { SignUpPage } from './pages/SignUp.page';
 import { ThreadView } from './pages/ThreadView';
 import { GroupView } from './pages/GroupView';
-import { ForgotPasswordPage } from './pages/ForgotPassword.page';
-import { ResetPasswordPage } from './pages/ResetPassword.page';
 
 const router = createHashRouter([
   {
@@ -30,11 +30,15 @@ const router = createHashRouter([
       },
       {
         path: '/post/create',
-        element: <CreatePostPage />,
+        element: (
+          <CreatePostPage />
+        ),
       },
       {
         path: '/post/:id',
-        element: <PostPage />,
+        element: (
+          <PostPage />
+        ),
       },
     ],
   },
@@ -48,35 +52,51 @@ const router = createHashRouter([
   },
   {
     path: '/dashboard',
-    element: <LoggedInHomePage />,
+    element: (
+        <LoggedInHomePage />
+    ),
   },
   {
     path: '/host-qa',
-    element: <HostQASession />,
+    element: (
+        <HostQASession />
+    ),
   },
   {
     path: '/join-qa',
-    element: <JoinQASession />,
+    element: (
+        <JoinQASession />
+    ),
   },
   {
     path: '/create-group', // Add this new route
-    element: <CreateGroup />,
+    element: (
+        <CreateGroup />
+    ),
   },
   {
     path: '/join-group',
-    element: <JoinGroup />,
+    element: (
+        <JoinGroup />
+    ),
   },
   {
     path: '/create-thread',
-    element: <CreateThread />,
+    element: (
+        <CreateThread />
+    ),
   },
   {
     path: '/discover-threads',
-    element: <DiscoverThreads />,
+    element: (
+        <DiscoverThreads />
+    ),
   },
   {
     path: '/thread/:threadUuid',
-    element: <ThreadView />,
+    element: (
+        <ThreadView />
+    ),
   },
   {
     path: '/group/:groupUuid',
@@ -88,7 +108,9 @@ const router = createHashRouter([
   },
   {
     path: '/funding-opportunities/create',
-    element: <CreateFunding />,
+    element: (
+        <CreateFunding />
+    ),
   },
   {
     path: `/forgot-password`,
