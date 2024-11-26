@@ -44,7 +44,7 @@ export function LoggedInHomePage() {
         setThreadsData(data);
       }
 
-      setGroupUuid("cfc53e71-1958-4137-b12c-ac2757b59761")
+      setGroupUuid("281ac8d1-556d-4cfd-8d55-66450d2fca05")
 
       fetchThreadData();
   }, [])
@@ -67,8 +67,8 @@ export function LoggedInHomePage() {
         </Group>
 
         <SimpleGrid cols={2} spacing="md" mb="xl">
-          <Paper p="md" withBorder component={Link} onClick={() => handleViewGroup(25)} to={`/group/${groupUuid}`}>
-            Group ID 6
+          <Paper p="md" withBorder component={Link} onClick={() => handleViewGroup(9)} to={`/group/${groupUuid}`}>
+            Group ID 9
           </Paper>
           <Paper p="md" withBorder>
             Group name 2

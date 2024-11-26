@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal, Divider, Loader, Stack } from '@mantine/core';
+import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal, Divider, Loader, Stack, TextInput, Notification } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { EditorConsumer } from '@tiptap/react';
@@ -80,9 +80,17 @@ export function GroupView() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [groupData, setGroupData] = useState<ChosenGroup[] | null>(null);
   const [userName, setUserName] = useState('');
-  const [modalOpened, setModalOpened] = useState(false);
+  const [membersModalOpened, setMembersModalOpened] = useState(false);
+  const [deleteConfirmationModalOpened, setDeleteConfirmationModalOpened] = useState(false);
+  const [addMemberModalOpened, setAddMemberModalOpened] = useState(false);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const [groupOwner, setGroupOwner] = useState('');
+  const [newMember, setNewMember] = useState('');
+  const [newMemberAdded, setNewMemberAdded] = useState(false)
+  const [newMemberNotAdded, setNewMemberNotAdded] = useState(false)
+  const addMembersButtonRef = useRef<HTMLButtonElement | null>(null);
+  const deleteGroupButtonRef = useRef<HTMLButtonElement | null>(null);
+
 
   const email = localStorage.getItem('email');
   // Get the JWT token
@@ -113,19 +121,19 @@ export function GroupView() {
       const data = await response.json();
       console.log("data: ", data)
 
-      /*for (let i = 0; i < data[0].MemberEmails.length; i++) {
-        if (email != data[0].MemberEmails[i]) {
-          return <Text>You are not a member of this group.</Text>;
-        }
-      }*/
-
       for (let i = 0; i < data[0].MemberEmails.length; i++) {
-        if (data[0].MemberRoles[i] == "Owner") {
-          setGroupOwner(data[0].MemberEmails[i])
+        console.log("data[0].MemberEmails[i]: ", data[0].MemberEmails[i])
+
+        if (email == data[0].MemberEmails[i]) {
+          for (let i = 0; i < data[0].MemberEmails.length; i++) {
+            if (data[0].MemberRoles[i] == "Owner") {
+              setGroupOwner(data[0].MemberEmails[i])
+            }
+          }
+    
+          setGroupData(data);
         }
       }
-
-      setGroupData(data);
     }
     
     fetchGroupData();
@@ -498,7 +506,7 @@ export function GroupView() {
     const data = await response.json();
     console.log("data: ", data)
     setGroupMembers(data)
-    setModalOpened(true)
+    setMembersModalOpened(true)
 
     console.log("Email: ", email)
 
@@ -511,7 +519,7 @@ export function GroupView() {
 
   const closeMembersList = async() => {
     console.log("Members list")
-    setModalOpened(false)
+    setMembersModalOpened(false)
   }
 
   // Kick a member out of the group
@@ -584,8 +592,75 @@ export function GroupView() {
     openMembersList()
   }
 
-  const openDeleteGroupVerification = async() => {
-    console.log("openDeleteGroupVerification()")
+  const openAddMember = (e: React.MouseEvent<HTMLButtonElement>) => {
+    (e.target as HTMLButtonElement).blur()
+    
+    if (addMembersButtonRef.current) {
+      console.log("addMembersButtonRef")
+      addMembersButtonRef.current.blur();
+    }
+
+    setAddMemberModalOpened(true)
+  }
+
+  const closeAddMember = () => {
+    console.log("closeAddMember()")
+    
+    setAddMemberModalOpened(false)
+    setNewMemberAdded(false)
+    setNewMemberNotAdded(false)
+  }
+
+  const addMember = async(useremail: string) => {
+    console.log("addMember()")
+
+    setNewMemberAdded(false)
+    setNewMemberNotAdded(false)
+    
+    const response = await fetch(`http://localhost:5000/addMember/${groupID}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ useremail }),
+    });
+
+    // Check if the response is ok (status code 200-299)
+    if (!response.ok) {
+      setNewMemberNotAdded(true)
+    } else {
+      setNewMemberAdded(true)
+    }
+  }
+
+  const closeSuccessNotification = () => {
+    setNewMemberAdded(false)
+  }
+
+  const closeErrorNotification = () => {
+    setNewMemberNotAdded(false)
+  }
+
+  const openDeleteGroupVerification = (e: React.MouseEvent<HTMLButtonElement>) => {
+    (e.target as HTMLButtonElement).blur()
+    
+    if (deleteGroupButtonRef.current) {
+      console.log("deleteGroupButtonRef")
+      deleteGroupButtonRef.current.blur();
+    }
+
+    setDeleteConfirmationModalOpened(true)
+  }
+
+  const closeDeleteGroupVerification = () => {
+    console.log("closeDeleteGroupVerification()")
+
+    setDeleteConfirmationModalOpened(false)
+  }
+
+  const confirmGroupDeletion = async() => {
+    console.log("confirmGroupDeletion()")
 
     const response = await fetch(`http://localhost:5000/deleteGroup/${groupID}`, {
       method: 'DELETE',
@@ -600,6 +675,8 @@ export function GroupView() {
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
+
+    navigate("/dashboard")
   }
 
   return (
@@ -610,10 +687,13 @@ export function GroupView() {
 
       <Container size="lg" mt={30}>
         <Modal
-          opened={modalOpened}
+          opened={membersModalOpened}
           onClose={closeMembersList}
-          title="Members"
+          closeOnClickOutside={false}  // Don't close on background click
+          closeOnEscape={false} 
           size="lg"
+          centered
+          aria-modal="true"
         >
           <Title order={2} style={{ textAlign: "center", marginBottom: "20px" }}>Members</Title>
 
@@ -651,6 +731,56 @@ export function GroupView() {
           </Stack>
         </Modal>
 
+        <Modal
+          opened={addMemberModalOpened}
+          onClose={closeAddMember}
+          closeOnClickOutside={false}  // Don't close on background click
+          closeOnEscape={false} 
+          size="lg"
+          centered
+          aria-modal="true"
+        >
+          <Stack align="center">  {/* Aligns items horizontally */}
+            <Text size="xl" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 500, marginBottom: 15 }}>Enter the user's email address</Text>
+            
+            <Group>
+              <TextInput
+                placeholder="Email address"
+                value={newMember}
+                onChange={(event) => setNewMember(event.currentTarget.value)}
+                style={{ width: '400px' }}
+              />
+              <Button color="red" onClick={() => addMember(newMember)}>Add Member</Button>
+            </Group>
+          </Stack>
+
+          {newMemberAdded && (
+            <Notification color="teal" title="Success!" mt="md" onClose={closeSuccessNotification}>
+              The new member was successfully added to the group!
+            </Notification>
+          )}
+
+          {newMemberNotAdded && (
+            <Notification color="red" title="Error!" mt="md" onClose={closeErrorNotification}>
+            Failed to add the user to the group. Please verify the email address.
+          </Notification>
+          )}
+        </Modal>
+
+        <Modal
+          opened={deleteConfirmationModalOpened}
+          onClose={closeDeleteGroupVerification}
+          closeOnClickOutside={false}  // Don't close on background click
+          closeOnEscape={false} 
+          size="lg"
+          centered
+          aria-modal="true"
+        >
+          <Stack align="center">  {/* Aligns items horizontally */}
+            <Text size="xl" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 500, marginBottom: 15 }}>Are you sure you want to delete this group?</Text>
+            <Button color="red" onClick={confirmGroupDeletion}>Confirm Group Deletion</Button>
+          </Stack>
+        </Modal>
 
         {/* Discussion group's title, description, and creation date */}
         <Paper 
@@ -662,6 +792,7 @@ export function GroupView() {
             padding: '20px', 
             marginBottom: 30
           }}
+         
         >
           <Group justify="space-between" align="center">
             <MantineTitle order={2} style={styles.title} mb="xs">
@@ -669,9 +800,17 @@ export function GroupView() {
             </MantineTitle>
 
             {/* Members list button */}
-            <Button variant="outline" color="teal" onClick={openMembersList}>
-              Members
-            </Button>
+            <Group>
+              <Button variant="outline" color="teal" onClick={openMembersList}>
+                Members
+              </Button>
+
+              {email == groupOwner && (
+                <Button ref={addMembersButtonRef} variant="outline" color="cyan" onClick={openAddMember}>
+                  Add Member
+                </Button>
+              )}
+            </Group>
           </Group>
           
           <Group justify="space-between" align="center">
@@ -686,8 +825,8 @@ export function GroupView() {
 
           {email == groupOwner && (
           <div style={{ textAlign: 'right' }}>
-            {/* Members list button */}
-            <Button variant="subtle" color="red" onClick={openDeleteGroupVerification}>
+            {/* Delete group button */}
+            <Button ref={deleteGroupButtonRef} variant="subtle" color="red" onClick={openDeleteGroupVerification}>
               Delete Group
             </Button>
           </div>

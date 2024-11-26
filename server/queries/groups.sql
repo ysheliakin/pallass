@@ -75,6 +75,10 @@ WHERE user_email IN ($1, $2) AND group_id = $3;
 DELETE FROM groups
 WHERE id = $1;
 
+-- name: AddMemberToGroup :exec
+INSERT INTO group_members (group_id, user_email, role, joined_at)
+VALUES ($1, $2, $3, CURRENT_TIMESTAMP);
+
 -- -- name: CheckIfUserInGroup :one
 -- SELECT COUNT(*) 
 -- FROM group_members

@@ -411,7 +411,7 @@ func ChangeOwner(c echo.Context) error {
 func DeleteGroup(c echo.Context) error {
 	fmt.Println("DeleteGroupMessage()")
 
-	groupIDStr := c.Param("groupID")
+	groupIDStr := c.Param("groupid")
 
 	groupId, err := strconv.Atoi(groupIDStr)
 	if err != nil {
@@ -426,6 +426,52 @@ func DeleteGroup(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "Group successfully deleted"})
+}
+
+func AddMember(c echo.Context) error {
+	fmt.Println("AddMember()")
+
+	var groupMember GroupMember
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&groupMember)
+	if err != nil {
+		e.Logger.Error(err)
+		fmt.Println("Error decoding the incoming JSON request body")
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	var emailParam pgtype.Text
+	if groupMember.UserEmail != "" {
+		emailParam = pgtype.Text{String: groupMember.UserEmail, Valid: true}
+	} else {
+		emailParam = pgtype.Text{Valid: false}
+	}
+
+	fmt.Println("emailParam: ", emailParam)
+
+	groupIDStr := c.Param("groupid")
+
+	groupId, err := strconv.Atoi(groupIDStr)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.String(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	// Inserting new member data
+	newMemberParams := queries.AddMemberToGroupParams{
+		GroupID:   int32(groupId),
+		UserEmail: emailParam,
+		Role:      "Member",
+	}
+
+	// Delete the group message
+	err = sql.AddMemberToGroup(context.Background(), newMemberParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "New member successfully added to the group"})
 }
 
 

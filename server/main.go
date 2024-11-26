@@ -133,6 +133,7 @@ func main() {
 	authGroup.POST("/getMembers", controller.GetGroupMembers)
 	authGroup.POST("/exitGroup/:groupid", controller.ExitGroup)
 	authGroup.POST("/changeOwner/:email", controller.ChangeOwner)
+	authGroup.POST("/addMember/:groupid", controller.AddMember)
 	authGroup.POST("/flag", controller.FlagController)
 	authGroup.POST("/threads/upvote/:threadID", controller.UpvoteThread)
 	authGroup.POST("/downvote", controller.DownvoteController)
