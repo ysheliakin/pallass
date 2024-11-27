@@ -124,6 +124,7 @@ func main() {
 	authGroup.GET("/getThreadsSortedByLeastUpvotes", controller.GetThreadsSortedByLeastUpvotes)
 	authGroup.GET("/getUpvotedThreads/:email", controller.GetUpvotedThreadsController)
 	authGroup.GET("/threads/getUpvotes/:threadID", controller.GetThreadUpvotes)
+	authGroup.GET("/getGroups/:email", controller.GetGroups)
 	// Post handlers
 	authGroup.POST("/postThread", controller.ThreadController)
 	authGroup.POST("/threads/:id", controller.GetThreadController)

@@ -232,6 +232,62 @@ func (q *Queries) GetGroupMembersByGroupID(ctx context.Context, groupID int32) (
 	return items, nil
 }
 
+const getGroupsByUserEmail = `-- name: GetGroupsByUserEmail :many
+SELECT groups.id, name, description, created_at, uuid, public, notifications, group_members.id, group_id, role, joined_at, user_email 
+FROM groups
+JOIN group_members ON groups.id = group_members.group_id
+WHERE group_members.user_email = $1
+ORDER BY group_members.joined_at DESC
+`
+
+type GetGroupsByUserEmailRow struct {
+	ID            int32
+	Name          string
+	Description   pgtype.Text
+	CreatedAt     pgtype.Timestamp
+	Uuid          pgtype.UUID
+	Public        pgtype.Bool
+	Notifications pgtype.Bool
+	ID_2          int32
+	GroupID       int32
+	Role          string
+	JoinedAt      pgtype.Timestamp
+	UserEmail     pgtype.Text
+}
+
+func (q *Queries) GetGroupsByUserEmail(ctx context.Context, userEmail pgtype.Text) ([]GetGroupsByUserEmailRow, error) {
+	rows, err := q.db.Query(ctx, getGroupsByUserEmail, userEmail)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetGroupsByUserEmailRow
+	for rows.Next() {
+		var i GetGroupsByUserEmailRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.CreatedAt,
+			&i.Uuid,
+			&i.Public,
+			&i.Notifications,
+			&i.ID_2,
+			&i.GroupID,
+			&i.Role,
+			&i.JoinedAt,
+			&i.UserEmail,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertGroup = `-- name: InsertGroup :one
 INSERT INTO groups (name, description, created_at, public, notifications)
 VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4)

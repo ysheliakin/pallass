@@ -689,7 +689,8 @@ export function GroupView() {
         <Modal
           opened={membersModalOpened}
           onClose={closeMembersList}
-          closeOnClickOutside={false}  // Don't close on background click
+          // Don't close the modal on a background click or on an Escape key click
+          closeOnClickOutside={false}
           closeOnEscape={false} 
           size="lg"
           centered
@@ -734,13 +735,13 @@ export function GroupView() {
         <Modal
           opened={addMemberModalOpened}
           onClose={closeAddMember}
-          closeOnClickOutside={false}  // Don't close on background click
+          closeOnClickOutside={false}
           closeOnEscape={false} 
           size="lg"
           centered
           aria-modal="true"
         >
-          <Stack align="center">  {/* Aligns items horizontally */}
+          <Stack align="center">
             <Text size="xl" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 500, marginBottom: 15 }}>Enter the user's email address</Text>
             
             <Group>
@@ -770,19 +771,20 @@ export function GroupView() {
         <Modal
           opened={deleteConfirmationModalOpened}
           onClose={closeDeleteGroupVerification}
-          closeOnClickOutside={false}  // Don't close on background click
+          closeOnClickOutside={false}
           closeOnEscape={false} 
           size="lg"
           centered
           aria-modal="true"
         >
-          <Stack align="center">  {/* Aligns items horizontally */}
+          {/* Stack the components one under the other and center them */}
+          <Stack align="center">
             <Text size="xl" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 500, marginBottom: 15 }}>Are you sure you want to delete this group?</Text>
             <Button color="red" onClick={confirmGroupDeletion}>Confirm Group Deletion</Button>
           </Stack>
         </Modal>
 
-        {/* Discussion group's title, description, and creation date */}
+        {/* Group's title, description, and creation date */}
         <Paper 
           shadow="sm"
           radius="xl"
@@ -799,12 +801,13 @@ export function GroupView() {
               {groupData[0].GroupName}
             </MantineTitle>
 
-            {/* Members list button */}
             <Group>
+              {/* Members list button */}
               <Button variant="outline" color="teal" onClick={openMembersList}>
                 Members
               </Button>
 
+              {/* If the user is the group owner, display the 'Add Member' button */}
               {email == groupOwner && (
                 <Button ref={addMembersButtonRef} variant="outline" color="cyan" onClick={openAddMember}>
                   Add Member
@@ -823,6 +826,7 @@ export function GroupView() {
             {groupData[0].GroupDescription}
           </Text>
 
+          {/* If the user is the group owner, display the 'Delete Group' button */}
           {email == groupOwner && (
           <div style={{ textAlign: 'right' }}>
             {/* Delete group button */}

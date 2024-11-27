@@ -92,8 +92,6 @@ func AddGroupMembers(c echo.Context) error {
 }
 
 func GetGroupController(c echo.Context) error {
-	//return c.String(http.StatusOK, "Group updated")
-
 	fmt.Println("GetGroupController()")
 
 	var user User
@@ -196,6 +194,7 @@ func StoreGroupMessage(c echo.Context) error {
 	return c.JSON(http.StatusOK, messageData)
 }
 
+// Delete a message
 func DeleteGroupMessage(c echo.Context) error {
 	fmt.Println("DeleteGroupMessage()")
 
@@ -216,6 +215,7 @@ func DeleteGroupMessage(c echo.Context) error {
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "Group message and replies successfully deleted"})
 }
 
+// Edit a message
 func EditGroupMessage(c echo.Context) error {
 	var groupMessage GroupMessage
 
@@ -248,6 +248,7 @@ func EditGroupMessage(c echo.Context) error {
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "Group message successfully updated"})
 }
 
+// Get the messages that are replies
 func GetGroupReplyingMessageData(c echo.Context) error {
 	var groupMessage GroupMessage
 
@@ -277,6 +278,7 @@ func GetGroupReplyingMessageData(c echo.Context) error {
 	return c.JSON(http.StatusOK, replyingMessageData)
 }
 
+// Get the list of members of a group
 func GetGroupMembers(c echo.Context) error {
 	var groupMember GroupMember
 
@@ -305,6 +307,7 @@ func GetGroupMembers(c echo.Context) error {
 	return c.JSON(http.StatusOK, groupMembers)
 }
 
+// Leave/kick a user out of the group
 func ExitGroup(c echo.Context) error {
 	var groupMember GroupMember
 
@@ -353,6 +356,7 @@ func ExitGroup(c echo.Context) error {
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "User successfully removed from the group"})	
 }
 
+// Change the owner of the group
 func ChangeOwner(c echo.Context) error {
 	var groupMember GroupMember
 
@@ -408,6 +412,7 @@ func ChangeOwner(c echo.Context) error {
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "User successfully removed from the group"})
 }
 
+// Delete the group
 func DeleteGroup(c echo.Context) error {
 	fmt.Println("DeleteGroupMessage()")
 
@@ -428,6 +433,7 @@ func DeleteGroup(c echo.Context) error {
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "Group successfully deleted"})
 }
 
+// Add a member to the group
 func AddMember(c echo.Context) error {
 	fmt.Println("AddMember()")
 
@@ -472,6 +478,32 @@ func AddMember(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "New member successfully added to the group"})
+}
+
+// Get the groups that the user is a part of
+func GetGroups(c echo.Context) error {
+	fmt.Println("GetGroups")
+
+	emailParam := c.Param("email")
+	fmt.Println("emailParam: ", emailParam)
+
+	var email pgtype.Text
+	if emailParam != "" {
+		email = pgtype.Text{String: emailParam, Valid: true}
+	} else {
+		email = pgtype.Text{Valid: false}
+	}
+
+	// Query the database to retrieve information from all of the groups that the user is a part of
+	groups, err := sql.GetGroupsByUserEmail(context.Background(), email)
+	if err != nil {
+		if err.Error() == "no rows in result set" {
+			return c.JSON(http.StatusNotFound, "No groups were found")
+		}
+		return c.JSON(http.StatusInternalServerError, "Error retrieving upvoted threads")
+	}
+	fmt.Println("groups: ", groups)
+	return c.JSON(http.StatusOK, groups)
 }
 
 

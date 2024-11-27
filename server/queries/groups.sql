@@ -13,6 +13,13 @@ SELECT id, name, description, created_at
 FROM groups
 WHERE id = $1;
 
+-- name: GetGroupsByUserEmail :many
+SELECT * 
+FROM groups
+JOIN group_members ON groups.id = group_members.group_id
+WHERE group_members.user_email = $1
+ORDER BY group_members.joined_at DESC;
+
 -- name: GetGroupAndGroupMessagesByGroupIDAndFullnameByUserEmail :many
 SELECT 
     groups.id AS group_id, 
