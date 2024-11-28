@@ -129,7 +129,7 @@ func main() {
 	authGroup.POST("/postThread", controller.ThreadController)
 	authGroup.POST("/threads/:id", controller.GetThreadController)
 	authGroup.POST("/newgroup", controller.CreateGroup)
-	authGroup.POST("/addgroupmembers", controller.AddGroupMembers)
+	authGroup.POST("/addgroupmember", controller.AddGroupMember)
 	authGroup.POST("/groups/:id", controller.GetGroupController)
 	authGroup.POST("/getMembers", controller.GetGroupMembers)
 	authGroup.POST("/exitGroup/:groupid", controller.ExitGroup)
@@ -162,6 +162,11 @@ func main() {
 	authGroup.POST("/storeGroupMessage", controller.StoreGroupMessage)
 	authGroup.POST("/getGroupReplyingMessageData", controller.GetGroupReplyingMessageData)
 	authGroup.POST("/editGroupMessage", controller.EditGroupMessage)
+	authGroup.POST("/getGroupsByInput", controller.GetGroupsByInput)
+	authGroup.POST("/requestJoinGroup", controller.RequestJoinGroup)
+	authGroup.POST("/getJoinRequests", controller.GetJoinRequests)
+	authGroup.POST("/acceptJoinRequest/:groupid", controller.AddMember)
+	authGroup.POST("/removeJoinRequest/:groupid", controller.RemoveJoinGroupRequest)
 	// Put handlers
 	authGroup.PUT("/message", controller.UpdateMessageController)
 	authGroup.PUT("/user", func(c echo.Context) error {

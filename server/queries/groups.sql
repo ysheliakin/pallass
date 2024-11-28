@@ -1,6 +1,6 @@
 -- name: InsertGroup :one
-INSERT INTO groups (name, description, created_at, public, notifications)
-VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4)
+INSERT INTO groups (name, description, created_at, public)
+VALUES ($1, $2, CURRENT_TIMESTAMP, $3)
 RETURNING id, uuid;
 
 -- name: InsertGroupMember :one
@@ -25,6 +25,7 @@ SELECT
     groups.id AS group_id, 
     groups.name AS group_name,
     groups.description AS group_description, 
+    groups.public AS group_public,
     groups.uuid AS group_uuid,
     groups.created_at AS group_created_at,
     -- Messages in the group
@@ -43,6 +44,8 @@ SELECT
     group_replying_message.created_at AS group_reply_created_at,
     -- Count of the group's members
     COUNT(group_members.id) AS member_count,
+    -- Count of the group's join requests
+    COUNT(join_group_requests.id) AS join_request_count,
     array_agg(group_members.user_email) AS member_emails,
     array_agg(group_members.role) AS member_roles
 FROM 
@@ -53,6 +56,8 @@ LEFT JOIN
     group_messages AS group_replying_message ON group_messages.group_message_id = group_replying_message.id
 LEFT JOIN
     group_members ON groups.id = group_members.group_id
+LEFT JOIN
+    join_group_requests ON groups.id = join_group_requests.group_id
 WHERE 
     groups.id = $1
 GROUP BY 
@@ -86,9 +91,34 @@ WHERE id = $1;
 INSERT INTO group_members (group_id, user_email, role, joined_at)
 VALUES ($1, $2, $3, CURRENT_TIMESTAMP);
 
--- -- name: CheckIfUserInGroup :one
--- SELECT COUNT(*) 
--- FROM group_members
--- WHERE group_id = $1 AND user_id = $2;
+-- name: GetGroupsByNameSortedByMostRecent :many
+SELECT 
+    groups.*,
+    array_agg(DISTINCT group_members.user_email) AS member_emails,
+    array_agg(DISTINCT join_group_requests.user_email) AS join_request_emails
+FROM 
+    groups
+LEFT JOIN
+    group_members ON groups.id = group_members.group_id
+LEFT JOIN
+    join_group_requests ON groups.id = join_group_requests.group_id
+WHERE 
+    groups.name ILIKE $1
+GROUP BY 
+    groups.id
+ORDER BY 
+    groups.created_at DESC;
 
+-- name: AddUserToJoinGroupRequests :exec
+INSERT INTO join_group_requests (group_id, user_email, created_at)
+VALUES ($1, $2, CURRENT_TIMESTAMP);
 
+-- name: GetJoinGroupRequests :many
+SELECT jgr.*, u.firstname, u.lastname
+FROM join_group_requests jgr
+JOIN users u ON jgr.user_email = u.email
+WHERE jgr.group_id = $1;
+
+-- name: RemoveJoinGroupRequest :exec
+DELETE FROM join_group_requests
+WHERE group_id = $1 AND user_email = $2;

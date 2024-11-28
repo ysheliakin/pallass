@@ -19,13 +19,12 @@ type FundingOpportunity struct {
 }
 
 type Group struct {
-	ID            int32
-	Name          string
-	Description   pgtype.Text
-	CreatedAt     pgtype.Timestamp
-	Uuid          pgtype.UUID
-	Public        pgtype.Bool
-	Notifications pgtype.Bool
+	ID          int32
+	Name        string
+	Description pgtype.Text
+	CreatedAt   pgtype.Timestamp
+	Uuid        pgtype.UUID
+	Public      pgtype.Bool
 }
 
 type GroupMember struct {
@@ -45,6 +44,13 @@ type GroupMessage struct {
 	GroupMessageID pgtype.Int4
 	Reply          pgtype.Bool
 	CreatedAt      pgtype.Timestamp
+}
+
+type JoinGroupRequest struct {
+	ID        int32
+	GroupID   int32
+	UserEmail string
+	CreatedAt pgtype.Timestamp
 }
 
 type Message struct {

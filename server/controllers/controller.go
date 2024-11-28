@@ -60,6 +60,11 @@ type GroupMember struct {
 	Role      string `json:"role"`
 }
 
+type JoinGroupRequest struct {
+	GroupID   string `json:"groupid"`
+	UserEmail string `json:"useremail"`  
+}
+
 type User struct {
 	ID           int32    `json:"id"`
 	Firstname    string   `json:"firstName"`

@@ -68,7 +68,7 @@ export function CreateGroup() {
         console.log('groupMembersData:', groupMembersData);
 
         try {
-          const response = await fetch('http://localhost:5000/addgroupmembers', {
+          const response = await fetch('http://localhost:5000/addgroupmember', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -109,7 +109,7 @@ export function CreateGroup() {
           console.log('groupMembersData', i,  ':, ', groupMembersData);
 
           try {
-            const response = await fetch('http://localhost:5000/addgroupmembers', {
+            const response = await fetch('http://localhost:5000/addgroupmember', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -219,17 +219,6 @@ export function CreateGroup() {
               >
                 <Radio value="private" label="Private" />
                 <Radio value="public" label="Public" />
-              </Radio.Group>
-            </Stack>
-
-            <Stack>
-              <Title order={6}>Notifications:</Title>
-              <Radio.Group
-                value={notifications}
-                onChange={setNotifications}
-              >
-                <Radio value="on" label="On" />
-                <Radio value="off" label="Off" />
               </Radio.Group>
             </Stack>
           </Group>

@@ -1,18 +1,100 @@
 import React, { useState } from 'react';
-import { Container, Title, TextInput, Radio, Button, Paper, Stack } from '@mantine/core';
+import { Container, Title, TextInput, Radio, Button, Paper, Stack, Grid, Card, Text } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+
+interface Group {
+  ID: number,
+  Name: string,
+  Description: string,
+  Uuid: string,
+  CreatedAt: string,
+  Public: boolean,
+  MemberEmails: Array<String>,
+  JoinRequestEmails: Array<String>,
+}
 
 export function JoinGroup() {
   const styles = useStyles();
+  const navigate = useNavigate();
 
-  const [groupId, setGroupId] = useState('');
-  const [notifications, setNotifications] = useState('on');
+  const [userInput, setUserInput] = useState('');
+  const [groups, setGroups] = useState<Group[] | null>(null);
+  const [nullResponse, setNullResponse] = useState(false);
+  //const [successMessage, setSuccessMessage] = useState("")
 
-  const handleJoinGroup = () => {
-    console.log('Join group data:', { groupId, notifications });
-    // Handle group joining logic here
-  };
+  const token = localStorage.getItem('token')
+  const email = localStorage.getItem('email')
+
+  const handleSearchGroup = async(name: string) => {
+    const response = await fetch(`http://localhost:5000/getGroupsByInput`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name }),
+    });
+
+    // Check if the response is ok
+    if (!response.ok) {
+      throw new Error('Error in the response');
+    }
+
+    const responseData = await response.json();
+    console.log("responseData: ", responseData)
+    setGroups(responseData);
+
+    if (responseData != null) { 
+      setNullResponse(false)
+    } else {
+      setNullResponse(true)
+    }
+  }
+
+  const joiningGroup = async(groupID: number, groupUuid: string, useremail: string) => {
+    const groupid = groupID.toString();
+    const role = "Member"
+
+    const response = await fetch(`http://localhost:5000/addgroupmember`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ groupid, useremail, role }),
+    });
+
+    // Check if the response is ok
+    if (!response.ok) {
+      throw new Error('Error in the response');
+    }
+
+    localStorage.setItem("groupID", groupid);
+    navigate(`/group/${groupUuid}`);
+  }
+
+  const requestJoinGroup = async(groupID: number, useremail: string) => {
+    const groupid = groupID.toString();
+
+    const response = await fetch(`http://localhost:5000/requestJoinGroup`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ groupid, useremail }),
+    });
+
+    // Check if the response is ok
+    if (!response.ok) {
+      //setSuccessMessage("")
+      throw new Error('Error in the response');
+    }
+
+    //setSuccessMessage(responseMessage)
+    handleSearchGroup(userInput)
+  }
 
   return (
     <Layout>
@@ -29,37 +111,94 @@ export function JoinGroup() {
           p={30} 
           mt={30} 
           radius="md" 
-          style={{...styles.formContainer, backgroundColor: 'white'}}
+          style={{...styles.formContainer, backgroundColor: 'white', marginBottom: 40}}
         >
           <TextInput
-            label="GroupID"
-            placeholder="Enter group ID"
-            required
-            value={groupId}
-            onChange={(event) => setGroupId(event.currentTarget.value)}
+            label="Search for a Group"
+            placeholder="Enter keywords or a group's name"
+            value={userInput}
+            onChange={(event) => setUserInput(event.currentTarget.value)}
             styles={{ input: styles.input }}
           />
-
-          <Stack mt="md">
-            <Title order={6}>Notifications:</Title>
-            <Radio.Group
-              value={notifications}
-              onChange={setNotifications}
-            >
-              <Radio value="on" label="On" />
-              <Radio value="off" label="Off" />
-            </Radio.Group>
-          </Stack>
 
           <Button 
             fullWidth 
             mt="xl" 
             style={styles.primaryButton}
-            onClick={handleJoinGroup}
+            onClick={() => handleSearchGroup(userInput)}
           >
-            Join Group/Request to Join Group
+            Search Group
           </Button>
         </Paper>
+
+        <Grid>
+          <Grid.Col span={12}>
+            {groups && (
+              <Grid>
+                {groups.map(group => (
+                  <Grid.Col key={group.ID} span={4}>
+                    <Card 
+                      shadow="sm" 
+                      p="lg" 
+                      radius="md" 
+                      withBorder 
+                      style={{ textDecoration: 'none', color: 'inherit' }}
+                    >
+                      <Text fw={500} style={{ marginBottom: 10 }}>{group.Name}</Text>
+                      
+                      {group.Public == true ? (
+                        <Text>Public</Text>
+                      ) : (
+                        <Text>Private</Text>
+                      )}
+
+                      <Text size="sm" color="dimmed" mt="xs" style={{ marginBottom: 20}}>
+                        Created on: {new Date(group.CreatedAt).toLocaleDateString()}
+                      </Text>
+
+                      {group.Public == true ? (
+                        <Button 
+                          onClick={() => {
+                            if (email) {
+                              joiningGroup(group.ID, group.Uuid, email);
+                            }
+                          }}
+
+                          disabled={!email || group.MemberEmails.includes(email)}
+                        >
+                          Join
+                        </Button>
+                      ) : (
+                        <Button 
+                          onClick={() => {
+                            if (email) {
+                              requestJoinGroup(group.ID, email);
+                            }
+                          }}
+
+                          disabled={!email || group.JoinRequestEmails.includes(email) || group.MemberEmails.includes(email)}
+                        >
+                          Request to Join
+                        </Button>
+                      )}
+                    </Card>
+                  </Grid.Col>
+                ))}
+              </Grid>
+            )}
+
+            {nullResponse && (
+              <Text
+                style={{
+                  fontWeight: 500,
+                  letterSpacing: '1px',
+                }}
+              >
+                No groups were found.
+              </Text>
+            )}
+          </Grid.Col>
+          </Grid>
       </Container>
     </Layout>
   );

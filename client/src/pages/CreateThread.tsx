@@ -122,10 +122,6 @@ export function CreateThread() {
             <Button onClick={handleAddCategory}>Add</Button>
           </Group>
 
-          <Text size="sm" color="gray" mt="md">
-            Note: A moderator must approve a post before it is displayed.
-          </Text>
-
           <Button 
             fullWidth 
             mt="xl" 

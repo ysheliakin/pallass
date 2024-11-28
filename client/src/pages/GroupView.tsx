@@ -38,6 +38,7 @@ interface ChosenGroup {
   GroupID: string,
   GroupName: string,
   GroupDescription: string,
+  GroupPublic: boolean,
   GroupUuid: string,
   GroupCreatedAt: string,
   GroupMessageID: string,
@@ -46,12 +47,14 @@ interface ChosenGroup {
   GroupMessageGroupID: string,
   GroupMessageContent: string,
   GroupMessageCreatedAt: string,
-  ReplyID: string,
-  ReplyFirstname: string,
-  ReplyLastname: string,
-  ReplyContent: string,
-  ReplyCreatedAt: string,
+  GroupReplyID: string,
+  GroupReplyFirstname: string,
+  GroupReplyLastname: string,
+  GroupReplyContent: string,
+  GroupReplyCreatedAt: string,
   UserFullname: string,
+  MemberCount: number,
+  JoinRequestCount: string,
 }
 
 interface GroupMember {
@@ -60,6 +63,15 @@ interface GroupMember {
 	UserEmail: string,
 	Role: string,
 	JoinedAt: string,
+	Firstname: string,
+	Lastname: string,
+}
+
+interface JoinRequests {
+  ID: string,
+	GroupID: string,
+	UserEmail: string,
+	CreatedAt: string,
 	Firstname: string,
 	Lastname: string,
 }
@@ -81,13 +93,16 @@ export function GroupView() {
   const [groupData, setGroupData] = useState<ChosenGroup[] | null>(null);
   const [userName, setUserName] = useState('');
   const [membersModalOpened, setMembersModalOpened] = useState(false);
+  const [joinRequestsModalOpened, setJoinRequestsModalOpened] = useState(false);
   const [deleteConfirmationModalOpened, setDeleteConfirmationModalOpened] = useState(false);
   const [addMemberModalOpened, setAddMemberModalOpened] = useState(false);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+
   const [groupOwner, setGroupOwner] = useState('');
   const [newMember, setNewMember] = useState('');
-  const [newMemberAdded, setNewMemberAdded] = useState(false)
-  const [newMemberNotAdded, setNewMemberNotAdded] = useState(false)
+  const [newMemberAdded, setNewMemberAdded] = useState(false);
+  const [newMemberNotAdded, setNewMemberNotAdded] = useState(false);
+  const [joinGroupRequests, setJoinGroupRequests] = useState<JoinRequests[]>([]);
   const addMembersButtonRef = useRef<HTMLButtonElement | null>(null);
   const deleteGroupButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -99,6 +114,7 @@ export function GroupView() {
   const ws = useRef<WebSocket | null>(null);
   const groupID = localStorage.getItem("groupID");
   console.log("groupID: ", groupID)
+  console.log("email: ", email)
   var getUserName = "";
 
   const fetchGroup = async() => {
@@ -194,7 +210,7 @@ export function GroupView() {
           const deletingMessages = new Set([Number(deletingMessageId)]);
       
           const deletingReplies = (messageId: string) => {
-            const replies = messages.filter((msg) => msg.ReplyID == messageId);
+            const replies = messages.filter((msg) => msg.GroupReplyID == messageId);
             replies.forEach((reply) => {
               deletingMessages.add(Number(reply.GroupMessageID));
               deletingReplies(reply.GroupMessageID);
@@ -679,6 +695,71 @@ export function GroupView() {
     navigate("/dashboard")
   }
 
+  const openJoinRequestsList = async() => {
+    const response = await fetch(`http://localhost:5000/getJoinRequests`, {
+      method: 'POST',
+      headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ groupID }),
+    });
+
+    // Check if the response is ok (status code 200-299)
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+    console.log("data: ", data)
+    setJoinGroupRequests(data)
+    setJoinRequestsModalOpened(true)
+  }
+
+  const closeJoinRequestsList = () => {
+    console.log("closeJoinRequestsList()")
+
+    setJoinRequestsModalOpened(false)
+  }
+
+  const acceptJoinRequest = async(useremail: string) => {
+    const acceptRequestResponse = await fetch(`http://localhost:5000/acceptJoinRequest/${groupID}`, {
+      method: 'POST',
+      headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ useremail }),
+    });
+
+    // Check if the response is ok (status code 200-299)
+    if (!acceptRequestResponse.ok) {
+        throw new Error('Network response was not ok');
+    }
+
+    setJoinRequestsModalOpened(true)
+    
+    denyJoinRequest(useremail)
+  }
+
+  const denyJoinRequest = async(useremail: string) => {
+    const removeRequestResponse = await fetch(`http://localhost:5000/removeJoinRequest/${groupID}`, {
+      method: 'POST',
+      headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ useremail }),
+    })
+
+    // Check if the response is ok (status code 200-299)
+    if (!removeRequestResponse.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    openJoinRequestsList()
+  }
+
   return (
     <Layout>
       <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
@@ -686,6 +767,42 @@ export function GroupView() {
       </Link>
 
       <Container size="lg" mt={30}>
+      <Modal
+          opened={joinRequestsModalOpened}
+          onClose={closeJoinRequestsList}
+          // Don't close the modal on a background click or on an Escape key click
+          closeOnClickOutside={false}
+          closeOnEscape={false} 
+          size="lg"
+          centered
+          aria-modal="true"
+        >
+          <Title order={2} style={{ textAlign: "center", marginBottom: "20px" }}>Join Requests</Title>
+
+          <Stack>
+            {/* If join requests list is empty or loading */}
+            {joinGroupRequests == null ? (
+              <Text style={{ display: 'flex', justifyContent: 'center' }}>There are no requests to join the group.</Text>
+            ) : (
+              joinGroupRequests.map((request, index) => (
+                <React.Fragment key={index}>
+                  <Group style={{ justifyContent: "center" }}>
+                    {/* Display join requests */}
+                    <Text style={{ marginRight: 100 }}>{request.Firstname} {request.Lastname}</Text>
+
+                    <Group>
+                      <Button variant="subtle" color="green" onClick={() => acceptJoinRequest(request.UserEmail)}>Accept</Button>
+                      <Button variant="subtle" color="red" onClick={() => denyJoinRequest(request.UserEmail)}>Deny</Button>
+                    </Group>
+                  </Group>
+                  {/* Add a Divider after each request except the last one */}
+                  {index < joinGroupRequests.length - 1 && <Divider />}
+                </React.Fragment>
+              ))
+            )}
+          </Stack>
+        </Modal>
+        
         <Modal
           opened={membersModalOpened}
           onClose={closeMembersList}
@@ -700,7 +817,7 @@ export function GroupView() {
 
           <Stack>
             {/* If members list is empty or loading */}
-            {groupMembers.length === 0 ? (
+            {groupMembers.length == null ? (
               <Loader variant="dots" />
             ) : (
               groupMembers.map((member, index) => (
@@ -794,7 +911,6 @@ export function GroupView() {
             padding: '20px', 
             marginBottom: 30
           }}
-         
         >
           <Group justify="space-between" align="center">
             <MantineTitle order={2} style={styles.title} mb="xs">
@@ -802,8 +918,14 @@ export function GroupView() {
             </MantineTitle>
 
             <Group>
+              {email == groupOwner && groupData[0].GroupPublic == false && ((
+                <Button variant="subtle" color="grape" onClick={openJoinRequestsList}>
+                  Join Requests
+                </Button>
+              ))}
+
               {/* Members list button */}
-              <Button variant="outline" color="teal" onClick={openMembersList}>
+              <Button variant="subtle" color="teal" onClick={openMembersList}>
                 Members
               </Button>
 
@@ -844,18 +966,18 @@ export function GroupView() {
             groupData.map((groupMessage) => (
               <React.Fragment key={groupMessage.GroupMessageID}>
                 {/* If the message is a reply, display the message being replied to */}
-                {groupMessage.ReplyContent && (
-                  <Card shadow="sm" padding="xs" radius="md" style={{ backgroundColor: '#D7C6B4', marginTop: '10px', ...(groupMessage.ReplyContent != '' ? { borderBottomLeftRadius: '0', borderBottomRightRadius: '0' } : {}) }}>
+                {groupMessage.GroupReplyContent && (
+                  <Card shadow="sm" padding="xs" radius="md" style={{ backgroundColor: '#D7C6B4', marginTop: '10px', ...(groupMessage.GroupReplyContent != '' ? { borderBottomLeftRadius: '0', borderBottomRightRadius: '0' } : {}) }}>
                     <Group>
                       <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                        <Text><span style={{ color: '#BE4BDB', fontWeight: 700, fontSize: 14 }}>Reply To </span> | <span style={{ fontSize: 12, fontWeight: 700 }}>{ groupMessage.ReplyFirstname } { groupMessage.ReplyLastname }</span> <span style={{ fontSize: 10, float: 'right' }}>{new Date(groupMessage.ReplyCreatedAt).toLocaleDateString()} {new Date(groupMessage.ReplyCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
-                        <Text style={{ fontSize: 12 }}>{ groupMessage.ReplyContent }</Text>
+                        <Text><span style={{ color: '#BE4BDB', fontWeight: 700, fontSize: 14 }}>Reply To </span> | <span style={{ fontSize: 12, fontWeight: 700 }}>{ groupMessage.GroupReplyFirstname } { groupMessage.GroupReplyLastname }</span> <span style={{ fontSize: 10, float: 'right' }}>{new Date(groupMessage.GroupReplyCreatedAt).toLocaleDateString()} {new Date(groupMessage.GroupReplyCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
+                        <Text style={{ fontSize: 12 }}>{ groupMessage.GroupReplyContent }</Text>
                       </Box>
                     </Group>
                   </Card>
                 )}
 
-                <Card key={groupMessage.GroupMessageID} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
+                <Card key={groupMessage.GroupMessageID} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', ...(groupMessage.GroupReplyID != null ? { borderTopLeftRadius: '0', borderTopRightRadius: '0' } : { marginTop: '10px' }) }}>
                   <Group>
                     {/* Display the 'Edit' and 'Delete' buttons if the user is the one who sent the message */}
                     {groupMessage.GroupMessageFirstname + " " + groupMessage.GroupMessageLastname == groupData[0].UserFullname ? (

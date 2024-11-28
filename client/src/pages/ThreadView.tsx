@@ -62,7 +62,6 @@ interface Thread {
   MessageLastname: string,
   MessageContent: string,
   MessageCreatedAt: string,
-  MessageReply: string,
   ReplyID: string,
   ReplyFirstname: string,
   ReplyLastname: string,
@@ -820,7 +819,7 @@ export function ThreadView() {
                   </Card>
                 )}
 
-                <Card key={threadMessage.MessageID} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
+                <Card key={threadMessage.MessageID} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', ...(threadMessage.ReplyID != null ? { borderTopLeftRadius: '0', borderTopRightRadius: '0' } : { marginTop: '10px' }) }}>
                   <Group>
                     {/* Display the 'Edit' and 'Delete' buttons if the user is the one who sent the message */}
                     {threadMessage.MessageFirstname + " " + threadMessage.MessageLastname == threadData[0].UserFullname ? (

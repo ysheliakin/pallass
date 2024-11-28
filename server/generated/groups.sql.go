@@ -27,6 +27,21 @@ func (q *Queries) AddMemberToGroup(ctx context.Context, arg AddMemberToGroupPara
 	return err
 }
 
+const addUserToJoinGroupRequests = `-- name: AddUserToJoinGroupRequests :exec
+INSERT INTO join_group_requests (group_id, user_email, created_at)
+VALUES ($1, $2, CURRENT_TIMESTAMP)
+`
+
+type AddUserToJoinGroupRequestsParams struct {
+	GroupID   int32
+	UserEmail string
+}
+
+func (q *Queries) AddUserToJoinGroupRequests(ctx context.Context, arg AddUserToJoinGroupRequestsParams) error {
+	_, err := q.db.Exec(ctx, addUserToJoinGroupRequests, arg.GroupID, arg.UserEmail)
+	return err
+}
+
 const deleteGroup = `-- name: DeleteGroup :exec
 DELETE FROM groups
 WHERE id = $1
@@ -57,6 +72,7 @@ SELECT
     groups.id AS group_id, 
     groups.name AS group_name,
     groups.description AS group_description, 
+    groups.public AS group_public,
     groups.uuid AS group_uuid,
     groups.created_at AS group_created_at,
     -- Messages in the group
@@ -75,6 +91,8 @@ SELECT
     group_replying_message.created_at AS group_reply_created_at,
     -- Count of the group's members
     COUNT(group_members.id) AS member_count,
+    -- Count of the group's join requests
+    COUNT(join_group_requests.id) AS join_request_count,
     array_agg(group_members.user_email) AS member_emails,
     array_agg(group_members.role) AS member_roles
 FROM 
@@ -85,6 +103,8 @@ LEFT JOIN
     group_messages AS group_replying_message ON group_messages.group_message_id = group_replying_message.id
 LEFT JOIN
     group_members ON groups.id = group_members.group_id
+LEFT JOIN
+    join_group_requests ON groups.id = join_group_requests.group_id
 WHERE 
     groups.id = $1
 GROUP BY 
@@ -102,6 +122,7 @@ type GetGroupAndGroupMessagesByGroupIDAndFullnameByUserEmailRow struct {
 	GroupID               int32
 	GroupName             string
 	GroupDescription      pgtype.Text
+	GroupPublic           pgtype.Bool
 	GroupUuid             pgtype.UUID
 	GroupCreatedAt        pgtype.Timestamp
 	GroupMessageID        pgtype.Int4
@@ -117,6 +138,7 @@ type GetGroupAndGroupMessagesByGroupIDAndFullnameByUserEmailRow struct {
 	GroupReplyContent     pgtype.Text
 	GroupReplyCreatedAt   pgtype.Timestamp
 	MemberCount           int64
+	JoinRequestCount      int64
 	MemberEmails          interface{}
 	MemberRoles           interface{}
 }
@@ -134,6 +156,7 @@ func (q *Queries) GetGroupAndGroupMessagesByGroupIDAndFullnameByUserEmail(ctx co
 			&i.GroupID,
 			&i.GroupName,
 			&i.GroupDescription,
+			&i.GroupPublic,
 			&i.GroupUuid,
 			&i.GroupCreatedAt,
 			&i.GroupMessageID,
@@ -149,6 +172,7 @@ func (q *Queries) GetGroupAndGroupMessagesByGroupIDAndFullnameByUserEmail(ctx co
 			&i.GroupReplyContent,
 			&i.GroupReplyCreatedAt,
 			&i.MemberCount,
+			&i.JoinRequestCount,
 			&i.MemberEmails,
 			&i.MemberRoles,
 		); err != nil {
@@ -232,8 +256,67 @@ func (q *Queries) GetGroupMembersByGroupID(ctx context.Context, groupID int32) (
 	return items, nil
 }
 
+const getGroupsByNameSortedByMostRecent = `-- name: GetGroupsByNameSortedByMostRecent :many
+SELECT 
+    groups.id, groups.name, groups.description, groups.created_at, groups.uuid, groups.public,
+    array_agg(DISTINCT group_members.user_email) AS member_emails,
+    array_agg(DISTINCT join_group_requests.user_email) AS join_request_emails
+FROM 
+    groups
+LEFT JOIN
+    group_members ON groups.id = group_members.group_id
+LEFT JOIN
+    join_group_requests ON groups.id = join_group_requests.group_id
+WHERE 
+    groups.name ILIKE $1
+GROUP BY 
+    groups.id
+ORDER BY 
+    groups.created_at DESC
+`
+
+type GetGroupsByNameSortedByMostRecentRow struct {
+	ID                int32
+	Name              string
+	Description       pgtype.Text
+	CreatedAt         pgtype.Timestamp
+	Uuid              pgtype.UUID
+	Public            pgtype.Bool
+	MemberEmails      interface{}
+	JoinRequestEmails interface{}
+}
+
+func (q *Queries) GetGroupsByNameSortedByMostRecent(ctx context.Context, name string) ([]GetGroupsByNameSortedByMostRecentRow, error) {
+	rows, err := q.db.Query(ctx, getGroupsByNameSortedByMostRecent, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetGroupsByNameSortedByMostRecentRow
+	for rows.Next() {
+		var i GetGroupsByNameSortedByMostRecentRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.CreatedAt,
+			&i.Uuid,
+			&i.Public,
+			&i.MemberEmails,
+			&i.JoinRequestEmails,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getGroupsByUserEmail = `-- name: GetGroupsByUserEmail :many
-SELECT groups.id, name, description, created_at, uuid, public, notifications, group_members.id, group_id, role, joined_at, user_email 
+SELECT groups.id, name, description, created_at, uuid, public, group_members.id, group_id, role, joined_at, user_email 
 FROM groups
 JOIN group_members ON groups.id = group_members.group_id
 WHERE group_members.user_email = $1
@@ -241,18 +324,17 @@ ORDER BY group_members.joined_at DESC
 `
 
 type GetGroupsByUserEmailRow struct {
-	ID            int32
-	Name          string
-	Description   pgtype.Text
-	CreatedAt     pgtype.Timestamp
-	Uuid          pgtype.UUID
-	Public        pgtype.Bool
-	Notifications pgtype.Bool
-	ID_2          int32
-	GroupID       int32
-	Role          string
-	JoinedAt      pgtype.Timestamp
-	UserEmail     pgtype.Text
+	ID          int32
+	Name        string
+	Description pgtype.Text
+	CreatedAt   pgtype.Timestamp
+	Uuid        pgtype.UUID
+	Public      pgtype.Bool
+	ID_2        int32
+	GroupID     int32
+	Role        string
+	JoinedAt    pgtype.Timestamp
+	UserEmail   pgtype.Text
 }
 
 func (q *Queries) GetGroupsByUserEmail(ctx context.Context, userEmail pgtype.Text) ([]GetGroupsByUserEmailRow, error) {
@@ -271,7 +353,6 @@ func (q *Queries) GetGroupsByUserEmail(ctx context.Context, userEmail pgtype.Tex
 			&i.CreatedAt,
 			&i.Uuid,
 			&i.Public,
-			&i.Notifications,
 			&i.ID_2,
 			&i.GroupID,
 			&i.Role,
@@ -288,17 +369,59 @@ func (q *Queries) GetGroupsByUserEmail(ctx context.Context, userEmail pgtype.Tex
 	return items, nil
 }
 
+const getJoinGroupRequests = `-- name: GetJoinGroupRequests :many
+SELECT jgr.id, jgr.group_id, jgr.user_email, jgr.created_at, u.firstname, u.lastname
+FROM join_group_requests jgr
+JOIN users u ON jgr.user_email = u.email
+WHERE jgr.group_id = $1
+`
+
+type GetJoinGroupRequestsRow struct {
+	ID        int32
+	GroupID   int32
+	UserEmail string
+	CreatedAt pgtype.Timestamp
+	Firstname string
+	Lastname  string
+}
+
+func (q *Queries) GetJoinGroupRequests(ctx context.Context, groupID int32) ([]GetJoinGroupRequestsRow, error) {
+	rows, err := q.db.Query(ctx, getJoinGroupRequests, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetJoinGroupRequestsRow
+	for rows.Next() {
+		var i GetJoinGroupRequestsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.GroupID,
+			&i.UserEmail,
+			&i.CreatedAt,
+			&i.Firstname,
+			&i.Lastname,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertGroup = `-- name: InsertGroup :one
-INSERT INTO groups (name, description, created_at, public, notifications)
-VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4)
+INSERT INTO groups (name, description, created_at, public)
+VALUES ($1, $2, CURRENT_TIMESTAMP, $3)
 RETURNING id, uuid
 `
 
 type InsertGroupParams struct {
-	Name          string
-	Description   pgtype.Text
-	Public        pgtype.Bool
-	Notifications pgtype.Bool
+	Name        string
+	Description pgtype.Text
+	Public      pgtype.Bool
 }
 
 type InsertGroupRow struct {
@@ -307,12 +430,7 @@ type InsertGroupRow struct {
 }
 
 func (q *Queries) InsertGroup(ctx context.Context, arg InsertGroupParams) (InsertGroupRow, error) {
-	row := q.db.QueryRow(ctx, insertGroup,
-		arg.Name,
-		arg.Description,
-		arg.Public,
-		arg.Notifications,
-	)
+	row := q.db.QueryRow(ctx, insertGroup, arg.Name, arg.Description, arg.Public)
 	var i InsertGroupRow
 	err := row.Scan(&i.ID, &i.Uuid)
 	return i, err
@@ -335,6 +453,21 @@ func (q *Queries) InsertGroupMember(ctx context.Context, arg InsertGroupMemberPa
 	var group_id int32
 	err := row.Scan(&group_id)
 	return group_id, err
+}
+
+const removeJoinGroupRequest = `-- name: RemoveJoinGroupRequest :exec
+DELETE FROM join_group_requests
+WHERE group_id = $1 AND user_email = $2
+`
+
+type RemoveJoinGroupRequestParams struct {
+	GroupID   int32
+	UserEmail string
+}
+
+func (q *Queries) RemoveJoinGroupRequest(ctx context.Context, arg RemoveJoinGroupRequestParams) error {
+	_, err := q.db.Exec(ctx, removeJoinGroupRequest, arg.GroupID, arg.UserEmail)
+	return err
 }
 
 const switchGroupRoles = `-- name: SwitchGroupRoles :exec

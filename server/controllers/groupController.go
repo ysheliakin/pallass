@@ -28,14 +28,12 @@ func CreateGroup(c echo.Context) error {
 	}
 
 	privacyParam := pgtype.Bool{Bool: group.Privacy, Valid: true}
-	notificationsParam := pgtype.Bool{Bool: group.Notifications, Valid: true}
 
-	// Inserting group data, including Privacy and Notifications fields
+	// Inserting group data
 	groupParams := queries.InsertGroupParams{
 		Name:          group.Name,
 		Description:   descriptionParam,
 		Public:        privacyParam,
-		Notifications: notificationsParam,
 	}
 
 	groupID, err := sql.InsertGroup(context.Background(), groupParams)
@@ -52,8 +50,9 @@ func CreateGroup(c echo.Context) error {
 	})
 }
 
-func AddGroupMembers(c echo.Context) error {
-	fmt.Println("AddGroupMembers()")
+func AddGroupMember(c echo.Context) error {
+	fmt.Println()
+	fmt.Println("AddGroupMember()")
 
 	var groupMember GroupMember
 
@@ -62,6 +61,10 @@ func AddGroupMembers(c echo.Context) error {
 		fmt.Println("Invalid inputs")
 		return c.JSON(http.StatusBadRequest, "Invalid inputs")
 	}
+
+	fmt.Println("groupMember.GroupID: ", groupMember.GroupID)
+	fmt.Println("groupMember.UserEmail: ", groupMember.UserEmail)
+	fmt.Println("groupMember.Role: ", groupMember.Role)
 
 	groupIDInt, err := strconv.Atoi(groupMember.GroupID)
 	if err != nil {
@@ -110,6 +113,7 @@ func GetGroupController(c echo.Context) error {
 	groupIDInt32 := int32(groupID)
 
 	fmt.Println("GroupIDInt32: ", groupIDInt32)
+	fmt.Println("user.Email: ", user.Email)
 
 	groupParams := queries.GetGroupAndGroupMessagesByGroupIDAndFullnameByUserEmailParams{
 		ID:    groupIDInt32,
@@ -119,11 +123,13 @@ func GetGroupController(c echo.Context) error {
 	fmt.Println("groupParams initiated")
 
 	// Query the database
-	group, err := sql.GetGroupAndGroupMessagesByGroupIDAndFullnameByUserEmail(context.Background(), groupParams) // Pass as int32
+	group, err := sql.GetGroupAndGroupMessagesByGroupIDAndFullnameByUserEmail(context.Background(), groupParams)
 	if err != nil {
 		if err.Error() == "no rows in result set" {
+			fmt.Println("Group not found")
 			return c.JSON(http.StatusNotFound, "Group not found")
 		}
+		fmt.Println("Error retrieving group")
 		return c.JSON(http.StatusInternalServerError, "Error retrieving group")
 	}
 
@@ -506,44 +512,126 @@ func GetGroups(c echo.Context) error {
 	return c.JSON(http.StatusOK, groups)
 }
 
+func GetGroupsByInput(c echo.Context) error {
+	var group Group
 
+	fmt.Println()
+	fmt.Println("GetGroupsByInput()")
 
-/*func JoinGroup(c echo.Context) error {
-	var member GroupMember
-
-	// Bind the JSON input to the GroupMember struct
-	err := c.Bind(&member)
+	// Decode the incoming JSON request body
+	err := c.Bind(&group)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid inputs")
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
 	}
 
-	groupIDInt, err := strconv.Atoi(member.GroupID)
+	groupName := "%" + group.Name + "%"
+	fmt.Println("groupName: ", groupName)
+
+	groups, err := sql.GetGroupsByNameSortedByMostRecent(context.Background(), groupName)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid GroupID format")
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
 	}
 
-	userIDInt, err := strconv.Atoi(member.UserID)
+	fmt.Println("groups: ", groups)
+	return c.JSON(http.StatusOK, groups)
+}
+
+func RequestJoinGroup(c echo.Context) error {
+	var joinGroupRequest JoinGroupRequest
+
+	fmt.Println()
+	fmt.Println("RequestJoinGroup()")
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&joinGroupRequest)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid GroupID format")
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
 	}
 
-	// Prepare parameters for inserting the group member
-	groupMemberParams := queries.InsertGroupMemberParams{
-		GroupID: int32(groupIDInt),
-		UserID:  int32(userIDInt),
-		Role:    member.Role,
-	}
-
-	// Insert the group member into the database
-	memberID, err := sql.InsertGroupMember(context.Background(), groupMemberParams)
+	groupID, err := strconv.ParseInt(joinGroupRequest.GroupID, 10, 32)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "Error adding group member")
+		return c.JSON(http.StatusBadRequest, "Invalid Group ID")
+	}
+	groupIDInt32 := int32(groupID)
+
+	userJoinRequestParams := queries.AddUserToJoinGroupRequestsParams{
+		GroupID:   groupIDInt32,
+		UserEmail: joinGroupRequest.UserEmail,
+	} 
+
+	err = sql.AddUserToJoinGroupRequests(context.Background(), userJoinRequestParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
 	}
 
-	// Convert the member ID to a string
-	memberIDStr := strconv.FormatInt(int64(memberID), 10)
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Your request to join has been sent!"})
+}
 
-	return c.JSON(http.StatusOK, map[string]string{
-		"id": memberIDStr,
-	})
-}*/
+func GetJoinRequests(c echo.Context) error {
+	var joinGroupRequest JoinGroupRequest
+
+	fmt.Println()
+	fmt.Println("GetJoinRequests()")
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&joinGroupRequest)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	groupID, err := strconv.ParseInt(joinGroupRequest.GroupID, 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid Group ID")
+	}
+	groupIDInt32 := int32(groupID)
+
+	groupRequests, err := sql.GetJoinGroupRequests(context.Background(), groupIDInt32)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, groupRequests)
+}
+
+func RemoveJoinGroupRequest(c echo.Context) error {
+	var joinGroupRequest JoinGroupRequest
+
+	fmt.Println()
+	fmt.Println("RemoveJoinGroupRequest()")
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&joinGroupRequest)
+	if err != nil {
+		e.Logger.Error(err)
+		fmt.Println("Error decoding the incoming JSON request body")
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	groupIDStr := c.Param("groupid")
+
+	fmt.Println("groupIDStr: ", groupIDStr)
+
+	groupID, err := strconv.ParseInt(groupIDStr, 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid Group ID")
+	}
+	groupIDInt32 := int32(groupID)
+
+	fmt.Println("groupIDInt32: ", groupIDInt32)
+	fmt.Println("joinGroupRequest.UserEmail: ", joinGroupRequest.UserEmail)
+
+	joinRequestParams := queries.RemoveJoinGroupRequestParams{
+		GroupID:   groupIDInt32,
+		UserEmail: joinGroupRequest.UserEmail,
+	}
+
+	err = sql.RemoveJoinGroupRequest(context.Background(), joinRequestParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Join request successfully removed!"})
+}

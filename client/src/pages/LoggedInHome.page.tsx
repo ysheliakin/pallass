@@ -95,7 +95,7 @@ export function LoggedInHomePage() {
   return (
     <Layout>
       <Container size="lg">
-        <Group justify="apart" mb="xl">
+        <Group justify="apart" mb="xl" style={{ marginTop: 20 }}>
           <Title order={2} style={styles.title}>
             Your Groups
           </Title>
@@ -136,7 +136,9 @@ export function LoggedInHomePage() {
           </Button>
         </Group>
 
-        <Title order={3} mb="md" style={styles.title}>Discussion Forum threads you upvoted</Title>
+        <Group justify="apart" mb="xl" style={{ marginTop: 50 }}>
+          <Title order={2} style={styles.title}>Your Upvoted Discussion Forum Threads</Title>
+        </Group>
         {/* If the user upvoted threads, display them. Otherwise, display a message. */}
         {threadsData ? (
           <SimpleGrid cols={2} spacing="md" mb="xl">          
@@ -162,31 +164,11 @@ export function LoggedInHomePage() {
 
         <Group mb="xl">
           <Button component={Link} to="/create-thread" variant="subtle" color="violet">
-            + Create a thread
+            + Create thread
           </Button>
           <Button component={Link} to="/discover-threads" variant="subtle" color="violet">
             + Discover threads
           </Button>
-        </Group>
-
-        <Title order={3} mb="md" style={styles.title}>
-          Expert Q&A Sessions
-        </Title>
-        <Group mb="xl">
-          <Button component={Link} to="/host-qa" style={styles.primaryButton}>
-            Host Q&A session
-          </Button>
-          <Button component={Link} to="/join-qa" style={styles.primaryButton}>
-            Join Q&A session
-          </Button>
-        </Group>
-
-        <Title order={3} mb="md" style={styles.title}>
-          Learn
-        </Title>
-        <Group>
-          <Button style={styles.primaryButton}>Write about a topic</Button>
-          <Button style={styles.primaryButton}>Learn about a topic</Button>
         </Group>
       </Container>
     </Layout>
