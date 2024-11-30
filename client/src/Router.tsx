@@ -8,11 +8,10 @@ import { DiscoverThreads } from './pages/DiscoverThreads';
 import { ForgotPasswordPage } from './pages/ForgotPassword.page';
 import { FundingOpportunities } from './pages/FundingOpportunities.page';
 import { HomePage } from './pages/Home.page';
-import { HostQASession } from './pages/HostQA.page';
-import { JoinGroup } from './pages/JoinGroup.page'; // Import the new component
-import { JoinQASession } from './pages/JoinQA.page';
+import { JoinGroup } from './pages/JoinGroup.page';
 import { LoggedInHomePage } from './pages/LoggedInHome.page';
 import { LoginPage } from './pages/Login.page';
+import { EditProfilePage } from './pages/EditProfile.page'
 import { PostPage } from './pages/Post.page';
 import { ResetPasswordPage } from './pages/ResetPassword.page';
 import { SignUpPage } from './pages/SignUp.page';
@@ -64,18 +63,10 @@ const router = createHashRouter([
     ),
   },
   {
-    path: '/host-qa',
+    path: '/edit-profile',
     element: (
       <ProtectedRoute>
-        <HostQASession />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/join-qa',
-    element: (
-      <ProtectedRoute>
-        <JoinQASession />
+        <EditProfilePage />
       </ProtectedRoute>
     ),
   },

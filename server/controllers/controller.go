@@ -73,7 +73,7 @@ type User struct {
 	Password     string   `json:"password"`
 	Organization string   `json:"organization"`
 	Fieldofstudy string   `json:"fieldOfStudy"`
-	Jobtitle     string   `json:"jobtItle"`
+	Jobtitle     string   `json:"jobTitle"`
 	SocialLinks  []string `json:"socialLinks"`
 	TempCode     string   `json:"tempCode"`
 	Token        string   `json:"token"`

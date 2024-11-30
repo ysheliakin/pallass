@@ -125,6 +125,7 @@ func main() {
 	authGroup.GET("/getUpvotedThreads/:email", controller.GetUpvotedThreadsController)
 	authGroup.GET("/threads/getUpvotes/:threadID", controller.GetThreadUpvotes)
 	authGroup.GET("/getGroups/:email", controller.GetGroups)
+	authGroup.GET("/getUserProfile/:email", controller.GetUserProfile)
 	// Post handlers
 	authGroup.POST("/postThread", controller.ThreadController)
 	authGroup.POST("/threads/:id", controller.GetThreadController)
@@ -176,6 +177,7 @@ func main() {
 		return c.String(http.StatusOK, "Post updated")
 	})
 	authGroup.PUT("/user", controller.UpdateUserController)
+	authGroup.PUT("/editProfile", controller.EditProfile)
 	// Delete handlers
 	authGroup.DELETE("/deleteThread", controller.DeleteThreadController)
 	authGroup.DELETE("/deleteThreadMessage/:messageID", controller.DeleteThreadMessage)

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IconUserCircle } from '@tabler/icons-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Divider } from '@mantine/core';
 import {
   ActionIcon,
   Box,
@@ -148,8 +149,11 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const styles = useStyles();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const navigate = useNavigate();
   const appContext = useAppContext();
+
+  const email = localStorage.getItem('email');
 
   // Log the user out
   const handleLogout = () => {
@@ -161,6 +165,11 @@ export function Layout({ children }: LayoutProps) {
     navigate('/');
   };
 
+  // Navigate to the "Edit Profile" page
+  const handleEditProfile = () => {
+    navigate('/edit-profile');
+  }
+
   return (
     <MantineProvider theme={theme}>
       <Box style={styles.pageContainer}>
@@ -168,12 +177,14 @@ export function Layout({ children }: LayoutProps) {
           <Box style={styles.header}>
             <div style={styles.headerContent}>
               <img src={logo} alt="Logo" height={40} />
-              <Link to="/" style={styles.title}>
-                <Title order={1}>Pallas's Hub</Title>
-              </Link>
+              <Title style={styles.title} order={1}>Pallas's Hub</Title>
+
               <Group>
                 {appContext.user?.id ? (
-                  <Menu opened={isMenuOpen} onChange={setIsMenuOpen}>
+                  <Menu 
+                    opened={isMenuOpen} 
+                    onChange={setIsMenuOpen}
+                  >
                     <Menu.Target>
                       <ActionIcon size="lg" variant="subtle" color="gray">
                         <IconUserCircle size={40} />
@@ -183,9 +194,25 @@ export function Layout({ children }: LayoutProps) {
                       style={{ border: 'solid darkgray' }}
                       styles={{ dropdown: { zIndex: 1000 } }}
                     >
-                      <Menu.Item>Contacts</Menu.Item>
-                      <Menu.Item>Edit profile</Menu.Item>
-                      <Menu.Item onClick={handleLogout}>Log Out</Menu.Item>
+                      <Menu.Item
+                        style={{
+                          backgroundColor: 'transparent',
+                          cursor: 'default',
+                          fontWeight: 'bold',
+                          textAlign: 'center'
+                        }}
+                      >
+                        {email}
+                      </Menu.Item>
+                      <Divider
+                        style={{
+                          height: 4,
+                          backgroundColor: '#5B5A60',
+                        }}
+                      />
+                      <Menu.Item style={{ textAlign: 'center' }} onClick={handleEditProfile}>Edit profile</Menu.Item>
+                      <Divider />
+                      <Menu.Item style={{ textAlign: 'center' }} onClick={handleLogout}>Log Out</Menu.Item>
                     </Menu.Dropdown>
                   </Menu>
                 ) : (

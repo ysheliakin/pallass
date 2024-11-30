@@ -52,6 +52,51 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 	return err
 }
 
+const deleteSocialLinks = `-- name: DeleteSocialLinks :exec
+DELETE FROM user_social_links
+WHERE user_email = $1
+`
+
+func (q *Queries) DeleteSocialLinks(ctx context.Context, userEmail string) error {
+	_, err := q.db.Exec(ctx, deleteSocialLinks, userEmail)
+	return err
+}
+
+const getUserAndSocialLinksByEmail = `-- name: GetUserAndSocialLinksByEmail :one
+SELECT u.id, u.firstname, u.lastname, u.email, u.organization, u.field_of_study, u.job_title, array_agg(usl.social_link) AS social_links
+FROM users u
+LEFT JOIN user_social_links usl ON u.email = usl.user_email
+WHERE u.email = $1
+GROUP BY u.id
+`
+
+type GetUserAndSocialLinksByEmailRow struct {
+	ID           int32
+	Firstname    string
+	Lastname     string
+	Email        string
+	Organization pgtype.Text
+	FieldOfStudy string
+	JobTitle     pgtype.Text
+	SocialLinks  interface{}
+}
+
+func (q *Queries) GetUserAndSocialLinksByEmail(ctx context.Context, email string) (GetUserAndSocialLinksByEmailRow, error) {
+	row := q.db.QueryRow(ctx, getUserAndSocialLinksByEmail, email)
+	var i GetUserAndSocialLinksByEmailRow
+	err := row.Scan(
+		&i.ID,
+		&i.Firstname,
+		&i.Lastname,
+		&i.Email,
+		&i.Organization,
+		&i.FieldOfStudy,
+		&i.JobTitle,
+		&i.SocialLinks,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, firstname, lastname, email, password, organization, field_of_study, job_title, temp_code
 FROM users
@@ -124,6 +169,35 @@ func (q *Queries) RemoveCodeByEmail(ctx context.Context, email string) error {
 	return err
 }
 
+const updateUser = `-- name: UpdateUser :exec
+UPDATE users
+SET firstname = $1, lastname = $2, password = $3, organization = $4, field_of_study = $5, job_title = $6
+WHERE email = $7
+`
+
+type UpdateUserParams struct {
+	Firstname    string
+	Lastname     string
+	Password     string
+	Organization pgtype.Text
+	FieldOfStudy string
+	JobTitle     pgtype.Text
+	Email        string
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.Exec(ctx, updateUser,
+		arg.Firstname,
+		arg.Lastname,
+		arg.Password,
+		arg.Organization,
+		arg.FieldOfStudy,
+		arg.JobTitle,
+		arg.Email,
+	)
+	return err
+}
+
 const updateUserCodeByEmail = `-- name: UpdateUserCodeByEmail :exec
 UPDATE users
 SET temp_code = $1
@@ -137,6 +211,33 @@ type UpdateUserCodeByEmailParams struct {
 
 func (q *Queries) UpdateUserCodeByEmail(ctx context.Context, arg UpdateUserCodeByEmailParams) error {
 	_, err := q.db.Exec(ctx, updateUserCodeByEmail, arg.TempCode, arg.Email)
+	return err
+}
+
+const updateUserExcludingPassword = `-- name: UpdateUserExcludingPassword :exec
+UPDATE users
+SET firstname = $1, lastname = $2, organization = $3, field_of_study = $4, job_title = $5
+WHERE email = $6
+`
+
+type UpdateUserExcludingPasswordParams struct {
+	Firstname    string
+	Lastname     string
+	Organization pgtype.Text
+	FieldOfStudy string
+	JobTitle     pgtype.Text
+	Email        string
+}
+
+func (q *Queries) UpdateUserExcludingPassword(ctx context.Context, arg UpdateUserExcludingPasswordParams) error {
+	_, err := q.db.Exec(ctx, updateUserExcludingPassword,
+		arg.Firstname,
+		arg.Lastname,
+		arg.Organization,
+		arg.FieldOfStudy,
+		arg.JobTitle,
+		arg.Email,
+	)
 	return err
 }
 

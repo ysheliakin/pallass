@@ -362,9 +362,18 @@ func ValidateResetCode(c echo.Context) error {
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "Successful code verification"})
 }
 
-func GetUser(c echo.Context) error {
-	fmt.Println("GetUser")
-	return c.JSON(http.StatusOK, nil)
+func GetUserProfile(c echo.Context) error {
+	fmt.Println("GetUserProfile")
+
+	userEmail := c.Param("email")
+
+	userData, err := sql.GetUserAndSocialLinksByEmail(context.Background(), userEmail)
+	if err != nil {
+		fmt.Println("Error getting the user's profile")
+		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Error getting the user's profile"})
+	}
+
+	return c.JSON(http.StatusOK, userData)
 }
 
 // UserController handles user-related actions
@@ -375,4 +384,106 @@ func UserController(c echo.Context) error {
 // UpdateUserController handles user updates
 func UpdateUserController(c echo.Context) error {
 	return c.String(http.StatusOK, "User updated")
+}
+
+func EditProfile(c echo.Context) error {
+	fmt.Println()
+	fmt.Println("EditProfile")
+
+	var user User
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&user)
+	if err != nil {
+		fmt.Println("Invalid code")
+		return c.JSON(http.StatusBadRequest, RegisterResponse{Message: "Invalid code."})
+	}
+
+	fmt.Println("JSON decoding successful")
+
+	if user.Email == "" || user.Fieldofstudy == "" {
+		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "We were unable to create your account. Please fill out every required field."})
+	}
+
+	// Check if the user inputted an organization or not
+	var organizationParam pgtype.Text
+	if user.Organization != "" {
+		organizationParam = pgtype.Text{String: user.Organization, Valid: true}
+	} else {
+		organizationParam = pgtype.Text{Valid: false}
+	}
+
+	// Check if the user inputted a job title or not
+	var jobParam pgtype.Text
+	if user.Jobtitle != "" {
+		jobParam = pgtype.Text{String: user.Jobtitle, Valid: true}
+	} else {
+		jobParam = pgtype.Text{Valid: false}
+	}
+
+	if user.Password == "" {
+		userParams := queries.UpdateUserExcludingPasswordParams{
+			Organization: organizationParam,
+			FieldOfStudy: user.Fieldofstudy,
+			JobTitle:     jobParam,
+			Email:        user.Email,
+		}
+
+		// Save the new user to the database using sqlc queries
+		err = sql.UpdateUserExcludingPassword(context.Background(), userParams)
+		if err != nil {
+			fmt.Println("We were unable to create your profile. Please check your information and try again.")
+			return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to create your profile. Please check your information and try again."})
+		}
+	} else {
+		// Hash the password
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		if err != nil {
+			log.Error("Error hashing password")
+			return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to create your account. Please check your information and try again."})
+		}
+		user.Password = string(hashedPassword)
+
+		userParams := queries.UpdateUserParams{
+			Password:     user.Password,
+			Organization: organizationParam,
+			FieldOfStudy: user.Fieldofstudy,
+			JobTitle:     jobParam,
+			Email:        user.Email,
+		}
+
+		// Save the new user to the database using sqlc queries
+		err = sql.UpdateUser(context.Background(), userParams)
+		if err != nil {
+			fmt.Println("We were unable to create your profile. Please check your information and try again.")
+			return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to create your profile. Please check your information and try again."})
+		}
+	}
+
+	err = sql.DeleteSocialLinks(context.Background(), user.Email)
+	if err != nil {
+		fmt.Println("We were unable to delete your social links.")
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "We were unable to delete your social links."})
+	}
+
+	// Insert social links if the user inputted any
+	if len(user.SocialLinks) > 0 {
+		for _, socialLink := range user.SocialLinks {
+			if socialLink != "" {
+				userSocialLinksParams := queries.InsertUserSocialLinkParams{
+					UserEmail:  user.Email,
+					SocialLink: socialLink,
+				}
+
+				err = sql.InsertUserSocialLink(context.Background(), userSocialLinksParams)
+				if err != nil {
+					fmt.Println("There was an issue adding your link(s). Please verify your link(s) and try again.")
+					return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "There was an issue adding your link(s). Please verify your link(s) and try again."})
+				}
+			}
+		}
+	}
+
+	fmt.Println("Account successfully registered")
+	return c.JSON(http.StatusOK, RegisterResponse{Message: "Account successfully registered"})
 }
