@@ -301,6 +301,8 @@ func webSocketGroup(c echo.Context) error {
 				Type: "EDIT_MESSAGE",
             }
 
+			fmt.Println("editMessage: ", editMessage)
+
             // Broadcast the edit message to all clients
             broadcastGroupMessage <- editMessage
 		} else if msg.Type == "DELETE_MESSAGE" {

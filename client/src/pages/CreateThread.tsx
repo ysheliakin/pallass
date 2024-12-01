@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Title, TextInput, Textarea, Select, Text, Button, Paper, Group } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { useNavigate, Link } from 'react-router-dom';
+import { base } from '@/api/base';
 
 export function CreateThread() {
   const styles = useStyles();
@@ -30,7 +31,7 @@ export function CreateThread() {
   
     try {
       // Send a POST request to the backend
-      const response = await fetch('http://localhost:5000/postThread', {
+      const response = await fetch(`http://${base}/postThread`, {
         method: 'POST', // POST request
         headers: {
           'Authorization': `Bearer ${token}`,

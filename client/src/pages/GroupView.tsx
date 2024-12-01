@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal, Divider, Loader, Stack, TextInput, Notification } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { base } from '@/api/base';
 import { EditorConsumer } from '@tiptap/react';
-import { IconVideo } from '@tabler/icons-react';
 
 interface User {
   id: string;
@@ -120,7 +120,7 @@ export function GroupView() {
   const fetchGroup = async() => {
     // Get the discussion group's information (including its messages)
     const fetchGroupData = async () => {
-      const response = await fetch(`http://localhost:5000/groups/${groupID}`, {
+      const response = await fetch(`http://${base}/groups/${groupID}`, {
           method: 'POST',
           headers: {
               'Authorization': `Bearer ${token}`,
@@ -156,7 +156,7 @@ export function GroupView() {
     // fetchArticles();
 
     // Websocket connection
-    ws.current = new WebSocket(`ws://localhost:5000/wsgroup/${email}`)
+    ws.current = new WebSocket(`ws://${base}/wsgroup/${email}`)
 
     ws.current.onopen = () => {
         console.log("Websocket connected");
@@ -177,7 +177,8 @@ export function GroupView() {
             return [];
           }
 
-          const updatedGroupMessages = prevMessages.map((msg) => msg.GroupMessageID == message.id ? { ...msg, MessageContent : message.content } : msg);
+          const updatedGroupMessages = prevMessages.map((msg) => msg.GroupMessageID == message.id ? { ...msg, GroupMessageContent : message.content } : msg);
+          console.log("updatedGroupMessages: ", updatedGroupMessages)
           return updatedGroupMessages;
         })
       }
@@ -262,7 +263,7 @@ export function GroupView() {
 
   const sendMessage = async () => {
     // Get the sender's information
-    const fullname = await fetch('http://localhost:5000/getUserName', {
+    const fullname = await fetch(`http://${base}/getUserName`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -286,7 +287,7 @@ export function GroupView() {
     const replymessageid = replyingToMessageId
 
     // Store the message being sent
-    const storeGroupMessage = await fetch('http://localhost:5000/storeGroupMessage', {
+    const storeGroupMessage = await fetch(`http://${base}/storeGroupMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -327,7 +328,7 @@ export function GroupView() {
   };
 
   const handleDeleteGroupMessage = async (messageId: string) => { 
-    const response = await fetch(`http://localhost:5000/deleteGroupMessage/${messageId}`, {
+    const response = await fetch(`http://${base}/deleteGroupMessage/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -352,7 +353,10 @@ export function GroupView() {
   const handleSaveEdit = async (messageId: string, content: string) => {
     const id = "" + messageId + ""
 
-    const response = await fetch(`http://localhost:5000/editGroupMessage`, {
+    console.log("id: ", id)
+    console.log("content: ", content)
+
+    const response = await fetch(`http://${base}/editGroupMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -391,7 +395,7 @@ export function GroupView() {
   // Post the reply
   const handlePostReply = async (messageId: string) => {
     // Get the sender's information
-    const fullname = await fetch('http://localhost:5000/getUserName', {
+    const fullname = await fetch(`http://${base}/getUserName`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -415,7 +419,7 @@ export function GroupView() {
     const replymessageid = "" + messageId + ""
 
     // Store the reply
-    const storeGroupMessage = await fetch('http://localhost:5000/storeGroupMessage', {
+    const storeGroupMessage = await fetch(`http://${base}/storeGroupMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -435,7 +439,7 @@ export function GroupView() {
     console.log("id: ", id)
 
     // Get the information of the message being replied to
-    const getGroupReplyingMessageData = await fetch('http://localhost:5000/getGroupReplyingMessageData', {
+    const getGroupReplyingMessageData = await fetch(`http://${base}/getGroupReplyingMessageData`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -505,7 +509,7 @@ export function GroupView() {
   }
 
   const openMembersList = async() => {
-    const response = await fetch(`http://localhost:5000/getMembers`, {
+    const response = await fetch(`http://${base}/getMembers`, {
       method: 'POST',
       headers: {
           'Authorization': `Bearer ${token}`,
@@ -545,7 +549,7 @@ export function GroupView() {
     console.log("groupID: ", groupID)
     console.log("useremail: ", useremail)
 
-    const response = await fetch(`http://localhost:5000/exitGroup/${groupID}`, {
+    const response = await fetch(`http://${base}/exitGroup/${groupID}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -568,7 +572,7 @@ export function GroupView() {
     console.log("groupID: ", groupID)
     console.log("useremail: ", useremail)
 
-    const response = await fetch(`http://localhost:5000/exitGroup/${groupID}`, {
+    const response = await fetch(`http://${base}/exitGroup/${groupID}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -591,7 +595,7 @@ export function GroupView() {
     console.log("groupID: ", groupID)
     console.log("useremail: ", useremail)
 
-    const response = await fetch(`http://localhost:5000/changeOwner/${email}`, {
+    const response = await fetch(`http://${base}/changeOwner/${email}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -633,7 +637,7 @@ export function GroupView() {
     setNewMemberAdded(false)
     setNewMemberNotAdded(false)
     
-    const response = await fetch(`http://localhost:5000/addMember/${groupID}`, {
+    const response = await fetch(`http://${base}/addMember/${groupID}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -678,13 +682,12 @@ export function GroupView() {
   const confirmGroupDeletion = async() => {
     console.log("confirmGroupDeletion()")
 
-    const response = await fetch(`http://localhost:5000/deleteGroup/${groupID}`, {
+    const response = await fetch(`http://${base}/deleteGroup/${groupID}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ groupID }),
+      }
     });
 
     // Check if the response is ok (status code 200-299)
@@ -696,7 +699,7 @@ export function GroupView() {
   }
 
   const openJoinRequestsList = async() => {
-    const response = await fetch(`http://localhost:5000/getJoinRequests`, {
+    const response = await fetch(`http://${base}/getJoinRequests`, {
       method: 'POST',
       headers: {
           'Authorization': `Bearer ${token}`,
@@ -723,7 +726,7 @@ export function GroupView() {
   }
 
   const acceptJoinRequest = async(useremail: string) => {
-    const acceptRequestResponse = await fetch(`http://localhost:5000/acceptJoinRequest/${groupID}`, {
+    const acceptRequestResponse = await fetch(`http://${base}/acceptJoinRequest/${groupID}`, {
       method: 'POST',
       headers: {
           'Authorization': `Bearer ${token}`,
@@ -743,7 +746,7 @@ export function GroupView() {
   }
 
   const denyJoinRequest = async(useremail: string) => {
-    const removeRequestResponse = await fetch(`http://localhost:5000/removeJoinRequest/${groupID}`, {
+    const removeRequestResponse = await fetch(`http://${base}/removeJoinRequest/${groupID}`, {
       method: 'POST',
       headers: {
           'Authorization': `Bearer ${token}`,

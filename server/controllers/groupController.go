@@ -15,6 +15,8 @@ import (
 func CreateGroup(c echo.Context) error {
 	var group Group
 
+	fmt.Println("CreateGroup()")
+
 	err := c.Bind(&group)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid inputs")
@@ -41,8 +43,13 @@ func CreateGroup(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred trying to create the group."})
 	}
 
+	fmt.Println("groupID: ", groupID)
+
 	groupIDStr := strconv.FormatInt(int64(groupID.ID), 10)
+	fmt.Println("groupIDStr: ", groupIDStr)
+
 	groupUUIDStr := fmt.Sprintf("%x-%x-%x-%x-%x", groupID.Uuid.Bytes[0:4], groupID.Uuid.Bytes[4:6], groupID.Uuid.Bytes[6:8], groupID.Uuid.Bytes[8:10], groupID.Uuid.Bytes[10:16])
+	fmt.Println("groupUUIDStr: ", groupUUIDStr)
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"id":   groupIDStr,
@@ -84,6 +91,8 @@ func AddGroupMember(c echo.Context) error {
 		UserEmail: userEmailParam,
 		Role: groupMember.Role,
 	}
+
+	fmt.Println("InsertGroupMemberParams: ", InsertGroupMemberParams)
 
 	groupID, err := sql.InsertGroupMember(context.Background(), InsertGroupMemberParams)
 	if err != nil {
@@ -422,7 +431,7 @@ func ChangeOwner(c echo.Context) error {
 func DeleteGroup(c echo.Context) error {
 	fmt.Println("DeleteGroupMessage()")
 
-	groupIDStr := c.Param("groupid")
+	groupIDStr := c.Param("groupID")
 
 	groupId, err := strconv.Atoi(groupIDStr)
 	if err != nil {

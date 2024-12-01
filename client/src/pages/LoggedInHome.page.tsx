@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Title, Button, Group, Paper, SimpleGrid, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { Layout, useStyles } from '@/components/layout';
+import { base } from '@/api/base';
 
 interface Threads {
   ID: number, 
@@ -44,7 +45,7 @@ export function LoggedInHomePage() {
     const fetchData = async() => {
       try {
         // Get the threads upvoted by the user
-        const upvotedThreads = await fetch(`http://localhost:5000/getUpvotedThreads/${email}`, {
+        const upvotedThreads = await fetch(`http://${base}/getUpvotedThreads/${email}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -61,7 +62,7 @@ export function LoggedInHomePage() {
         setThreadsData(upvotedThreadsData);
 
         // Get the groups that the user is a part of
-        const groupsApartOf = await fetch(`http://localhost:5000/getGroups/${email}`, {
+        const groupsApartOf = await fetch(`http://${base}/getGroups/${email}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,

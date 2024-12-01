@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Title, TextInput, Radio, Button, Paper, Stack, Grid, Card, Text } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { Link, useNavigate } from 'react-router-dom';
+import { base } from '@/api/base';
 
 interface Group {
   ID: number,
@@ -27,7 +28,7 @@ export function JoinGroup() {
   const email = localStorage.getItem('email')
 
   const handleSearchGroup = async(name: string) => {
-    const response = await fetch(`http://localhost:5000/getGroupsByInput`, {
+    const response = await fetch(`http://${base}/getGroupsByInput`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -56,7 +57,7 @@ export function JoinGroup() {
     const groupid = groupID.toString();
     const role = "Member"
 
-    const response = await fetch(`http://localhost:5000/addgroupmember`, {
+    const response = await fetch(`http://${base}/addgroupmember`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -77,7 +78,7 @@ export function JoinGroup() {
   const requestJoinGroup = async(groupID: number, useremail: string) => {
     const groupid = groupID.toString();
 
-    const response = await fetch(`http://localhost:5000/requestJoinGroup`, {
+    const response = await fetch(`http://${base}/requestJoinGroup`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

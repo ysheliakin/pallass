@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { base } from '@/api/base';
 import { EditorConsumer } from '@tiptap/react';
-import { IconVideo } from '@tabler/icons-react';
 
 interface User {
   id: string;
@@ -219,16 +219,12 @@ export function ThreadView() {
       } catch (error) {
         console.error("Error fetching Papers:", error);
       }
-  
-
-
   };
-
 
   const fetchThread = async() => {
     // Get the discussion thread's information (including its messages)
     const fetchThreadData = async () => {
-      const response = await fetch(`http://localhost:5000/threads/${threadID}`, {
+      const response = await fetch(`http://${base}/threads/${threadID}`, {
           method: 'POST',
           headers: {
               'Authorization': `Bearer ${token}`,
@@ -260,7 +256,7 @@ export function ThreadView() {
     // fetchArticles();
 
     // Websocket connection
-    ws.current = new WebSocket(`ws://localhost:5000/wsthread/${email}`)
+    ws.current = new WebSocket(`ws://${base}/wsthread/${email}`)
 
     ws.current.onopen = () => {
         console.log("Websocket connected");
@@ -374,7 +370,7 @@ export function ThreadView() {
 
   const sendMessage = async () => {
     // Get the sender's information
-    const fullname = await fetch('http://localhost:5000/getUserName', {
+    const fullname = await fetch(`http://${base}/getUserName`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -398,7 +394,7 @@ export function ThreadView() {
     const replymessageid = replyingToMessageId
 
     // Store the message being sent
-    const storeThreadMessage = await fetch('http://localhost:5000/storeThreadMessage', {
+    const storeThreadMessage = await fetch(`http://${base}/storeThreadMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -441,7 +437,7 @@ export function ThreadView() {
   // Upvote the discussion thread
   const handleUpvote = async () => { 
     try {
-      const storeUpvote = await fetch(`http://localhost:5000/threads/upvote/${threadID}`, {
+      const storeUpvote = await fetch(`http://${base}/threads/upvote/${threadID}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -454,7 +450,7 @@ export function ThreadView() {
         throw new Error('Failed to upvote');
       }
 
-      const getThreadUpvotes = await fetch(`http://localhost:5000/threads/getUpvotes/${threadID}`, {
+      const getThreadUpvotes = await fetch(`http://${base}/threads/getUpvotes/${threadID}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -489,7 +485,7 @@ export function ThreadView() {
   };
 
   const handleDeleteThreadMessage = async (messageId: string) => {    
-    const response = await fetch(`http://localhost:5000/deleteThreadMessage/${messageId}`, {
+    const response = await fetch(`http://${base}/deleteThreadMessage/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -514,7 +510,7 @@ export function ThreadView() {
   const handleSaveEdit = async (messageId: string, content: string) => {
     const id = "" + messageId + ""
 
-    const response = await fetch(`http://localhost:5000/editThreadMessage`, {
+    const response = await fetch(`http://${base}/editThreadMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -553,7 +549,7 @@ export function ThreadView() {
   // Post the reply
   const handlePostReply = async (messageId: string) => {
     // Get the sender's information
-    const fullname = await fetch('http://localhost:5000/getUserName', {
+    const fullname = await fetch(`http://${base}/getUserName`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -577,7 +573,7 @@ export function ThreadView() {
     const replymessageid = "" + messageId + ""
 
     // Store the reply
-    const storeThreadMessage = await fetch('http://localhost:5000/storeThreadMessage', {
+    const storeThreadMessage = await fetch(`http://${base}/storeThreadMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -595,7 +591,7 @@ export function ThreadView() {
     const id = replymessageid
 
     // Get the information of the message being replied to
-    const getReplyingMessageData = await fetch('http://localhost:5000/getReplyingMessageData', {
+    const getReplyingMessageData = await fetch(`http://${base}/getReplyingMessageData`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

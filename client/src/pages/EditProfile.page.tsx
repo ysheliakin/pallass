@@ -13,6 +13,7 @@ import {
 } from '@mantine/core';
 import { register } from '@/api/user';
 import { Layout, useStyles } from '@/components/layout';
+import { base } from '@/api/base';
 
 interface User {
   ID: string,
@@ -47,7 +48,7 @@ export function EditProfilePage() {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      const userProfileData = await fetch(`http://localhost:5000/getUserProfile/${email}`, {
+      const userProfileData = await fetch(`http://${base}/getUserProfile/${email}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -112,7 +113,7 @@ export function EditProfilePage() {
 
     const socialLinks = getSocialLinks.filter(socialLink => socialLink !== "");
     
-    const response = await fetch("http://localhost:5000/editProfile", {
+    const response = await fetch(`http://${base}/editProfile`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
