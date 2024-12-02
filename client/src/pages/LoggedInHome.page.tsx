@@ -171,6 +171,19 @@ export function LoggedInHomePage() {
             + Discover threads
           </Button>
         </Group>
+
+        <Group justify="apart" mb="xl" style={{ marginTop: 50 }}>
+          <Title order={2} style={styles.title}>Funding Opportunities</Title>
+        </Group>
+
+        <Group mb="xl">
+          <Button component={Link} to="/funding-opportunities/create" variant="subtle" color="violet">
+            + Create a funding opportunity
+          </Button>
+          <Button component={Link} to="/funding-opportunities" variant="subtle" color="violet">
+            + Discover funding opportunities
+          </Button>
+        </Group>
       </Container>
     </Layout>
   );
