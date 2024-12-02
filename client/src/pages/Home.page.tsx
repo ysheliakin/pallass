@@ -1,8 +1,8 @@
 import React from 'react';
 import { Container, Group, Image, Paper, Stack, Title } from '@mantine/core';
 import { Layout, useStyles } from '../components/layout';
-import groupImage from '../images/group_example.png';
-import threadImage from '../images/thread_example.png';
+import groupImage from '@/images/group_example.png';
+import threadImage from '@/images/thread_example.png';
 
 export function HomePage() {
   const styles = useStyles();
@@ -21,7 +21,7 @@ export function HomePage() {
               <div style={{ flex: 1 }}>
                 <Title order={3}>Create and join Groups to work on projects</Title>
               </div>
-              <Image
+              <Image 
                 src={groupImage}
                 alt="Group example"
                 width={417.39}
@@ -36,7 +36,7 @@ export function HomePage() {
                 src={threadImage}
                 alt="Discussion Forum thread example"
                 width={417.39}
-                height={200}
+                height={200} 
               />
               <div style={{ flex: 1 }}>
                 <Title order={3}>Create and follow threads in the Discussion Forum</Title>
