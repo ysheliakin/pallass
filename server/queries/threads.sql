@@ -3,6 +3,11 @@ INSERT INTO threads (title, content, category, user_email, created_at)
 VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
 RETURNING id, uuid;
 
+-- name: InsertThreadWithGrant :one
+INSERT INTO threads (title, content, category, user_email, created_at, funding_opportunity_id)
+VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, $5)
+RETURNING id, uuid;
+
 -- name: GetUpvotedThreadsByUserEmail :many
 SELECT *
 FROM threads
@@ -59,6 +64,8 @@ SELECT
     replying_message.lastname AS reply_lastname,
     replying_message.content AS reply_content,
     replying_message.created_at AS reply_created_at,
+    -- The grant associated with the thread
+    funding_opportunities.title AS funding_opportunity_title,
     -- Count of the thread's upvotes
     COUNT(thread_upvotes.id) AS upvote_count,
     array_agg(thread_upvotes.user_email) AS upvote_emails
@@ -70,10 +77,12 @@ LEFT JOIN
     messages AS replying_message ON messages.message_id = replying_message.id
 LEFT JOIN
     thread_upvotes ON threads.id = thread_upvotes.thread_id
+LEFT JOIN
+    funding_opportunities ON threads.funding_opportunity_id = funding_opportunities.id
 WHERE 
     threads.id = $1
 GROUP BY 
-    threads.id, messages.id, replying_message.id
+    threads.id, messages.id, replying_message.id, funding_opportunities.id
 ORDER BY 
     messages.created_at ASC;
 
@@ -153,3 +162,8 @@ GROUP BY
     threads.id
 ORDER BY 
     upvote_count ASC;
+
+-- name: GetThreadCategoriesAndFundingOpportunities :many
+SELECT DISTINCT t.category, fo.id, fo.title
+FROM threads t
+CROSS JOIN funding_opportunities fo;

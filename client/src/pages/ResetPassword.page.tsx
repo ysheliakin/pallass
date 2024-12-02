@@ -26,7 +26,6 @@ export function ResetPasswordPage() {
     const response = await fetch(`http://${base}/validate-code`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, tempcode }),
@@ -47,7 +46,6 @@ export function ResetPasswordPage() {
     const response = await fetch(`http://${base}/reset-password`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),

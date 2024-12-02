@@ -3,6 +3,11 @@ INSERT INTO groups (name, description, created_at, public)
 VALUES ($1, $2, CURRENT_TIMESTAMP, $3)
 RETURNING id, uuid;
 
+-- name: InsertGroupWithGrant :one
+INSERT INTO groups (name, description, created_at, public, funding_opportunity_id)
+VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4)
+RETURNING id, uuid;
+
 -- name: InsertGroupMember :one
 INSERT INTO group_members (group_id, user_email, role, joined_at)
 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
@@ -42,6 +47,8 @@ SELECT
     group_replying_message.lastname AS group_reply_lastname,
     group_replying_message.content AS group_reply_content,
     group_replying_message.created_at AS group_reply_created_at,
+    -- The grant associated with the group
+    funding_opportunities.title AS funding_opportunity_title,
     -- Count of the group's members
     COUNT(group_members.id) AS member_count,
     -- Count of the group's join requests
@@ -58,10 +65,12 @@ LEFT JOIN
     group_members ON groups.id = group_members.group_id
 LEFT JOIN
     join_group_requests ON groups.id = join_group_requests.group_id
+LEFT JOIN
+    funding_opportunities ON groups.funding_opportunity_id = funding_opportunities.id
 WHERE 
     groups.id = $1
 GROUP BY 
-    groups.id, group_messages.id, group_replying_message.id
+    groups.id, group_messages.id, group_replying_message.id, funding_opportunities.id
 ORDER BY 
     group_messages.created_at ASC;
 
@@ -122,3 +131,7 @@ WHERE jgr.group_id = $1;
 -- name: RemoveJoinGroupRequest :exec
 DELETE FROM join_group_requests
 WHERE group_id = $1 AND user_email = $2;
+
+-- name: GetGrants :many
+SELECT id, title
+FROM funding_opportunities;

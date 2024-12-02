@@ -70,8 +70,84 @@ func GetThreadUpvotes(c echo.Context) error {
 	return c.JSON(http.StatusOK, threadUpvotesCount)	
 }
 
-// ThreadController handles thread-related actions
-func ThreadController(c echo.Context) error {
+// Creates a new thread associated with a funding opportunity
+func CreateThreadWithGrantController(c echo.Context) error {
+	var thread Thread
+	var grantIDParam pgtype.Int4
+
+	err := c.Bind(&thread)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid inputs")
+	}
+
+	fmt.Println("thread.UserEmail: ", thread.UserEmail)
+
+	//parameters for the database insertion
+	var categoryParam pgtype.Text
+	if thread.Category != "" {
+		categoryParam = pgtype.Text{String: thread.Category, Valid: true}
+	} else {
+		categoryParam = pgtype.Text{Valid: false}
+	}
+
+	var userEmailParam pgtype.Text
+	if thread.UserEmail != "" {
+		userEmailParam = pgtype.Text{String: thread.UserEmail, Valid: true}
+	} else {
+		userEmailParam = pgtype.Text{Valid: false}
+	}
+
+
+	grantIDStr := c.Param("grantID")
+
+	// If the grant ID exists, convert it to pgtpye.Int4 and set reply to true
+	// Else set the reply to false
+	if grantIDStr != "" {
+		fmt.Println("grantIDStr exists")
+
+		grantID, err := strconv.Atoi(grantIDStr)
+		if err != nil {
+			e.Logger.Error(err)
+			fmt.Println("Invalid grant ID format")
+			return c.String(http.StatusBadRequest, "Invalid grant ID format")
+		}
+
+		grantIDParam = pgtype.Int4{Int32: int32(grantID), Valid: true}
+	} else {
+		grantIDParam = pgtype.Int4{Valid: false}
+	}
+
+
+	threadParams := queries.InsertThreadWithGrantParams{
+		Title:     thread.Title,
+		Content:   thread.Content,
+		Category:  categoryParam.String,
+		UserEmail: userEmailParam,
+		FundingOpportunityID: grantIDParam,
+	}
+
+	threadUUID, err := sql.InsertThreadWithGrant(context.Background(), threadParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Error creating thread")
+	}
+
+	// Store initial message
+	err = sql.StoreInitialThreadMessage(context.Background(), threadUUID.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Initial message not added")
+	}
+
+	threadIDStr := strconv.FormatInt(int64(threadUUID.ID), 10)
+	threadUUIDStr := fmt.Sprintf("%x-%x-%x-%x-%x", threadUUID.Uuid.Bytes[0:4], threadUUID.Uuid.Bytes[4:6], threadUUID.Uuid.Bytes[6:8], threadUUID.Uuid.Bytes[8:10], threadUUID.Uuid.Bytes[10:16])
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"id":   threadIDStr,
+		"uuid": threadUUIDStr,
+	})
+}
+
+// Creates a new thread
+func CreateThreadController(c echo.Context) error {
 	var thread Thread
 
 	err := c.Bind(&thread)
@@ -103,10 +179,22 @@ func ThreadController(c echo.Context) error {
 		UserEmail: userEmailParam,
 	}
 
+	fmt.Println("Hello")
+
 	threadUUID, err := sql.InsertThread(context.Background(), threadParams)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Error creating thread")
 	}
+
+	fmt.Println("threadUUID.ID: ", threadUUID.ID)
+
+	// Store initial message
+	err = sql.StoreInitialThreadMessage(context.Background(), threadUUID.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Initial message not added")
+	}
+
+	fmt.Println("hello2")
 
 	threadIDStr := strconv.FormatInt(int64(threadUUID.ID), 10)
 	threadUUIDStr := fmt.Sprintf("%x-%x-%x-%x-%x", threadUUID.Uuid.Bytes[0:4], threadUUID.Uuid.Bytes[4:6], threadUUID.Uuid.Bytes[6:8], threadUUID.Uuid.Bytes[8:10], threadUUID.Uuid.Bytes[10:16])
@@ -501,4 +589,18 @@ func GetThreadsByNameSortedByLeastUpvotes(c echo.Context) error {
 	fmt.Println("threads: ", threads)
 
 	return c.JSON(http.StatusOK, threads)
+}
+
+func GetCategoriesAndGrants(c echo.Context) error {
+	fmt.Println()
+	fmt.Println("GetCategoriesAndGrants()")
+
+	categoriesAndGrants, err := sql.GetThreadCategoriesAndFundingOpportunities(context.Background())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
+	}
+
+	fmt.Println("categoriesAndGrants: ", categoriesAndGrants)
+
+	return c.JSON(http.StatusOK, categoriesAndGrants)
 }

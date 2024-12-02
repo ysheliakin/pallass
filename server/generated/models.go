@@ -19,12 +19,13 @@ type FundingOpportunity struct {
 }
 
 type Group struct {
-	ID          int32
-	Name        string
-	Description pgtype.Text
-	CreatedAt   pgtype.Timestamp
-	Uuid        pgtype.UUID
-	Public      pgtype.Bool
+	ID                   int32
+	Name                 string
+	Description          pgtype.Text
+	CreatedAt            pgtype.Timestamp
+	Uuid                 pgtype.UUID
+	Public               pgtype.Bool
+	FundingOpportunityID pgtype.Int4
 }
 
 type GroupMember struct {
@@ -69,13 +70,14 @@ type SampleTable struct {
 }
 
 type Thread struct {
-	ID        int32
-	Title     string
-	Content   string
-	Category  string
-	CreatedAt pgtype.Timestamp
-	Uuid      pgtype.UUID
-	UserEmail pgtype.Text
+	ID                   int32
+	Title                string
+	Content              string
+	Category             string
+	CreatedAt            pgtype.Timestamp
+	Uuid                 pgtype.UUID
+	UserEmail            pgtype.Text
+	FundingOpportunityID pgtype.Int4
 }
 
 type ThreadUpvote struct {

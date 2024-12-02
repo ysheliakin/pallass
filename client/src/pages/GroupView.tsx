@@ -55,6 +55,7 @@ interface ChosenGroup {
   UserFullname: string,
   MemberCount: number,
   JoinRequestCount: string,
+  FundingOpportunityTitle: string,
 }
 
 interface GroupMember {
@@ -946,6 +947,12 @@ export function GroupView() {
               Created on: <strong>{new Date(groupData[0].GroupCreatedAt).toLocaleDateString()}</strong>
             </Text>
           </Group>
+
+          {groupData[0].FundingOpportunityTitle && (
+            <Text size="sm" style={{ fontStyle: 'italic', marginBottom: 10 }}>
+              Research Grant Opportunity: <strong>{groupData[0].FundingOpportunityTitle}</strong>
+            </Text>
+          )}
 
           <Text mb="lg" size="md" style={{ lineHeight: 1.6 }}>
             {groupData[0].GroupDescription}

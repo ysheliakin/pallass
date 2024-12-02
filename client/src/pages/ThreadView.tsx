@@ -4,6 +4,7 @@ import { Layout, useStyles } from '@/components/layout';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { base } from '@/api/base';
 import { EditorConsumer } from '@tiptap/react';
+import { FundingOpportunities } from './FundingOpportunities.page';
 
 interface User {
   id: string;
@@ -68,7 +69,8 @@ interface Thread {
   ReplyContent: string,
   ReplyCreatedAt: string,
   UserFullname: string,
-  UpvoteEmails: Array<String>
+  UpvoteEmails: Array<String>,
+  FundingOpportunityTitle: string,
 }
 
 export function ThreadView() {
@@ -327,18 +329,20 @@ export function ThreadView() {
 
         // Remove the deleted message and its nested replies (if it was an older message displayed during the page initialization)
         setThreadData((prevMessages) => {
-          if (prevMessages == null ) {
+          if (prevMessages == null || prevMessages.length === 0) {
             return [];
           }
 
           const updatedThreadMessages = deleteOldMessageAndReplies(prevMessages, message.id);
+          console.log("updatedThreadMessages: ", updatedThreadMessages)
+
           return updatedThreadMessages;
         })
       }
       // Render the list of messages with the new message included 
       else {
         setMessages((prevMessages) => [...prevMessages, message]);
-      } 
+      }
     };
 
     ws.current.onerror = (event) => {
@@ -367,6 +371,7 @@ export function ThreadView() {
     }
   }, [email, threadID, threadData]);
 
+  console.log("threadData: ", threadData)
 
   const sendMessage = async () => {
     // Get the sender's information
@@ -681,6 +686,12 @@ export function ThreadView() {
             </Text>
           </Group>
 
+          {threadData[0].FundingOpportunityTitle && (
+            <Text size="sm" style={{ fontStyle: 'italic', marginBottom: 10 }}>
+              Research Grant Opportunity: <strong>{threadData[0].FundingOpportunityTitle}</strong>
+            </Text>
+          )}
+
           <Text mb="lg" size="md" style={{ lineHeight: 1.6 }}>
             {threadData[0].ThreadContent}
           </Text>
@@ -891,7 +902,7 @@ export function ThreadView() {
   )}
 </Box>
 
-<Title order={3}>Comments</Title>
+<Title style={{ marginTop: 50 }} order={3}>Comments</Title>
         {/* Messages displayed on page initialization */}
         <div style={{ paddingBottom: replyingToMessageId ? '220px' : '130px' }}>
           {threadData && threadData[0].MessageID ? (
@@ -1153,6 +1164,7 @@ export function ThreadView() {
             position: 'fixed',
             bottom: 0,
             width: '1108px',
+            marginTop: 50,
           }}
         >
           { replyingToMessageId && replyingToMessageDate ? (

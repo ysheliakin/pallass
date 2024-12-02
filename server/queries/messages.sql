@@ -1,3 +1,7 @@
+-- name: StoreInitialThreadMessage :exec
+INSERT INTO messages (firstname, lastname, thread_id, content)
+VALUES ('Thread', 'Bot', $1, 'Feel free to communicate with others!');
+
 -- name: StoreThreadMessage :one
 INSERT INTO messages (firstname, lastname, thread_id, content, message_id, reply)
 VALUES ($1, $2, $3, $4, $5, $6)
@@ -32,6 +36,10 @@ SELECT id, firstname, lastname, content, created_at
 FROM messages
 WHERE id = $1;
 
+
+-- name: StoreInitialGroupMessage :exec
+INSERT INTO group_messages (firstname, lastname, group_id, content)
+VALUES ('Group', 'Bot', $1, 'Feel free to communicate with others!');
 
 -- name: StoreGroupMessage :one
 INSERT INTO group_messages (firstname, lastname, group_id, content, group_message_id, reply)

@@ -171,13 +171,11 @@ func (q *Queries) RemoveCodeByEmail(ctx context.Context, email string) error {
 
 const updateUser = `-- name: UpdateUser :exec
 UPDATE users
-SET firstname = $1, lastname = $2, password = $3, organization = $4, field_of_study = $5, job_title = $6
-WHERE email = $7
+SET password = $1, organization = $2, field_of_study = $3, job_title = $4
+WHERE email = $5
 `
 
 type UpdateUserParams struct {
-	Firstname    string
-	Lastname     string
 	Password     string
 	Organization pgtype.Text
 	FieldOfStudy string
@@ -187,8 +185,6 @@ type UpdateUserParams struct {
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 	_, err := q.db.Exec(ctx, updateUser,
-		arg.Firstname,
-		arg.Lastname,
 		arg.Password,
 		arg.Organization,
 		arg.FieldOfStudy,
@@ -216,13 +212,11 @@ func (q *Queries) UpdateUserCodeByEmail(ctx context.Context, arg UpdateUserCodeB
 
 const updateUserExcludingPassword = `-- name: UpdateUserExcludingPassword :exec
 UPDATE users
-SET firstname = $1, lastname = $2, organization = $3, field_of_study = $4, job_title = $5
-WHERE email = $6
+SET organization = $1, field_of_study = $2, job_title = $3
+WHERE email = $4
 `
 
 type UpdateUserExcludingPasswordParams struct {
-	Firstname    string
-	Lastname     string
 	Organization pgtype.Text
 	FieldOfStudy string
 	JobTitle     pgtype.Text
@@ -231,8 +225,6 @@ type UpdateUserExcludingPasswordParams struct {
 
 func (q *Queries) UpdateUserExcludingPassword(ctx context.Context, arg UpdateUserExcludingPasswordParams) error {
 	_, err := q.db.Exec(ctx, updateUserExcludingPassword,
-		arg.Firstname,
-		arg.Lastname,
 		arg.Organization,
 		arg.FieldOfStudy,
 		arg.JobTitle,

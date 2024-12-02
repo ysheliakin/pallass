@@ -207,6 +207,26 @@ func (q *Queries) StoreGroupMessage(ctx context.Context, arg StoreGroupMessagePa
 	return i, err
 }
 
+const storeInitialGroupMessage = `-- name: StoreInitialGroupMessage :exec
+INSERT INTO group_messages (firstname, lastname, group_id, content)
+VALUES ('Group', 'Bot', $1, 'Feel free to communicate with others!')
+`
+
+func (q *Queries) StoreInitialGroupMessage(ctx context.Context, groupID int32) error {
+	_, err := q.db.Exec(ctx, storeInitialGroupMessage, groupID)
+	return err
+}
+
+const storeInitialThreadMessage = `-- name: StoreInitialThreadMessage :exec
+INSERT INTO messages (firstname, lastname, thread_id, content)
+VALUES ('Thread', 'Bot', $1, 'Feel free to communicate with others!')
+`
+
+func (q *Queries) StoreInitialThreadMessage(ctx context.Context, threadID int32) error {
+	_, err := q.db.Exec(ctx, storeInitialThreadMessage, threadID)
+	return err
+}
+
 const storeThreadMessage = `-- name: StoreThreadMessage :one
 INSERT INTO messages (firstname, lastname, thread_id, content, message_id, reply)
 VALUES ($1, $2, $3, $4, $5, $6)

@@ -108,6 +108,8 @@ func main() {
 	e.POST("/request-reset", controller.RequestPasswordReset)
 	e.POST("/registeruser", controller.RegisterUser)
 	e.POST("/loginuser", controller.LoginUser)
+	e.POST("/validate-code", controller.ValidateResetCode)
+	e.POST("/reset-password", controller.ResetPassword)
 
 	// routes registered after this will require authentication
 	authGroup := e.Group("")
@@ -124,11 +126,15 @@ func main() {
 	authGroup.GET("/getThreadsSortedByLeastUpvotes", controller.GetThreadsSortedByLeastUpvotes)
 	authGroup.GET("/getUpvotedThreads/:email", controller.GetUpvotedThreadsController)
 	authGroup.GET("/threads/getUpvotes/:threadID", controller.GetThreadUpvotes)
+	authGroup.GET("/getCategoriesAndGrants", controller.GetCategoriesAndGrants)
 	authGroup.GET("/getGroups/:email", controller.GetGroups)
 	authGroup.GET("/getUserProfile/:email", controller.GetUserProfile)
+	authGroup.GET("/getGrants", controller.GetGrants)
 	// Post handlers
-	authGroup.POST("/postThread", controller.ThreadController)
+	authGroup.POST("/postThread/:grantID", controller.CreateThreadWithGrantController)
+	authGroup.POST("/postThread", controller.CreateThreadController)
 	authGroup.POST("/threads/:id", controller.GetThreadController)
+	authGroup.POST("/newgroup/:grantID", controller.CreateGroupWithGrant)
 	authGroup.POST("/newgroup", controller.CreateGroup)
 	authGroup.POST("/addgroupmember", controller.AddGroupMember)
 	authGroup.POST("/groups/:id", controller.GetGroupController)
@@ -142,8 +148,6 @@ func main() {
 	authGroup.POST("/post", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Post created")
 	})
-	authGroup.POST("/reset-password", controller.ResetPassword)
-	authGroup.POST("/validate-code", controller.ValidateResetCode)
 	authGroup.POST("/flag", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Flag added")
 	})

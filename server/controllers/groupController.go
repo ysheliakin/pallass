@@ -12,6 +12,79 @@ import (
 	queries "sih/pallass/generated"
 )
 
+func CreateGroupWithGrant(c echo.Context) error {
+	var group Group
+	var grantIDParam pgtype.Int4
+
+	fmt.Println("CreateGroup()")
+
+	err := c.Bind(&group)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid inputs")
+	}
+
+	var descriptionParam pgtype.Text
+	if group.Description != "" {
+		descriptionParam = pgtype.Text{String: group.Description, Valid: true}
+	} else {
+		descriptionParam = pgtype.Text{Valid: false}
+	}
+
+	privacyParam := pgtype.Bool{Bool: group.Privacy, Valid: true}
+
+
+	grantIDStr := c.Param("grantID")
+
+	// If the grant ID exists, convert it to pgtpye.Int4 and set reply to true
+	// Else set the reply to false
+	if grantIDStr != "" {
+		fmt.Println("grantIDStr exists")
+
+		grantID, err := strconv.Atoi(grantIDStr)
+		if err != nil {
+			e.Logger.Error(err)
+			fmt.Println("Invalid grant ID format")
+			return c.String(http.StatusBadRequest, "Invalid grant ID format")
+		}
+
+		grantIDParam = pgtype.Int4{Int32: int32(grantID), Valid: true}
+	} else {
+		grantIDParam = pgtype.Int4{Valid: false}
+	}
+
+	// Inserting group data
+	groupParams := queries.InsertGroupWithGrantParams{
+		Name:                 group.Name,
+		Description:          descriptionParam,
+		Public:               privacyParam,
+		FundingOpportunityID: grantIDParam,
+	}
+
+	groupID, err := sql.InsertGroupWithGrant(context.Background(), groupParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "An error occurred trying to create the group."})
+	}
+
+	fmt.Println("groupID: ", groupID)
+
+	// Store initial message
+	err = sql.StoreInitialGroupMessage(context.Background(), groupID.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Initial message not added")
+	}
+
+	groupIDStr := strconv.FormatInt(int64(groupID.ID), 10)
+	fmt.Println("groupIDStr: ", groupIDStr)
+
+	groupUUIDStr := fmt.Sprintf("%x-%x-%x-%x-%x", groupID.Uuid.Bytes[0:4], groupID.Uuid.Bytes[4:6], groupID.Uuid.Bytes[6:8], groupID.Uuid.Bytes[8:10], groupID.Uuid.Bytes[10:16])
+	fmt.Println("groupUUIDStr: ", groupUUIDStr)
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"id":   groupIDStr,
+		"uuid": groupUUIDStr,
+	})
+}
+
 func CreateGroup(c echo.Context) error {
 	var group Group
 
@@ -44,6 +117,12 @@ func CreateGroup(c echo.Context) error {
 	}
 
 	fmt.Println("groupID: ", groupID)
+
+	// Store initial message
+	err = sql.StoreInitialGroupMessage(context.Background(), groupID.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Initial message not added")
+	}
 
 	groupIDStr := strconv.FormatInt(int64(groupID.ID), 10)
 	fmt.Println("groupIDStr: ", groupIDStr)
@@ -104,6 +183,7 @@ func AddGroupMember(c echo.Context) error {
 }
 
 func GetGroupController(c echo.Context) error {
+	fmt.Println()
 	fmt.Println("GetGroupController()")
 
 	var user User
@@ -643,4 +723,18 @@ func RemoveJoinGroupRequest(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, RegisterResponse{Message: "Join request successfully removed!"})
+}
+
+func GetGrants(c echo.Context) error {
+	fmt.Println()
+	fmt.Println("GetGrants()")
+
+	grants, err := sql.GetGrants(context.Background())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
+	}
+
+	fmt.Println("grants: ", grants)
+
+	return c.JSON(http.StatusOK, grants)
 }
