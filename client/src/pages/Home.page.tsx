@@ -1,8 +1,8 @@
 import React from 'react';
 import { Container, Group, Image, Paper, Stack, Title } from '@mantine/core';
 import { Layout, useStyles } from '../components/layout';
-import groupImage from '@/images/group_example.png';
-import threadImage from '@/images/thread_example.png';
+import groupImage from '@/components/images/group_example.png';
+import threadImage from '@/components/images/thread_example.png';
 
 export function HomePage() {
   const styles = useStyles();
