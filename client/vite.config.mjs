@@ -10,6 +10,4 @@ export default defineConfig(({ mode }) => ({
     environment: 'jsdom',
     setupFiles: './vitest.setup.mjs',
   },
-  // Allow PNG files as assets
-  assetsInclude: ['**/*.PNG', '**/*.png'],
 }));
