@@ -784,88 +784,9 @@ export function ThreadView() {
             {paper.title}
           </Text>
 
-        <Box mt="xl">
-          <Title order={3}>Interesting Journals In The Field</Title>
-
-          {papers.length > 0 ? (
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '20px',
-                justifyContent: 'center',
-                marginTop: '20px',
-              }}
-            >
-              {papers.map((paper, index) => (
-                <Card
-                  key={index}
-                  shadow="sm"
-                  padding="lg"
-                  style={{
-                    width: '300px',
-                    borderRadius: '10px',
-                    backgroundColor: '#fff',
-                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                    cursor: 'pointer',
-                    overflow: 'hidden',
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  <Text
-                    size="lg"
-                    mt="md"
-                    style={{
-                      fontSize: '1.2rem',
-                      fontWeight: 'bold',
-                      color: '#333',
-                      marginBottom: '10px',
-                      lineHeight: '1.5',
-                    }}
-                  >
-                    {paper.title}
-                  </Text>
-
-                  <Text>
-                    {paper.Author}
-                  </Text>
-
-                  <Text>
-                    {paper.organization}
-                  </Text>
-                  
-                  <Button
-                    variant="light"
-                    color="blue"
-                    fullWidth
-                    mt="md"
-                    component="a"
-                    href={paper.paperLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      backgroundColor: '#1E90FF',
-                      color: '#fff',
-                      fontWeight: 'bold',
-                      textTransform: 'uppercase',
-                      padding: '12px',
-                      borderRadius: '5px',
-                      transition: 'background-color 0.3s ease',
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4682B4'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1E90FF'}
-                  >
-                    Read more
-                  </Button>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Text style={{fontSize: '1.2rem', color: '#777' }}>No articles available.</Text>
-          )}
-        </Box>
+          <Text>
+            {paper.Author}
+          </Text>
 
           <Text>
             {paper.organization}
