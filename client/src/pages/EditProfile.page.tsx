@@ -34,17 +34,12 @@ export function EditProfilePage() {
   const [error, setError] = useState('');
   const [changePassword, setChangePassword] = useState(false)
 
-  const token = localStorage.getItem('token')
-  const email = localStorage.getItem('email')
+  const email = localStorage.getItem('email');
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       const userProfileData = await fetch(`${base}/getUserProfile/${email}`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
       });
 
       // Check if the response is ok
@@ -105,10 +100,6 @@ export function EditProfilePage() {
 
     const response = await fetch(`${base}/editProfile`, {
       method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ email, password, organization, fieldOfStudy, jobTitle, socialLinks }),
     });
 

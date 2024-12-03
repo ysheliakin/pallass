@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal, Divider, Loader, Stack, TextInput, Notification } from '@mantine/core';
-import { Layout, useStyles } from '@/components/layout';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { base } from '@/api/base';
+import React, { useEffect, useRef, useState } from 'react';
 import { EditorConsumer } from '@tiptap/react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Box, Button, Card, Container, Divider, Group, Image, Loader, Title as MantineTitle, Modal, Notification, Paper, Stack, Text, Textarea, TextInput, Title } from '@mantine/core';
+import { base } from '@/api/base';
+import { Layout, useStyles } from '@/components/layout';
+
 
 interface User {
   id: string;
@@ -109,9 +110,6 @@ export function GroupView() {
 
 
   const email = localStorage.getItem('email');
-  // Get the JWT token
-  const token = localStorage.getItem('token');
-
   const ws = useRef<WebSocket | null>(null);
   const groupID = localStorage.getItem("groupID");
   console.log("groupID: ", groupID)
@@ -122,12 +120,8 @@ export function GroupView() {
     // Get the discussion group's information (including its messages)
     const fetchGroupData = async () => {
       const response = await fetch(`${base}/groups/${groupID}`, {
-          method: 'POST',
-          headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email }),
+        method: 'POST',
+        body: JSON.stringify({ email }),
       });
   
       // Check if the response is ok (status code 200-299)
@@ -266,10 +260,6 @@ export function GroupView() {
     // Get the sender's information
     const fullname = await fetch(`${base}/getUserName`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ email }),
     });
 
@@ -290,10 +280,6 @@ export function GroupView() {
     // Store the message being sent
     const storeGroupMessage = await fetch(`${base}/storeGroupMessage`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ firstname, lastname, groupid, content, replymessageid }),
     });
 
@@ -331,10 +317,6 @@ export function GroupView() {
   const handleDeleteGroupMessage = async (messageId: string) => { 
     const response = await fetch(`${base}/deleteGroupMessage/${messageId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      }
     });
 
     // Check if the response is ok
@@ -359,10 +341,6 @@ export function GroupView() {
 
     const response = await fetch(`${base}/editGroupMessage`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ id, content }),
     });
 
@@ -398,10 +376,6 @@ export function GroupView() {
     // Get the sender's information
     const fullname = await fetch(`${base}/getUserName`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ email }),
     });
 
@@ -422,10 +396,6 @@ export function GroupView() {
     // Store the reply
     const storeGroupMessage = await fetch(`${base}/storeGroupMessage`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ firstname, lastname, groupid, content, replymessageid }),
     });
 
@@ -442,10 +412,6 @@ export function GroupView() {
     // Get the information of the message being replied to
     const getGroupReplyingMessageData = await fetch(`${base}/getGroupReplyingMessageData`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ id }),
     })
 
@@ -512,10 +478,6 @@ export function GroupView() {
   const openMembersList = async() => {
     const response = await fetch(`${base}/getMembers`, {
       method: 'POST',
-      headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ groupID }),
     });
 
@@ -552,10 +514,6 @@ export function GroupView() {
 
     const response = await fetch(`${base}/exitGroup/${groupID}`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ useremail }),
     });
 
@@ -575,10 +533,6 @@ export function GroupView() {
 
     const response = await fetch(`${base}/exitGroup/${groupID}`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ useremail }),
     });
 
@@ -598,10 +552,6 @@ export function GroupView() {
 
     const response = await fetch(`${base}/changeOwner/${email}`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ groupID, useremail }),
     });
 
@@ -640,10 +590,6 @@ export function GroupView() {
     
     const response = await fetch(`${base}/addMember/${groupID}`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ useremail }),
     });
 
@@ -685,10 +631,6 @@ export function GroupView() {
 
     const response = await fetch(`${base}/deleteGroup/${groupID}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      }
     });
 
     // Check if the response is ok (status code 200-299)
@@ -702,10 +644,6 @@ export function GroupView() {
   const openJoinRequestsList = async() => {
     const response = await fetch(`${base}/getJoinRequests`, {
       method: 'POST',
-      headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ groupID }),
     });
 
@@ -729,10 +667,6 @@ export function GroupView() {
   const acceptJoinRequest = async(useremail: string) => {
     const acceptRequestResponse = await fetch(`${base}/acceptJoinRequest/${groupID}`, {
       method: 'POST',
-      headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ useremail }),
     });
 
@@ -749,10 +683,6 @@ export function GroupView() {
   const denyJoinRequest = async(useremail: string) => {
     const removeRequestResponse = await fetch(`${base}/removeJoinRequest/${groupID}`, {
       method: 'POST',
-      headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ useremail }),
     })
 

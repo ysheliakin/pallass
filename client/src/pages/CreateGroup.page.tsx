@@ -24,10 +24,8 @@ export function CreateGroup() {
   const [error, setError] = useState('');
   const [groupUuid, setGroupUuid] = useState('');
 
-  const token = localStorage.getItem('token');
   const email = localStorage.getItem('email');
   const navigate = useNavigate();
-  var getUserName = "";
 
   type GroupData = {
     name: string;
@@ -39,7 +37,7 @@ export function CreateGroup() {
     GroupID: string;
     UserEmail: string | null;
     Role: string;
-  }
+  };
 
   // Runs on initialization of the page
   useEffect(() => {
@@ -48,27 +46,23 @@ export function CreateGroup() {
         // Get the threads upvoted by the user
         const getGrants = await fetch(`${base}/getGrants`, {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
         });
-  
+
         // Check if the response is ok
         if (!getGrants.ok) {
           throw new Error('Error in the response');
         }
-  
+
         const getGrantsData = await getGrants.json();
-        console.log("getGrantsData: ", getGrantsData);
+        console.log('getGrantsData: ', getGrantsData);
         setGrants(getGrantsData);
-      } catch(error) {
-        console.log("No grants found")
+      } catch (error) {
+        console.log('No grants found');
       }
-    }
+    };
 
     fetchGrants();
-  }, [])
+  }, []);
 
   const handleCreateGroup = async () => {
     console.log('Group data:', { name, users, privacy, description });

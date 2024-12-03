@@ -26,8 +26,7 @@ export function CreateThread() {
   const [grant, setGrant] = useState<string | null>(null);
   const [grants, setGrants] = useState<Grants[]>([]);
 
-  const token = localStorage.getItem('token')
-  const email = localStorage.getItem('email')
+  const email = localStorage.getItem('email');
   const navigate = useNavigate();
 
   // Runs on initialization of the page
@@ -37,10 +36,6 @@ export function CreateThread() {
         // Get the threads upvoted by the user
         const getCategoriesAndGrants = await fetch(`${base}/getCategoriesAndGrants`, {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
         });
 
         // Check if the response is ok
@@ -105,10 +100,6 @@ export function CreateThread() {
         // Send a POST request to the backend
         const response = await fetch(`${base}/postThread/${grant}`, {
           method: 'POST', // POST request
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json', // Specify content type as JSON
-          },
           body: JSON.stringify(threadData), // Convert thread data to JSON
         });
 
@@ -125,10 +116,6 @@ export function CreateThread() {
         // Send a POST request to the backend
         const response = await fetch(`${base}/postThread`, {
           method: 'POST', // POST request
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json', // Specify content type as JSON
-          },
           body: JSON.stringify(threadData), // Convert thread data to JSON
         });
 

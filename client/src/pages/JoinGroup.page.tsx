@@ -25,16 +25,11 @@ export function JoinGroup() {
   const [nullResponse, setNullResponse] = useState(false);
   //const [successMessage, setSuccessMessage] = useState("")
 
-  const token = localStorage.getItem('token')
-  const email = localStorage.getItem('email')
+  const email = localStorage.getItem('email');
 
   const handleSearchGroup = async (name: string) => {
     const response = await fetch(`${base}/getGroupsByInput`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ name }),
     });
 
@@ -60,10 +55,6 @@ export function JoinGroup() {
 
     const response = await fetch(`${base}/addgroupmember`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ groupid, useremail, role }),
     });
 
@@ -81,10 +72,6 @@ export function JoinGroup() {
 
     const response = await fetch(`${base}/requestJoinGroup`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ groupid, useremail }),
     });
 

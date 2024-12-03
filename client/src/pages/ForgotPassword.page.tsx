@@ -15,9 +15,6 @@ export function ForgotPasswordPage() {
     const handleSubmit = async () => {
         const response = await fetch(`${base}/request-reset`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify({ email }),
         });
 

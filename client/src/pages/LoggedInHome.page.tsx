@@ -38,20 +38,15 @@ export function LoggedInHomePage() {
   // Temporary
   const [groupUuid, setGroupUuid] = useState("")
 
-  const token = localStorage.getItem('token');
   const email = localStorage.getItem('email');
 
   // Runs on initialization of the page
   useEffect(() => {
-    const fetchData = async() => {
+    const fetchData = async () => {
       try {
         // Get the threads upvoted by the user
         const upvotedThreads = await fetch(`${base}/getUpvotedThreads/${email}`, {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
         });
 
         // Check if the response is ok
@@ -65,10 +60,6 @@ export function LoggedInHomePage() {
         // Get the groups that the user is a part of
         const groupsApartOf = await fetch(`${base}/getGroups/${email}`, {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
         });
 
         // Check if the response is ok
@@ -77,9 +68,9 @@ export function LoggedInHomePage() {
         }
 
         const groupsApartOfData = await groupsApartOf.json();
-        setGroupsData(groupsApartOfData)
-      } catch(error) {
-        console.error(error)
+        setGroupsData(groupsApartOfData);
+      } catch (error) {
+        console.error(error);
       }
     };
 

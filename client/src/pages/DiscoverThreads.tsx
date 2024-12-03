@@ -35,16 +35,10 @@ export function DiscoverThreads() {
   const [threadsData, setThreadsData] = useState<Threads[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
 
-  const token = localStorage.getItem('token')
-
   useEffect(() => {
     const fetchThreadData = async () => {
       const threadsByMostUpvotes = await fetch(`${base}/getThreadsSortedByMostUpvotes`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
       });
 
       // Check if the response is ok
@@ -103,10 +97,6 @@ export function DiscoverThreads() {
       if (sortByUpvotes == 'mostUpvoted') {
         const response = await fetch(`${base}/getThreadsByNameSortedByMostUpvotes`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify({ title }),
         });
 
@@ -122,10 +112,6 @@ export function DiscoverThreads() {
         // Display the threads, sorted by the least upvotes, whose title contains the input entered by the user
         const response = await fetch(`${base}/getThreadsByNameSortedByLeastUpvotes`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify({ title }),
         });
 
@@ -144,10 +130,6 @@ export function DiscoverThreads() {
         if (category == '') {
           const response = await fetch(`${base}/getThreadsSortedByMostUpvotes`, {
             method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
           });
 
           // Check if the response is ok
@@ -161,10 +143,6 @@ export function DiscoverThreads() {
           // Show all of the threads of a chosen category sorted by the most upvotes
           const response = await fetch(`${base}/getThreadsByCategorySortedByMostUpvotes`, {
             method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify({ category }),
           });
 
@@ -181,10 +159,6 @@ export function DiscoverThreads() {
         if (category == '') {
           const response = await fetch(`${base}/getThreadsSortedByLeastUpvotes`, {
             method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
           });
 
           // Check if the response is ok
@@ -198,10 +172,6 @@ export function DiscoverThreads() {
           // Show all of the threads of a chosen category sorted by the least upvotes
           const response = await fetch(`${base}/getThreadsByCategorySortedByLeastUpvotes`, {
             method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify({ category }),
           });
 

@@ -95,12 +95,9 @@ export function ThreadView() {
   const [papers, setPapers] = useState<Paper[]>([]);
 
   const email = localStorage.getItem('email');
-  // Get the JWT token
-  const token = localStorage.getItem('token');
-
   const ws = useRef<WebSocket | null>(null);
-  const threadID = localStorage.getItem("threadID");
-  var getUserName = "";
+  const threadID = localStorage.getItem('threadID');
+  var getUserName = '';
 
   const fetchArticles = async () => {
     const today = new Date();
@@ -115,11 +112,60 @@ export function ThreadView() {
     // console.log("testing");
     var filteredQuery;
 
-    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'they', 'like', 'so', 'or',
-      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we',
-      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it',
-      'he', 'she', 'what', 'where', 'why', 'how', 'if', 'nor', 'when', 'too', 'see', 'saw', 'do',
-      'know', 'way', 'here', 'all'
+    const fillerWords = [
+      'a',
+      'about',
+      'the',
+      'in',
+      'of',
+      'thread',
+      'they',
+      'like',
+      'so',
+      'or',
+      'as',
+      'yet',
+      'just',
+      'very',
+      'right',
+      'just',
+      'by',
+      'be',
+      'you',
+      'as',
+      'this',
+      'that',
+      'we',
+      'us',
+      'me',
+      'them',
+      'there',
+      'their',
+      'on',
+      'to',
+      'think',
+      'most',
+      'not',
+      'few',
+      'is',
+      'it',
+      'he',
+      'she',
+      'what',
+      'where',
+      'why',
+      'how',
+      'if',
+      'nor',
+      'when',
+      'too',
+      'see',
+      'saw',
+      'do',
+      'know',
+      'way',
+      'here',
+      'all',
     ];
 
     // console.log("threadData (fetchArticles): ", threadData)
@@ -129,9 +175,9 @@ export function ThreadView() {
       const query = threadData[0].ThreadTitle;
       filteredQuery = query
         .split(' ')
-        .filter(word => !fillerWords.includes(word.toLowerCase()))
+        .filter((word) => !fillerWords.includes(word.toLowerCase()))
         .join(' ');
-      
+
       // console.log('Filtered Query:', filteredQuery);
     } else {
       console.error('ThreadTitle is null or undefined');
@@ -148,13 +194,10 @@ export function ThreadView() {
         } else {
           console.error('Articles not found in response', data);
         }
-      } 
-      } catch (error) {
-        console.error("Error fetching articles:", error);
       }
-  
-
-
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+    }
   };
 
   const fetchPapers = async () => {
@@ -170,20 +213,69 @@ export function ThreadView() {
     // console.log("testing");
     var filteredQuery;
 
-    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'they', 'like', 'so', 'or',
-      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we',
-      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it',
-      'he', 'she', 'what', 'where', 'why', 'how', 'if', 'nor', 'when', 'too', 'see', 'saw', 'do',
-      'know', 'way', 'here', 'all'
+    const fillerWords = [
+      'a',
+      'about',
+      'the',
+      'in',
+      'of',
+      'thread',
+      'they',
+      'like',
+      'so',
+      'or',
+      'as',
+      'yet',
+      'just',
+      'very',
+      'right',
+      'just',
+      'by',
+      'be',
+      'you',
+      'as',
+      'this',
+      'that',
+      'we',
+      'us',
+      'me',
+      'them',
+      'there',
+      'their',
+      'on',
+      'to',
+      'think',
+      'most',
+      'not',
+      'few',
+      'is',
+      'it',
+      'he',
+      'she',
+      'what',
+      'where',
+      'why',
+      'how',
+      'if',
+      'nor',
+      'when',
+      'too',
+      'see',
+      'saw',
+      'do',
+      'know',
+      'way',
+      'here',
+      'all',
     ];
     // filter out filler words
     if (threadData && threadData.length > 0 && threadData[0].ThreadTitle) {
       const query = threadData[0].ThreadCategory;
       filteredQuery = query
         .split(' ')
-        .filter(word => !fillerWords.includes(word.toLowerCase()))
+        .filter((word) => !fillerWords.includes(word.toLowerCase()))
         .join(' ');
-      
+
       // console.log('Filtered Query:', filteredQuery);
     } else {
       console.error('ThreadTitle is null or undefined');
@@ -205,23 +297,22 @@ export function ThreadView() {
         if (data && data.results && data.results.length > 0) {
           const papers: Paper[] = data.results.map((paper: any) => ({
             title: paper.bibjson?.title || ' ',
-            Author: paper.bibjson?.author?.name,  
+            Author: paper.bibjson?.author?.name,
             organization: paper.bibjson?.publisher.name || ' ', // Publisher name as organization
-            paperLink: paper.bibjson.article.license_display_example_url || `https://www.google.com/search?q=article+has+no+link`, // Link to article
-
+            paperLink:
+              paper.bibjson.article.license_display_example_url ||
+              `https://www.google.com/search?q=article+has+no+link`, // Link to article
           }));
-    
-  
+
           setPapers(papers.slice(0, 3));
           // console.log(JSON.stringify(papers));
-
         } else {
           console.error('Papers not found in response', data);
         }
-      } 
-      } catch (error) {
-        console.error("Error fetching Papers:", error);
       }
+    } catch (error) {
+      console.error('Error fetching Papers:', error);
+    }
   };
 
   const fetchThread = async () => {
@@ -229,10 +320,6 @@ export function ThreadView() {
     const fetchThreadData = async () => {
       const response = await fetch(`${base}/threads/${threadID}`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ email }),
       });
 
@@ -390,10 +477,6 @@ export function ThreadView() {
     // Get the sender's information
     const fullname = await fetch(`${base}/getUserName`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ email }),
     });
 
@@ -414,10 +497,6 @@ export function ThreadView() {
     // Store the message being sent
     const storeThreadMessage = await fetch(`${base}/storeThreadMessage`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ firstname, lastname, threadid, content, replymessageid }),
     });
 
@@ -463,10 +542,6 @@ export function ThreadView() {
     try {
       const storeUpvote = await fetch(`${base}/threads/upvote/${threadID}`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ email }),
       });
 
@@ -476,10 +551,6 @@ export function ThreadView() {
 
       const getThreadUpvotes = await fetch(`${base}/threads/getUpvotes/${threadID}`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
       });
 
       if (!getThreadUpvotes.ok) {
@@ -511,10 +582,6 @@ export function ThreadView() {
   const handleDeleteThreadMessage = async (messageId: string) => {
     const response = await fetch(`${base}/deleteThreadMessage/${messageId}`, {
       method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
     });
 
     // Check if the response is ok
@@ -538,10 +605,6 @@ export function ThreadView() {
 
     const response = await fetch(`${base}/editThreadMessage`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ id, content }),
     });
 
@@ -582,10 +645,6 @@ export function ThreadView() {
     // Get the sender's information
     const fullname = await fetch(`${base}/getUserName`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ email }),
     });
 
@@ -606,10 +665,6 @@ export function ThreadView() {
     // Store the reply
     const storeThreadMessage = await fetch(`${base}/storeThreadMessage`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ firstname, lastname, threadid, content, replymessageid }),
     });
 
@@ -624,10 +679,6 @@ export function ThreadView() {
     // Get the information of the message being replied to
     const getReplyingMessageData = await fetch(`${base}/getReplyingMessageData`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ id }),
     });
 
