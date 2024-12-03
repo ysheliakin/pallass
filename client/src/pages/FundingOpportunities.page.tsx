@@ -23,6 +23,8 @@ export function FundingOpportunities() {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [error, setError] = useState('');
+  const [minAmount, setMinAmount] = useState<number>(0);
+  const [maxAmount, setMaxAmount] = useState<number>(100000);
 
   const token = localStorage.getItem('token')
 
@@ -87,7 +89,13 @@ export function FundingOpportunities() {
   
         const responseData = await response.json();
         console.log("responseData: ", responseData)
-        setFilteredItems(responseData);
+
+        // Filter the fetched opportunities by minAmount and maxAmount
+        const filteredByAmount = responseData.filter(
+          (item: FundingItem) => item.TargetAmount >= minAmount && item.TargetAmount <= maxAmount
+        );
+
+      setFilteredItems(filteredByAmount);
       } else {
         const formattedStartDate = startDate ? new Date(startDate).toISOString().split('T')[0] : '';
         const formattedEndDate = endDate ? new Date(endDate).toISOString().split('T')[0] : '';
@@ -196,6 +204,22 @@ export function FundingOpportunities() {
                   value={endDate}
                   onChange={setEndDate}
                   placeholder="Enter the latest deadline"
+                />
+                <NumberInput
+                  label="Minimum Amount"
+                  value={minAmount}
+                  onChange={(value) => setMinAmount(Number(value))}
+                  min={0}
+                  step={500}
+                  style={{ width: 200 }}
+                />
+                <NumberInput
+                  label="Maximum Amount"
+                  value={maxAmount}
+                  onChange={(value) => setMaxAmount(Number(value))}
+                  min={0}
+                  step={500}
+                  style={{ width: 200 }}
                 />
               </Group>
 
