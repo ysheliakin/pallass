@@ -125,8 +125,11 @@ func LoginUser(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, RegisterResponse{Message: "Incorrect email or password."})
 	}
 
-	// Generate JWT token that expires in 24 hours
-	claims := jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour))}
+	// Generate JWT token for the suer that expires in 24 hours
+	claims := jwt.MapClaims{
+		"email": dbUser.Email,
+		"exp":   jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Sign the token
