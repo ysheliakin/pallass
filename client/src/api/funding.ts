@@ -18,7 +18,7 @@ export async function createFundingOpportunity(title: string, description: strin
         },
         body: JSON.stringify(body)
     }
-    const response = await fetch(`${base}/funding`, options);
+    const response = await fetch(`http://${base}/funding`, options);
     const result = await response.json();
     if (!response.ok) {
         console.error('Request failed: ', result);
@@ -34,7 +34,7 @@ export async function getFundingOpportunities() {
             'Content-Type': 'application/json'
         },
     }
-    const response = await fetch(`${base}/funding`, options);
+    const response = await fetch(`http://${base}/funding`, options);
     const result = await response.json();
     if (!response.ok) {
         console.error('Request failed: ', result);

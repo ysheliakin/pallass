@@ -3,6 +3,7 @@ import { Container, Group, Image, Paper, Stack, Title } from '@mantine/core';
 import { Layout, useStyles } from '../components/layout';
 import groupImage from '../images/group_example.svg';
 import threadImage from '../images/thread_example.svg';
+import grantImage from '../images/grant_example.svg';
 
 export function HomePage() {
   const styles = useStyles();
@@ -50,9 +51,9 @@ export function HomePage() {
                 <Title order={3}>Create and discover Funding Opportunities</Title>
               </div>
               <Image
-                src="/api/placeholder/300/200"
+                src={grantImage}
                 alt="Funding opportunity example"
-                width={300}
+                width={417}
                 height={200}
               />
             </Group>

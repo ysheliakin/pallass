@@ -130,6 +130,8 @@ func main() {
 	authGroup.GET("/getGroups/:email", controller.GetGroups)
 	authGroup.GET("/getUserProfile/:email", controller.GetUserProfile)
 	authGroup.GET("/getGrants", controller.GetGrants)
+	authGroup.GET("/getFundingOpportunitiesSortedByHighestAmount", controller.GetFundingOpportunitiesSortedByHighestAmount)
+	authGroup.GET("/getFundingOpportunitiesSortedByLowestAmount", controller.GetFundingOpportunitiesSortedByLowestAmount)
 	// Post handlers
 	authGroup.POST("/postThread/:grantID", controller.CreateThreadWithGrantController)
 	authGroup.POST("/postThread", controller.CreateThreadController)
@@ -172,6 +174,8 @@ func main() {
 	authGroup.POST("/getJoinRequests", controller.GetJoinRequests)
 	authGroup.POST("/acceptJoinRequest/:groupid", controller.AddMember)
 	authGroup.POST("/removeJoinRequest/:groupid", controller.RemoveJoinGroupRequest)
+	authGroup.POST("/getFundingOpportunitiesByNameSortedByHighestAmount", controller.GetFundingOpportunitiesByNameSortedByHighestAmount)
+	authGroup.POST("/getFundingOpportunitiesByNameSortedByLowestAmount", controller.GetFundingOpportunitiesByNameSortedByLowestAmount)
 	// Put handlers
 	authGroup.PUT("/message", controller.UpdateMessageController)
 	authGroup.PUT("/user", func(c echo.Context) error {
