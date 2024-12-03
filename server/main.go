@@ -92,10 +92,14 @@ func main() {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	// e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-	// 	AllowOrigins: []string{"http://localhost:5137", "https://ysheliakin.github.io/pallass"},
-	// }))
-	e.Use(middleware.CORS()) // TODO: might want to make this stricter
+	e.Use(middleware.CORS())
+	e.OPTIONS("/*", func(c echo.Context) error {
+		c.Response().Header().Set("Access-Control-Allow-Origin", "https://ysheliakin.github.io")
+		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Response().Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
+		return c.NoContent(http.StatusOK)
+	})
 
 	/* Public routes */
 	// Get handlers
