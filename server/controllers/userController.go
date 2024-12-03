@@ -152,6 +152,66 @@ func LoginUser(c echo.Context) error {
 	})
 }
 
+// Retrieve user
+func GetUser(c echo.Context) error {
+	var user GetUserPayload
+
+	// Decode the incoming JSON request body
+	err := c.Bind(&user)
+	if err != nil {
+		log.Error(err)
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
+	}
+
+	if user.Email != validateJWT(user.Token) {
+		return c.JSON(http.StatusUnauthorized, ErrorPayload{Error: err.Error()})
+	}
+
+	// Retrieve the user from the database
+	dbUser, err := sql.GetUserByEmail(context.Background(), user.Email)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, ErrorPayload{Error: err.Error()})
+	}
+
+	// Return the user and signed token via a JSON response
+	return c.JSON(http.StatusOK, User{
+		ID:           dbUser.ID,
+		Firstname:    dbUser.Firstname,
+		Lastname:     dbUser.Lastname,
+		Email:        dbUser.Email,
+		Organization: dbUser.Organization.String,
+		Token:        user.Token,
+		Jobtitle:     dbUser.JobTitle.String,
+		Fieldofstudy: dbUser.FieldOfStudy,
+	})
+}
+
+func validateJWT(tokenString string) string {
+	// Parse and validate the token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Ensure the signing method is correct
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return secretKey, nil
+	})
+
+	if err != nil {
+		return ""
+	}
+
+	// Extract claims
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		email, ok := claims["email"].(string)
+		if !ok {
+			return ""
+		}
+		return email
+	}
+
+	return ""
+}
+
 func Authenticate(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		fmt.Println("Authenticate()")
@@ -377,11 +437,6 @@ func GetUserProfile(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, userData)
-}
-
-// UserController handles user-related actions
-func UserController(c echo.Context) error {
-	return c.String(http.StatusOK, "User created")
 }
 
 // UpdateUserController handles user updates

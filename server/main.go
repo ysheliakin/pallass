@@ -119,7 +119,7 @@ func main() {
 	/* Private routes requiring bearer token */
 	// Get handlers
 	authGroup.GET("/playlist", controller.PlaylistController)
-	//authGroup.GET("/user", controller.GetUserController)
+	authGroup.GET("/user", controller.GetUser)
 	authGroup.GET("/getThreadsSortedByMostUpvotes", controller.GetThreadsSortedByMostUpvotes)
 	authGroup.GET("/getThreadsSortedByLeastUpvotes", controller.GetThreadsSortedByLeastUpvotes)
 	authGroup.GET("/getUpvotedThreads/:email", controller.GetUpvotedThreadsController)
@@ -152,7 +152,7 @@ func main() {
 	authGroup.POST("/downvote", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Downvoted")
 	})
-	authGroup.POST("/user", controller.UserController)
+	authGroup.POST("/user", controller.GetUser)
 	authGroup.POST("/funding", controller.AddFundingOpportunity)
 	authGroup.POST("/getUserName", controller.GetUserName)
 	authGroup.POST("/storeThreadMessage", controller.StoreThreadMessage)

@@ -62,7 +62,7 @@ type GroupMember struct {
 
 type JoinGroupRequest struct {
 	GroupID   string `json:"groupid"`
-	UserEmail string `json:"useremail"`  
+	UserEmail string `json:"useremail"`
 }
 
 type User struct {
@@ -82,6 +82,11 @@ type User struct {
 type LogInUser struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type GetUserPayload struct {
+	Email string `json:"email"`
+	Token string `json:"token"`
 }
 
 type Group struct {

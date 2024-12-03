@@ -26,12 +26,13 @@ export async function login(email: string, password: string) {
     return { ...result, ok: response.ok };
 }
 
-export async function getUser(token: string | null) {
+export async function getUser(email: string | null, token: string | null) {
     if (token === null) {
         return { ok: false, message: "JWT token not found" };
     }
     const options = {
-        method: 'GET',
+        method: 'POST',
+        body: JSON.stringify({ email, token }),
     }
     const response = await fetch(`${base}/user`, options);
     const result = await response.json();
