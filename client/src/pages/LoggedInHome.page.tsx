@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Title, Button, Group, Paper, SimpleGrid, Text } from '@mantine/core';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Layout, useStyles } from '@/components/layout';
+import { Button, Container, Group, Paper, SimpleGrid, Text, Title } from '@mantine/core';
 import { base } from '@/api/base';
+import { Layout, useStyles } from '@/components/layout';
+
 
 interface Threads {
   ID: number, 
@@ -45,12 +46,12 @@ export function LoggedInHomePage() {
     const fetchData = async() => {
       try {
         // Get the threads upvoted by the user
-        const upvotedThreads = await fetch(`http://${base}/getUpvotedThreads/${email}`, {
+        const upvotedThreads = await fetch(`${base}/getUpvotedThreads/${email}`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
-          }
+          },
         });
 
         // Check if the response is ok
@@ -62,12 +63,12 @@ export function LoggedInHomePage() {
         setThreadsData(upvotedThreadsData);
 
         // Get the groups that the user is a part of
-        const groupsApartOf = await fetch(`http://${base}/getGroups/${email}`, {
+        const groupsApartOf = await fetch(`${base}/getGroups/${email}`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
-          }
+          },
         });
 
         // Check if the response is ok

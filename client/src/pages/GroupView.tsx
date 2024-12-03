@@ -121,7 +121,7 @@ export function GroupView() {
   const fetchGroup = async() => {
     // Get the discussion group's information (including its messages)
     const fetchGroupData = async () => {
-      const response = await fetch(`http://${base}/groups/${groupID}`, {
+      const response = await fetch(`${base}/groups/${groupID}`, {
           method: 'POST',
           headers: {
               'Authorization': `Bearer ${token}`,
@@ -264,7 +264,7 @@ export function GroupView() {
 
   const sendMessage = async () => {
     // Get the sender's information
-    const fullname = await fetch(`http://${base}/getUserName`, {
+    const fullname = await fetch(`${base}/getUserName`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -288,7 +288,7 @@ export function GroupView() {
     const replymessageid = replyingToMessageId
 
     // Store the message being sent
-    const storeGroupMessage = await fetch(`http://${base}/storeGroupMessage`, {
+    const storeGroupMessage = await fetch(`${base}/storeGroupMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -329,7 +329,7 @@ export function GroupView() {
   };
 
   const handleDeleteGroupMessage = async (messageId: string) => { 
-    const response = await fetch(`http://${base}/deleteGroupMessage/${messageId}`, {
+    const response = await fetch(`${base}/deleteGroupMessage/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -357,7 +357,7 @@ export function GroupView() {
     console.log("id: ", id)
     console.log("content: ", content)
 
-    const response = await fetch(`http://${base}/editGroupMessage`, {
+    const response = await fetch(`${base}/editGroupMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -396,7 +396,7 @@ export function GroupView() {
   // Post the reply
   const handlePostReply = async (messageId: string) => {
     // Get the sender's information
-    const fullname = await fetch(`http://${base}/getUserName`, {
+    const fullname = await fetch(`${base}/getUserName`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -420,7 +420,7 @@ export function GroupView() {
     const replymessageid = "" + messageId + ""
 
     // Store the reply
-    const storeGroupMessage = await fetch(`http://${base}/storeGroupMessage`, {
+    const storeGroupMessage = await fetch(`${base}/storeGroupMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -440,7 +440,7 @@ export function GroupView() {
     console.log("id: ", id)
 
     // Get the information of the message being replied to
-    const getGroupReplyingMessageData = await fetch(`http://${base}/getGroupReplyingMessageData`, {
+    const getGroupReplyingMessageData = await fetch(`${base}/getGroupReplyingMessageData`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -510,7 +510,7 @@ export function GroupView() {
   }
 
   const openMembersList = async() => {
-    const response = await fetch(`http://${base}/getMembers`, {
+    const response = await fetch(`${base}/getMembers`, {
       method: 'POST',
       headers: {
           'Authorization': `Bearer ${token}`,
@@ -550,7 +550,7 @@ export function GroupView() {
     console.log("groupID: ", groupID)
     console.log("useremail: ", useremail)
 
-    const response = await fetch(`http://${base}/exitGroup/${groupID}`, {
+    const response = await fetch(`${base}/exitGroup/${groupID}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -573,7 +573,7 @@ export function GroupView() {
     console.log("groupID: ", groupID)
     console.log("useremail: ", useremail)
 
-    const response = await fetch(`http://${base}/exitGroup/${groupID}`, {
+    const response = await fetch(`${base}/exitGroup/${groupID}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -596,7 +596,7 @@ export function GroupView() {
     console.log("groupID: ", groupID)
     console.log("useremail: ", useremail)
 
-    const response = await fetch(`http://${base}/changeOwner/${email}`, {
+    const response = await fetch(`${base}/changeOwner/${email}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -638,7 +638,7 @@ export function GroupView() {
     setNewMemberAdded(false)
     setNewMemberNotAdded(false)
     
-    const response = await fetch(`http://${base}/addMember/${groupID}`, {
+    const response = await fetch(`${base}/addMember/${groupID}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -683,7 +683,7 @@ export function GroupView() {
   const confirmGroupDeletion = async() => {
     console.log("confirmGroupDeletion()")
 
-    const response = await fetch(`http://${base}/deleteGroup/${groupID}`, {
+    const response = await fetch(`${base}/deleteGroup/${groupID}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -700,7 +700,7 @@ export function GroupView() {
   }
 
   const openJoinRequestsList = async() => {
-    const response = await fetch(`http://${base}/getJoinRequests`, {
+    const response = await fetch(`${base}/getJoinRequests`, {
       method: 'POST',
       headers: {
           'Authorization': `Bearer ${token}`,
@@ -727,7 +727,7 @@ export function GroupView() {
   }
 
   const acceptJoinRequest = async(useremail: string) => {
-    const acceptRequestResponse = await fetch(`http://${base}/acceptJoinRequest/${groupID}`, {
+    const acceptRequestResponse = await fetch(`${base}/acceptJoinRequest/${groupID}`, {
       method: 'POST',
       headers: {
           'Authorization': `Bearer ${token}`,
@@ -747,7 +747,7 @@ export function GroupView() {
   }
 
   const denyJoinRequest = async(useremail: string) => {
-    const removeRequestResponse = await fetch(`http://${base}/removeJoinRequest/${groupID}`, {
+    const removeRequestResponse = await fetch(`${base}/removeJoinRequest/${groupID}`, {
       method: 'POST',
       headers: {
           'Authorization': `Bearer ${token}`,

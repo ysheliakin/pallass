@@ -8,7 +8,7 @@ export async function register(firstName: string, lastName: string, email: strin
         },
         body: JSON.stringify({ firstName, lastName, email, password, organization, fieldOfStudy, jobTitle, socialLinks }),
     }
-    const response = await fetch(`http://${base}/registeruser`, options);
+    const response = await fetch(`${base}/registeruser`, options);
     const result = await response.json();
     if (!response.ok) {
         console.error('Request failed: ', result);
@@ -24,7 +24,7 @@ export async function login(email: string, password: string) {
         },
         body: JSON.stringify({ email, password }),
     }
-    const response = await fetch(`http://${base}/loginuser`, options);
+    const response = await fetch(`${base}/loginuser`, options);
     const result = await response.json();
     if (!response.ok) {
         console.error('Request failed: ', result);
@@ -42,7 +42,7 @@ export async function getUser(token: string | null) {
             'Authorization': `Bearer ${token}`
         }
     }
-    const response = await fetch(`http://${base}/user`, options);
+    const response = await fetch(`${base}/user`, options);
     const result = await response.json();
     if (!response.ok) {
         console.error('Request failed: ', result);

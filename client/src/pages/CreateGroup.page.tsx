@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Title, TextInput, Select, Radio, Textarea, Button, Paper, Group, Stack, Box, Text, useSafeMantineTheme } from '@mantine/core';
-import { Layout, useStyles } from '@/components/layout';
-import { useNavigate, Link } from 'react-router-dom';
-import { createGroupWithGrant, createGroup, addGroupMember } from '@/api/group';
+import { Link, useNavigate } from 'react-router-dom';
+import { Box, Button, Container, Group, Paper, Radio, Select, Stack, Text, Textarea, TextInput, Title, useSafeMantineTheme } from '@mantine/core';
 import { base } from '@/api/base';
+import { addGroupMember, createGroup, createGroupWithGrant } from '@/api/group';
+import { Layout, useStyles } from '@/components/layout';
+
 
 interface Grants {
   ID: number,
@@ -45,12 +46,12 @@ export function CreateGroup() {
     const fetchGrants = async () => {
       try {
         // Get the threads upvoted by the user
-        const getGrants = await fetch(`http://${base}/getGrants`, {
+        const getGrants = await fetch(`${base}/getGrants`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
-          }
+          },
         });
   
         // Check if the response is ok

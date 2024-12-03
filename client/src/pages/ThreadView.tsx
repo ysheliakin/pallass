@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal } from '@mantine/core';
-import { Layout, useStyles } from '@/components/layout';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { base } from '@/api/base';
+import React, { useEffect, useRef, useState } from 'react';
 import { EditorConsumer } from '@tiptap/react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Box, Button, Card, Container, Group, Image, Title as MantineTitle, Modal, Paper, Text, Textarea, Title } from '@mantine/core';
+import { base } from '@/api/base';
+import { Layout, useStyles } from '@/components/layout';
 import { FundingOpportunities } from './FundingOpportunities.page';
+
 
 interface User {
   id: string;
@@ -223,46 +224,46 @@ export function ThreadView() {
       }
   };
 
-  const fetchThread = async() => {
+  const fetchThread = async () => {
     // Get the discussion thread's information (including its messages)
     const fetchThreadData = async () => {
-      const response = await fetch(`http://${base}/threads/${threadID}`, {
-          method: 'POST',
-          headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email }),
+      const response = await fetch(`${base}/threads/${threadID}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
       });
-  
+
       // Check if the response is ok (status code 200-299)
       if (!response.ok) {
-          throw new Error('Network response was not ok');
+        throw new Error('Network response was not ok');
       }
 
       const data = await response.json();
 
-      if (data != null) { 
+      if (data != null) {
         // If the user upvoted the thread, do not allow the user to click on the "Upvote" button again
         data[0].UpvoteEmails.map((user_email: String) => {
           if (user_email == email) {
-            setUpvoteState(true)
+            setUpvoteState(true);
           }
-        })
+        });
       }
 
       setThreadData(data);
-    }
-    
+    };
+
     fetchThreadData();
     // fetchArticles();
 
     // Websocket connection
-    ws.current = new WebSocket(`ws://${base}/wsthread/${email}`)
+    ws.current = new WebSocket(`ws://${base}/wsthread/${email}`);
 
     ws.current.onopen = () => {
-        console.log("Websocket connected");
-    }
+      console.log('Websocket connected');
+    };
 
     // Handle incoming messages from the WebSocket server (i.e. when a user sends a message)
     ws.current.onmessage = (event) => {
@@ -271,25 +272,34 @@ export function ThreadView() {
       // Edit the message's content if the type is 'EDIT_MESSAGE'
       if (message.type === 'EDIT_MESSAGE') {
         // Edit the message (if it was a newly sent message)
-        setMessages((prevMessages) => prevMessages.map((msg) => msg.id == message.id ? { ...msg, content : message.content } : msg));
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id == message.id ? { ...msg, content: message.content } : msg
+          )
+        );
 
         // Edit the message (if it was an older message displayed during the page initialization)
         setThreadData((prevMessages) => {
-          if (prevMessages == null ) {
+          if (prevMessages == null) {
             return [];
           }
 
-          const updatedThreadMessages = prevMessages.map((msg) => msg.MessageID == message.id ? { ...msg, MessageContent : message.content } : msg);
+          const updatedThreadMessages = prevMessages.map((msg) =>
+            msg.MessageID == message.id ? { ...msg, MessageContent: message.content } : msg
+          );
           return updatedThreadMessages;
-        })
+        });
       }
       // Remove the message and its nested replies if the type is 'DELETE_MESSAGE'
       else if (message.type === 'DELETE_MESSAGE') {
         // To delete a message and its nested replies that were newly sent
-        const deleteNewMessageAndReplies = (messages: Message[], deletingMessageId: string): Message[] => {
+        const deleteNewMessageAndReplies = (
+          messages: Message[],
+          deletingMessageId: string
+        ): Message[] => {
           // Contain all messages that are going to be deleted
           const deletingMessages = new Set([deletingMessageId]);
-      
+
           // Get all of the replies to the deleted messages
           const deletingReplies = (messageId: string) => {
             // Find the replies to the replies of the deleted message
@@ -299,18 +309,21 @@ export function ThreadView() {
               deletingReplies(reply.id);
             });
           };
-      
+
           // Recursion that starts from the deleted message
           deletingReplies(deletingMessageId);
-      
+
           // Filter out all the messages that need to be deleted
           return messages.filter((msg) => !deletingMessages.has(msg.id));
         };
 
         // To delete a message and its nested replies that were displayed on page initialization
-        const deleteOldMessageAndReplies = (messages: Thread[], deletingMessageId: string): Thread[] => {
+        const deleteOldMessageAndReplies = (
+          messages: Thread[],
+          deletingMessageId: string
+        ): Thread[] => {
           const deletingMessages = new Set([Number(deletingMessageId)]);
-      
+
           const deletingReplies = (messageId: string) => {
             const replies = messages.filter((msg) => msg.ReplyID == messageId);
             replies.forEach((reply) => {
@@ -318,9 +331,9 @@ export function ThreadView() {
               deletingReplies(reply.MessageID);
             });
           };
-      
+
           deletingReplies(deletingMessageId);
-      
+
           return messages.filter((msg) => !deletingMessages.has(Number(msg.MessageID)));
         };
 
@@ -334,19 +347,19 @@ export function ThreadView() {
           }
 
           const updatedThreadMessages = deleteOldMessageAndReplies(prevMessages, message.id);
-          console.log("updatedThreadMessages: ", updatedThreadMessages)
+          console.log('updatedThreadMessages: ', updatedThreadMessages);
 
           return updatedThreadMessages;
-        })
+        });
       }
-      // Render the list of messages with the new message included 
+      // Render the list of messages with the new message included
       else {
         setMessages((prevMessages) => [...prevMessages, message]);
       }
     };
 
     ws.current.onerror = (event) => {
-        console.error("WebSocket error observed:", event);
+      console.error('WebSocket error observed:', event);
     };
 
     ws.current.onclose = () => {
@@ -354,9 +367,9 @@ export function ThreadView() {
     };
 
     return () => {
-        ws.current?.close();
+      ws.current?.close();
     };
-  }
+  };
 
   // Runs on initialization of the page
   useEffect(() => {
@@ -371,14 +384,14 @@ export function ThreadView() {
     }
   }, [email, threadID, threadData]);
 
-  console.log("threadData: ", threadData)
+  console.log('threadData: ', threadData);
 
   const sendMessage = async () => {
     // Get the sender's information
-    const fullname = await fetch(`http://${base}/getUserName`, {
+    const fullname = await fetch(`${base}/getUserName`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email }),
@@ -390,19 +403,19 @@ export function ThreadView() {
     }
 
     const userData = await fullname.json();
-    const firstname = userData.Firstname
-    const lastname = userData.Lastname
-    getUserName = "" + firstname + " " + lastname
+    const firstname = userData.Firstname;
+    const lastname = userData.Lastname;
+    getUserName = '' + firstname + ' ' + lastname;
 
-    const threadid = threadID
-    const content = newMessage
-    const replymessageid = replyingToMessageId
+    const threadid = threadID;
+    const content = newMessage;
+    const replymessageid = replyingToMessageId;
 
     // Store the message being sent
-    const storeThreadMessage = await fetch(`http://${base}/storeThreadMessage`, {
+    const storeThreadMessage = await fetch(`${base}/storeThreadMessage`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ firstname, lastname, threadid, content, replymessageid }),
@@ -412,16 +425,22 @@ export function ThreadView() {
       throw new Error('Network response was not ok');
     }
 
-    const threadMessageData = await storeThreadMessage.json()
-    const messageID = "" + threadMessageData.ID + ""
+    const threadMessageData = await storeThreadMessage.json();
+    const messageID = '' + threadMessageData.ID + '';
 
-    const message = { id: messageID, sender: getUserName, content: newMessage, date: threadMessageData.CreatedAt, reply: "false" } as Message;
+    const message = {
+      id: messageID,
+      sender: getUserName,
+      content: newMessage,
+      date: threadMessageData.CreatedAt,
+      reply: 'false',
+    } as Message;
 
-    localStorage.setItem("localName", getUserName)
+    localStorage.setItem('localName', getUserName);
 
-    const name = localStorage.getItem("localName")
+    const name = localStorage.getItem('localName');
     if (name != null) {
-      setUserName(name)
+      setUserName(name);
     }
 
     // If the WebSocket connection exists, send the message through the WebSocket
@@ -429,51 +448,51 @@ export function ThreadView() {
       ws.current.send(JSON.stringify(message));
       setNewMessage('');
     } else {
-        console.error("The WebSocket is uninitialized.");
+      console.error('The WebSocket is uninitialized.');
     }
   };
 
   // Called when the user clicks on the 'Edit' button: enables the user to edit their message
   const handleEditMessage = (messageId: string, content: string) => {
     setEditingMessageId(messageId);
-    setEditedContent(content);    
+    setEditedContent(content);
   };
 
   // Upvote the discussion thread
-  const handleUpvote = async () => { 
+  const handleUpvote = async () => {
     try {
-      const storeUpvote = await fetch(`http://${base}/threads/upvote/${threadID}`, {
+      const storeUpvote = await fetch(`${base}/threads/upvote/${threadID}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email }),
       });
-  
+
       if (!storeUpvote.ok) {
         throw new Error('Failed to upvote');
       }
 
-      const getThreadUpvotes = await fetch(`http://${base}/threads/getUpvotes/${threadID}`, {
+      const getThreadUpvotes = await fetch(`${base}/threads/getUpvotes/${threadID}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
-  
+
       if (!getThreadUpvotes.ok) {
         throw new Error('Failed to upvote');
       }
 
       const data = await getThreadUpvotes.json();
-  
+
       setThreadData((prevData) => {
         if (!prevData) {
           return prevData;
         }
-        
+
         const updatedThread = prevData.map((getData, index) => {
           if (index === 0) {
             return { ...getData, UpvoteCount: data };
@@ -489,13 +508,13 @@ export function ThreadView() {
     setUpvoteState(true);
   };
 
-  const handleDeleteThreadMessage = async (messageId: string) => {    
-    const response = await fetch(`http://${base}/deleteThreadMessage/${messageId}`, {
+  const handleDeleteThreadMessage = async (messageId: string) => {
+    const response = await fetch(`${base}/deleteThreadMessage/${messageId}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
-      }
+      },
     });
 
     // Check if the response is ok
@@ -503,22 +522,24 @@ export function ThreadView() {
       throw new Error('Network response was not ok');
     }
 
-    const getMessageID = "" + messageId + ""
+    const getMessageID = '' + messageId + '';
 
     // Delete the message with the corresponding message ID: "getMessageID"
     if (ws.current) {
-      ws.current.send(JSON.stringify({ id: getMessageID, type: 'DELETE_MESSAGE', replyingmsgid: getMessageID }));
+      ws.current.send(
+        JSON.stringify({ id: getMessageID, type: 'DELETE_MESSAGE', replyingmsgid: getMessageID })
+      );
     }
-  }
+  };
 
   // Save the edited message
   const handleSaveEdit = async (messageId: string, content: string) => {
-    const id = "" + messageId + ""
+    const id = '' + messageId + '';
 
-    const response = await fetch(`http://${base}/editThreadMessage`, {
+    const response = await fetch(`${base}/editThreadMessage`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ id, content }),
@@ -531,7 +552,7 @@ export function ThreadView() {
 
     // Edit the message with the corresponding message ID
     if (ws.current) {
-      ws.current.send(JSON.stringify({id: id, content: content, type: 'EDIT_MESSAGE'}));
+      ws.current.send(JSON.stringify({ id: id, content: content, type: 'EDIT_MESSAGE' }));
     }
 
     setEditingMessageId(null);
@@ -544,20 +565,25 @@ export function ThreadView() {
   };
 
   // Called when the user clicks on the 'Reply' button: enables the user to reply to a message
-  const handleReply = (messageId: string, messageSender: string, messageContent: string, messageDate: string) => {
+  const handleReply = (
+    messageId: string,
+    messageSender: string,
+    messageContent: string,
+    messageDate: string
+  ) => {
     setReplyingToMessageId(messageId);
-    setReplyingToMessageSender(messageSender)
-    setReplyingToMessageContent(messageContent)
-    setReplyingToMessageDate(messageDate)
+    setReplyingToMessageSender(messageSender);
+    setReplyingToMessageContent(messageContent);
+    setReplyingToMessageDate(messageDate);
   };
 
   // Post the reply
   const handlePostReply = async (messageId: string) => {
     // Get the sender's information
-    const fullname = await fetch(`http://${base}/getUserName`, {
+    const fullname = await fetch(`${base}/getUserName`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email }),
@@ -569,19 +595,19 @@ export function ThreadView() {
     }
 
     const userData = await fullname.json();
-    const firstname = userData.Firstname
-    const lastname = userData.Lastname
-    getUserName = "" + firstname + " " + lastname
+    const firstname = userData.Firstname;
+    const lastname = userData.Lastname;
+    getUserName = '' + firstname + ' ' + lastname;
 
-    const threadid = threadID
-    const content = newMessage
-    const replymessageid = "" + messageId + ""
+    const threadid = threadID;
+    const content = newMessage;
+    const replymessageid = '' + messageId + '';
 
     // Store the reply
-    const storeThreadMessage = await fetch(`http://${base}/storeThreadMessage`, {
+    const storeThreadMessage = await fetch(`${base}/storeThreadMessage`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ firstname, lastname, threadid, content, replymessageid }),
@@ -591,49 +617,56 @@ export function ThreadView() {
       throw new Error('Network response was not ok');
     }
 
-    const threadMessageData = await storeThreadMessage.json()
-    const messageID = "" + threadMessageData.ID + ""
-    const id = replymessageid
+    const threadMessageData = await storeThreadMessage.json();
+    const messageID = '' + threadMessageData.ID + '';
+    const id = replymessageid;
 
     // Get the information of the message being replied to
-    const getReplyingMessageData = await fetch(`http://${base}/getReplyingMessageData`, {
+    const getReplyingMessageData = await fetch(`${base}/getReplyingMessageData`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ id }),
-    })
+    });
 
-    const replyingMessageData = await getReplyingMessageData.json()
-    const replyingMessageSender = replyingMessageData[0].Firstname + " " + replyingMessageData[0].Lastname
-    const replyingMessageID = "" + replyingMessageData[0].ID + ""
+    const replyingMessageData = await getReplyingMessageData.json();
+    const replyingMessageSender =
+      replyingMessageData[0].Firstname + ' ' + replyingMessageData[0].Lastname;
+    const replyingMessageID = '' + replyingMessageData[0].ID + '';
 
-    var message: Message
+    var message: Message;
 
     // If the ID of the message being replied to exists, create an object containing a reply
     // Else, create an object containing a message that is not a reply
     if (replymessageid != null) {
-      message = { 
-        id: messageID, 
-        sender: getUserName, 
-        content: newMessage, 
-        date: threadMessageData.CreatedAt, 
+      message = {
+        id: messageID,
+        sender: getUserName,
+        content: newMessage,
+        date: threadMessageData.CreatedAt,
         reply: 'true',
         replyingmsgid: replyingMessageID,
         replyingmsgsender: replyingMessageSender,
         replyingmsgcontent: replyingMessageData[0].Content,
-        replyingmsgdate: replyingMessageData[0].CreatedAt
+        replyingmsgdate: replyingMessageData[0].CreatedAt,
       } as Message;
     } else {
-      message = { id: messageID, sender: getUserName, content: newMessage, date: threadMessageData.CreatedAt, reply: 'false' } as Message;
+      message = {
+        id: messageID,
+        sender: getUserName,
+        content: newMessage,
+        date: threadMessageData.CreatedAt,
+        reply: 'false',
+      } as Message;
     }
 
-    localStorage.setItem("localName", getUserName)
+    localStorage.setItem('localName', getUserName);
 
-    const name = localStorage.getItem("localName")
+    const name = localStorage.getItem('localName');
     if (name != null) {
-      setUserName(name)
+      setUserName(name);
     }
 
     if (ws.current) {
@@ -641,14 +674,14 @@ export function ThreadView() {
       ws.current.send(JSON.stringify(message));
       setNewMessage('');
     } else {
-        console.error("The WebSocket is uninitialized.");
+      console.error('The WebSocket is uninitialized.');
     }
 
     // Set the states for the message reply to null to end the reply interface
-    setReplyingToMessageId(null)
-    setReplyingToMessageSender(null)
-    setReplyingToMessageContent(null)
-    setReplyingToMessageDate(null)
+    setReplyingToMessageId(null);
+    setReplyingToMessageSender(null);
+    setReplyingToMessageContent(null);
+    setReplyingToMessageDate(null);
   };
 
   // End the reply interface
