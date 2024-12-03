@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Center, Group, Loader, Text, Title } from '@mantine/core';
+import { Link } from 'react-router-dom';
+import { Button, Card, Center, Group, Loader, SimpleGrid, Text, Title } from '@mantine/core';
 import { getFundingOpportunities } from '@/api/funding';
 import { Layout } from '@/components/layout';
-import { Link } from 'react-router-dom';
 
 type FundingItem = {
   Title: string;
@@ -36,34 +36,36 @@ export const FundingOpportunities = () => {
       <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
         &lt; Back to Your Dashboard
       </Link>
-      
+
       <br />
       <Center>
         <Title>Funding Opportunities</Title>
       </Center>
       <br />
-      {items.map((x) => (
-        <Card key={x.Title} m="5 auto 0" w={400} shadow="sm" padding="lg" radius="md" withBorder>
-          <Group justify="space-between" mb="xs">
-            <Text fw={500}>{x.Title}</Text>
-          </Group>
+      <SimpleGrid cols={3}>
+        {items.map((x) => (
+          <Card key={x.Title} shadow="sm" padding="lg" radius="md" withBorder>
+            <Group justify="space-between" mb="xs">
+              <Text fw={500}>{x.Title}</Text>
+            </Group>
 
-          <Text size="sm" c="dimmed" lineClamp={3}>
-            {x.Description}
-          </Text>
+            <Text size="sm" c="dimmed" lineClamp={3}>
+              {x.Description}
+            </Text>
 
-          <Button color="blue" fullWidth mt="md" radius="md">
-            <a
-              style={{ textDecoration: 'none' }}
-              href={x.Link}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              View
-            </a>
-          </Button>
-        </Card>
-      ))}
+            <Button color="blue" fullWidth mt="md" radius="md">
+              <a
+                style={{ textDecoration: 'none' }}
+                href={x.Link}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View
+              </a>
+            </Button>
+          </Card>
+        ))}
+      </SimpleGrid>
     </Layout>
   );
 };

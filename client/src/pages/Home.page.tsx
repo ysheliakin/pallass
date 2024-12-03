@@ -2,6 +2,7 @@ import React from 'react';
 import { Container, Group, Image, Paper, Stack, Title } from '@mantine/core';
 import logo from '../../logo.svg';
 import { Layout, useStyles } from '../components/layout';
+import fundingImage from '../images/funding_example.png';
 import groupImage from '../images/group_example.svg';
 import threadImage from '../images/thread_example.svg';
 
@@ -46,7 +47,7 @@ export function HomePage() {
                 <Title order={3}>Create and discover Funding Opportunities</Title>
               </div>
               <Image
-                src="/api/placeholder/300/200"
+                src={fundingImage}
                 alt="Funding opportunity example"
                 width={300}
                 height={200}
