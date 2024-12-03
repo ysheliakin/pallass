@@ -43,8 +43,8 @@ export const FundingOpportunities = () => {
       </Center>
       <br />
       {items.map((x) => (
-        <Card shadow="sm" padding="lg" radius="md" withBorder>
-          <Group justify="space-between" mt="md" mb="xs">
+        <Card key={x.Title} m="5 auto 0" w={400} shadow="sm" padding="lg" radius="md" withBorder>
+          <Group justify="space-between" mb="xs">
             <Text fw={500}>{x.Title}</Text>
           </Group>
 

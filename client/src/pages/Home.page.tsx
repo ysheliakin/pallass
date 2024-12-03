@@ -1,5 +1,6 @@
 import React from 'react';
 import { Container, Group, Image, Paper, Stack, Title } from '@mantine/core';
+import logo from '../../logo.svg';
 import { Layout, useStyles } from '../components/layout';
 import groupImage from '../images/group_example.svg';
 import threadImage from '../images/thread_example.svg';
@@ -10,7 +11,7 @@ export function HomePage() {
   return (
     <Layout>
       <Container size="lg">
-        <img src="../logo.svg" alt="Logo" style={{ display: 'block', margin: '0 auto' }} />
+        <img src={logo} alt="Logo" style={{ display: 'block', margin: '0 auto' }} />
         <Title order={2} ta="center" mt="xl" style={styles.title}>
           Communicate with fellow researchers for free
         </Title>
@@ -21,12 +22,7 @@ export function HomePage() {
               <div style={{ flex: 1 }}>
                 <Title order={3}>Create and join Groups to work on projects</Title>
               </div>
-              <Image
-                src={groupImage}
-                alt="Group example"
-                width={417}
-                height={200}
-              />
+              <Image src={groupImage} alt="Group example" width={417} height={200} />
             </Group>
           </Paper>
 
