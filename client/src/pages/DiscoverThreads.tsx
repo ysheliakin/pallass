@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Title, TextInput, Checkbox, Radio, Paper, Grid, Card, Text, Button, Menu } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { Link } from 'react-router-dom';
+import { base } from '@/api/base';
 import { string } from 'prop-types';
 
 interface Threads {
@@ -37,7 +38,7 @@ export function DiscoverThreads() {
 
   useEffect(() => {
     const fetchThreadData = async () => {
-      const threadsByMostUpvotes = await fetch(`http://localhost:5000/getThreadsSortedByMostUpvotes`, {
+      const threadsByMostUpvotes = await fetch(`http://${base}/getThreadsSortedByMostUpvotes`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -97,7 +98,7 @@ export function DiscoverThreads() {
     if (threadName != '') {
       // Display the threads, sorted by the most upvotes, whose title contains the input entered by the user
       if (sortByUpvotes == 'mostUpvoted') {
-        const response = await fetch(`http://localhost:5000/getThreadsByNameSortedByMostUpvotes`, {
+        const response = await fetch(`http://${base}/getThreadsByNameSortedByMostUpvotes`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -116,7 +117,7 @@ export function DiscoverThreads() {
         setThreadsData(responseData);
       } else {
         // Display the threads, sorted by the least upvotes, whose title contains the input entered by the user
-        const response = await fetch(`http://localhost:5000/getThreadsByNameSortedByLeastUpvotes`, {
+        const response = await fetch(`http://${base}/getThreadsByNameSortedByLeastUpvotes`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -138,7 +139,7 @@ export function DiscoverThreads() {
       if (sortByUpvotes == 'mostUpvoted') {
         // Show all of the threads sorted by the most upvotes
         if (category == '') {
-          const response = await fetch(`http://localhost:5000/getThreadsSortedByMostUpvotes`, {
+          const response = await fetch(`http://${base}/getThreadsSortedByMostUpvotes`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -155,7 +156,7 @@ export function DiscoverThreads() {
           setThreadsData(responseData);
         } else {
           // Show all of the threads of a chosen category sorted by the most upvotes
-          const response = await fetch(`http://localhost:5000/getThreadsByCategorySortedByMostUpvotes`, {
+          const response = await fetch(`http://${base}/getThreadsByCategorySortedByMostUpvotes`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -175,7 +176,7 @@ export function DiscoverThreads() {
       } else {
         // Show all of the threads sorted by the least upvotes
         if (category == '') {
-          const response = await fetch(`http://localhost:5000/getThreadsSortedByLeastUpvotes`, {
+          const response = await fetch(`http://${base}/getThreadsSortedByLeastUpvotes`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -192,7 +193,7 @@ export function DiscoverThreads() {
           setThreadsData(responseData);
         } else {
           // Show all of the threads of a chosen category sorted by the least upvotes
-          const response = await fetch(`http://localhost:5000/getThreadsByCategorySortedByLeastUpvotes`, {
+          const response = await fetch(`http://${base}/getThreadsByCategorySortedByLeastUpvotes`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Container, Group, Image, Paper, Stack, Title } from '@mantine/core';
 import { Layout, useStyles } from '../components/layout';
+import groupImage from '../images/group_example.svg';
+import threadImage from '../images/thread_example.svg';
 
 export function HomePage() {
   const styles = useStyles();
@@ -19,16 +21,21 @@ export function HomePage() {
               <div style={{ flex: 1 }}>
                 <Title order={3}>Create and join Groups to work on projects</Title>
               </div>
-              <Image src="/api/placeholder/300/200" alt="Group example" width={300} height={200} />
+              <Image
+                src={groupImage}
+                alt="Group example"
+                width={417}
+                height={200}
+              />
             </Group>
           </Paper>
 
           <Paper shadow="sm" p="md">
             <Group>
               <Image
-                src="/api/placeholder/300/200"
+                src={threadImage}
                 alt="Discussion Forum thread example"
-                width={300}
+                width={417}
                 height={200}
               />
               <div style={{ flex: 1 }}>
@@ -40,41 +47,11 @@ export function HomePage() {
           <Paper shadow="sm" p="md">
             <Group>
               <div style={{ flex: 1 }}>
-                <Title order={3}>Join and host Expert Q&A sessions</Title>
+                <Title order={3}>Create and discover Funding Opportunities</Title>
               </div>
               <Image
                 src="/api/placeholder/300/200"
-                alt="Expert Q&A session example"
-                width={300}
-                height={200}
-              />
-            </Group>
-          </Paper>
-
-          <Paper shadow="sm" p="md">
-            <Group>
-              <Image
-                src="/api/placeholder/300/200"
-                alt="Learn topic example"
-                width={300}
-                height={200}
-              />
-              <div style={{ flex: 1 }}>
-                <Title order={3}>
-                  Learn about a topic written by an expert / write about a topic you're an expert in
-                </Title>
-              </div>
-            </Group>
-          </Paper>
-
-          <Paper shadow="sm" p="md">
-            <Group>
-              <div style={{ flex: 1 }}>
-                <Title order={3}>Send direct messages</Title>
-              </div>
-              <Image
-                src="/api/placeholder/300/200"
-                alt="Direct message example"
+                alt="Funding opportunity example"
                 width={300}
                 height={200}
               />

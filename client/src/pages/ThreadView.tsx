@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Container, Title as MantineTitle, Text, Image, Title, Paper, Button, Textarea, Group, Box, Card, Modal } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { base } from '@/api/base';
 import { EditorConsumer } from '@tiptap/react';
-import { IconVideo } from '@tabler/icons-react';
+import { FundingOpportunities } from './FundingOpportunities.page';
 
 interface User {
   id: string;
@@ -18,7 +19,6 @@ interface Article {
 }
 
 interface Paper {
-
   title: string;
   Author: string;
   organization: string;
@@ -63,14 +63,14 @@ interface Thread {
   MessageLastname: string,
   MessageContent: string,
   MessageCreatedAt: string,
-  MessageReply: string,
   ReplyID: string,
   ReplyFirstname: string,
   ReplyLastname: string,
   ReplyContent: string,
   ReplyCreatedAt: string,
   UserFullname: string,
-  UpvoteEmails: Array<String>
+  UpvoteEmails: Array<String>,
+  FundingOpportunityTitle: string,
 }
 
 export function ThreadView() {
@@ -114,12 +114,14 @@ export function ThreadView() {
     // console.log("testing");
     var filteredQuery;
 
-    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'benefits', 'like', 'so', 'or',
-      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we', 'all',
-      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it'
+    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'they', 'like', 'so', 'or',
+      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we',
+      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it',
+      'he', 'she', 'what', 'where', 'why', 'how', 'if', 'nor', 'when', 'too', 'see', 'saw', 'do',
+      'know', 'way', 'here', 'all'
     ];
 
-    console.log("threadData (fetchArticles): ", threadData)
+    // console.log("threadData (fetchArticles): ", threadData)
 
     // filter out filler words
     if (threadData && threadData.length > 0 && threadData[0].ThreadTitle) {
@@ -129,14 +131,14 @@ export function ThreadView() {
         .filter(word => !fillerWords.includes(word.toLowerCase()))
         .join(' ');
       
-      console.log('Filtered Query:', filteredQuery);
+      // console.log('Filtered Query:', filteredQuery);
     } else {
       console.error('ThreadTitle is null or undefined');
     }
     try {
       if (threadData && threadData.length > 0) {
         const response = await fetch(
-          `https://newsapi.org/v2/everything?q=${filteredQuery}&from=${formattedDate}&to=${formattedDate}&sortBy=popularity&language=en&apiKey=3457f090118c4f92a4eab998982c7457`
+          `https://newsapi.org/v2/everything?q=${filteredQuery}&from=2024-11-06&to=${formattedDate}&sortBy=popularity&language=en&apiKey=3457f090118c4f92a4eab998982c7457`
         );
         const data = await response.json();
         if (data.articles && Array.isArray(data.articles)) {
@@ -167,9 +169,11 @@ export function ThreadView() {
     // console.log("testing");
     var filteredQuery;
 
-    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'benefits', 'like', 'so', 'or',
-      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we', 'all',
-      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it'
+    const fillerWords = ['a', 'about', 'the', 'in', 'of', 'thread', 'they', 'like', 'so', 'or',
+      'as', 'yet', 'just', 'very', 'right', 'just', 'by', 'be', 'you', 'as', 'this', 'that', 'we',
+      'us', 'me', 'them', 'there', 'their', 'on', 'to', 'think', 'most', 'not', 'few', 'is', 'it',
+      'he', 'she', 'what', 'where', 'why', 'how', 'if', 'nor', 'when', 'too', 'see', 'saw', 'do',
+      'know', 'way', 'here', 'all'
     ];
     // filter out filler words
     if (threadData && threadData.length > 0 && threadData[0].ThreadTitle) {
@@ -179,7 +183,7 @@ export function ThreadView() {
         .filter(word => !fillerWords.includes(word.toLowerCase()))
         .join(' ');
       
-      console.log('Filtered Query:', filteredQuery);
+      // console.log('Filtered Query:', filteredQuery);
     } else {
       console.error('ThreadTitle is null or undefined');
     }
@@ -187,7 +191,9 @@ export function ThreadView() {
     try {
       if (threadData && threadData.length > 0) {
         const response = await fetch(
-          `https://doaj.org/api/search/journals/${filteredQuery}?page=1&pageSize=3`
+          // `https://doaj.org/api/search/journals/keywords:${filteredQuery}?lang=en&page=1&pageSize=3`
+          `https://doaj.org/api/search/journals/${filteredQuery}?lang=en&page=1&pageSize=3`
+          // `https://doaj.org/api/search/journals/${filteredQuery}?page=1&pageSize=3`
           // q=${encodeURIComponent(safeQuery)}&fromDate=${formattedDate}&toDate=${formattedDate}&size=3&lang=en`
         );
         // const textResponse = await response.text();
@@ -197,14 +203,17 @@ export function ThreadView() {
 
         if (data && data.results && data.results.length > 0) {
           const papers: Paper[] = data.results.map((paper: any) => ({
-            title: paper.bibjson.title.exact,
-            Author: paper.bibjson.author,  
-            organization: paper.bibjson.publisher.name || ' ', // Publisher name as organization
-            paperLink: paper.bibjson.article.license_display_example_url || 'N/A', // Link to article
+            title: paper.bibjson?.title || ' ',
+            Author: paper.bibjson?.author?.name,  
+            organization: paper.bibjson?.publisher.name || ' ', // Publisher name as organization
+            paperLink: paper.bibjson.article.license_display_example_url || `https://www.google.com/search?q=article+has+no+link`, // Link to article
+
           }));
     
   
           setPapers(papers.slice(0, 3));
+          // console.log(JSON.stringify(papers));
+
         } else {
           console.error('Papers not found in response', data);
         }
@@ -212,16 +221,12 @@ export function ThreadView() {
       } catch (error) {
         console.error("Error fetching Papers:", error);
       }
-  
-
-
   };
-
 
   const fetchThread = async() => {
     // Get the discussion thread's information (including its messages)
     const fetchThreadData = async () => {
-      const response = await fetch(`http://localhost:5000/threads/${threadID}`, {
+      const response = await fetch(`http://${base}/threads/${threadID}`, {
           method: 'POST',
           headers: {
               'Authorization': `Bearer ${token}`,
@@ -253,7 +258,7 @@ export function ThreadView() {
     // fetchArticles();
 
     // Websocket connection
-    ws.current = new WebSocket(`ws://localhost:5000/ws/${email}`)
+    ws.current = new WebSocket(`ws://${base}/wsthread/${email}`)
 
     ws.current.onopen = () => {
         console.log("Websocket connected");
@@ -324,18 +329,20 @@ export function ThreadView() {
 
         // Remove the deleted message and its nested replies (if it was an older message displayed during the page initialization)
         setThreadData((prevMessages) => {
-          if (prevMessages == null ) {
+          if (prevMessages == null || prevMessages.length === 0) {
             return [];
           }
 
           const updatedThreadMessages = deleteOldMessageAndReplies(prevMessages, message.id);
+          console.log("updatedThreadMessages: ", updatedThreadMessages)
+
           return updatedThreadMessages;
         })
       }
       // Render the list of messages with the new message included 
       else {
         setMessages((prevMessages) => [...prevMessages, message]);
-      } 
+      }
     };
 
     ws.current.onerror = (event) => {
@@ -364,10 +371,11 @@ export function ThreadView() {
     }
   }, [email, threadID, threadData]);
 
+  console.log("threadData: ", threadData)
 
   const sendMessage = async () => {
     // Get the sender's information
-    const fullname = await fetch('http://localhost:5000/getUserName', {
+    const fullname = await fetch(`http://${base}/getUserName`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -391,7 +399,7 @@ export function ThreadView() {
     const replymessageid = replyingToMessageId
 
     // Store the message being sent
-    const storeThreadMessage = await fetch('http://localhost:5000/storeThreadMessage', {
+    const storeThreadMessage = await fetch(`http://${base}/storeThreadMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -434,7 +442,7 @@ export function ThreadView() {
   // Upvote the discussion thread
   const handleUpvote = async () => { 
     try {
-      const storeUpvote = await fetch(`http://localhost:5000/threads/upvote/${threadID}`, {
+      const storeUpvote = await fetch(`http://${base}/threads/upvote/${threadID}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -447,7 +455,7 @@ export function ThreadView() {
         throw new Error('Failed to upvote');
       }
 
-      const getThreadUpvotes = await fetch(`http://localhost:5000/threads/getUpvotes/${threadID}`, {
+      const getThreadUpvotes = await fetch(`http://${base}/threads/getUpvotes/${threadID}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -482,7 +490,7 @@ export function ThreadView() {
   };
 
   const handleDeleteThreadMessage = async (messageId: string) => {    
-    const response = await fetch(`http://localhost:5000/deleteThreadMessage/${messageId}`, {
+    const response = await fetch(`http://${base}/deleteThreadMessage/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -507,7 +515,7 @@ export function ThreadView() {
   const handleSaveEdit = async (messageId: string, content: string) => {
     const id = "" + messageId + ""
 
-    const response = await fetch(`http://localhost:5000/editThreadMessage`, {
+    const response = await fetch(`http://${base}/editThreadMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -546,7 +554,7 @@ export function ThreadView() {
   // Post the reply
   const handlePostReply = async (messageId: string) => {
     // Get the sender's information
-    const fullname = await fetch('http://localhost:5000/getUserName', {
+    const fullname = await fetch(`http://${base}/getUserName`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -570,7 +578,7 @@ export function ThreadView() {
     const replymessageid = "" + messageId + ""
 
     // Store the reply
-    const storeThreadMessage = await fetch('http://localhost:5000/storeThreadMessage', {
+    const storeThreadMessage = await fetch(`http://${base}/storeThreadMessage`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -588,7 +596,7 @@ export function ThreadView() {
     const id = replymessageid
 
     // Get the information of the message being replied to
-    const getReplyingMessageData = await fetch('http://localhost:5000/getReplyingMessageData', {
+    const getReplyingMessageData = await fetch(`http://${base}/getReplyingMessageData`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -656,10 +664,6 @@ export function ThreadView() {
     return <div>Loading...</div>;
   }
 
-  const handleBackToDashboard = () => {
-    navigate('/dashboard')
-  };
-
   return (
     <Layout>
       <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
@@ -682,12 +686,18 @@ export function ThreadView() {
             </Text>
           </Group>
 
+          {threadData[0].FundingOpportunityTitle && (
+            <Text size="sm" style={{ fontStyle: 'italic', marginBottom: 10 }}>
+              Research Grant Opportunity: <strong>{threadData[0].FundingOpportunityTitle}</strong>
+            </Text>
+          )}
+
           <Text mb="lg" size="md" style={{ lineHeight: 1.6 }}>
             {threadData[0].ThreadContent}
           </Text>
 
           {/* Upvote button */}
-          <Group align="right">
+          <Group>
             <Button variant="outline" color="blue" onClick={handleUpvote} disabled={upvoteState}>
               👍 Upvote
             </Button>
@@ -699,13 +709,16 @@ export function ThreadView() {
   {articles.length > 0 ? (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
       {articles.map((article, index) => (
-        <Card key={index} shadow="sm" padding="lg" style={{ width: '350px' }}>
+        <Card key={index} shadow="sm" padding="lg" style={{ width: '350px' }} 
+        onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+        onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
           {article.urlToImage && (
             <Image src={article.urlToImage} alt={article.title} height={200} fit="cover" />
           )}
           <Text size="lg" mt="md">{article.title}</Text>
           <Button
-            variant="light"
+            // variant="light"
             color="blue"
             fullWidth
             mt="md"
@@ -713,8 +726,10 @@ export function ThreadView() {
             href={article.url}
             target="_blank"
             rel="noopener noreferrer"
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4DFF00'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2986CC'}
           >
-            Read more
+            READ MORE
           </Button>
         </Card>
       ))}
@@ -737,13 +752,14 @@ export function ThreadView() {
         marginTop: '20px',
       }}
     >
+
       {papers.map((paper, index) => (
         <Card
           key={index}
           shadow="sm"
           padding="lg"
           style={{
-            width: '300px',
+            width: '350px',
             borderRadius: '10px',
             backgroundColor: '#fff',
             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
@@ -777,8 +793,8 @@ export function ThreadView() {
           </Text>
           
           <Button
-            variant="light"
-            color="blue"
+            variant="dark"
+            color="red"
             fullWidth
             mt="md"
             component="a"
@@ -786,16 +802,16 @@ export function ThreadView() {
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              backgroundColor: '#1E90FF',
+              backgroundColor: '#CC0000',
               color: '#fff',
-              fontWeight: 'bold',
+              // fontWeight: 'bold',
               textTransform: 'uppercase',
               padding: '12px',
               borderRadius: '5px',
               transition: 'background-color 0.3s ease',
             }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4682B4'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1E90FF'}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4DFF00'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#CC0000'}
           >
             Read more
           </Button>
@@ -807,7 +823,7 @@ export function ThreadView() {
   )}
 </Box>
 
-<Title order={3}>Comments</Title>
+<Title style={{ marginTop: 50 }} order={3}>Comments</Title>
         {/* Messages displayed on page initialization */}
         <div style={{ paddingBottom: replyingToMessageId ? '220px' : '130px' }}>
           {threadData && threadData[0].MessageID ? (
@@ -825,7 +841,7 @@ export function ThreadView() {
                   </Card>
                 )}
 
-                <Card key={threadMessage.MessageID} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', marginTop: '10px' }}>
+                <Card key={threadMessage.MessageID} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', ...(threadMessage.ReplyID != null ? { borderTopLeftRadius: '0', borderTopRightRadius: '0' } : { marginTop: '10px' }) }}>
                   <Group>
                     {/* Display the 'Edit' and 'Delete' buttons if the user is the one who sent the message */}
                     {threadMessage.MessageFirstname + " " + threadMessage.MessageLastname == threadData[0].UserFullname ? (
@@ -1069,6 +1085,7 @@ export function ThreadView() {
             position: 'fixed',
             bottom: 0,
             width: '1108px',
+            marginTop: 50,
           }}
         >
           { replyingToMessageId && replyingToMessageDate ? (

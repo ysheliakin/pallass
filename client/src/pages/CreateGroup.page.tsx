@@ -1,64 +1,247 @@
-import React, { useState } from 'react';
-import { Container, Title, TextInput, Select, Radio, Textarea, Button, Paper, Group, Stack, Box } from '@mantine/core';
+import React, { useEffect, useState } from 'react';
+import { Container, Title, TextInput, Select, Radio, Textarea, Button, Paper, Group, Stack, Box, Text, useSafeMantineTheme } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { createGroupWithGrant, createGroup, addGroupMember } from '@/api/group';
+import { base } from '@/api/base';
+
+interface Grants {
+  ID: number,
+	Title: string,
+}
 
 export function CreateGroup() {
   const styles = useStyles();
 
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [privacy, setPrivacy] = useState('private');
   const [users, setUsers] = useState<string[]>([]);
   const [newUser, setNewUser] = useState('');
-  const [privacy, setPrivacy] = useState('private');
-  const [notifications, setNotifications] = useState('on');
-  const [description, setDescription] = useState('');
+  const [grant, setGrant] = useState<string | null>(null);
+  const [grants, setGrants] = useState<Grants[]>([]);
+  const [error, setError] = useState('');
+  const [groupUuid, setGroupUuid] = useState('');
 
   const token = localStorage.getItem('token');
   const email = localStorage.getItem('email');
+  const navigate = useNavigate();
   var getUserName = "";
 
+  type GroupData = {
+    name: string;
+    privacy: boolean;
+    description: string;
+  };
+
+  type GroupMembers = {
+    GroupID: string;
+    UserEmail: string | null;
+    Role: string;
+  }
+
+  // Runs on initialization of the page
+  useEffect(() => {
+    const fetchGrants = async () => {
+      try {
+        // Get the threads upvoted by the user
+        const getGrants = await fetch(`http://${base}/getGrants`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+  
+        // Check if the response is ok
+        if (!getGrants.ok) {
+          throw new Error('Error in the response');
+        }
+  
+        const getGrantsData = await getGrants.json();
+        console.log("getGrantsData: ", getGrantsData);
+        setGrants(getGrantsData);
+      } catch(error) {
+        console.log("No grants found")
+      }
+    }
+
+    fetchGrants();
+  }, [])
+
   const handleCreateGroup = async () => {
-    console.log('Group data:', { name, users, privacy, notifications, description });
+    console.log('Group data:', { name, users, privacy, description });
     // Handle group creation logic here
     const transformedPrivacy = privacy === 'public';
-    const transformedNotifications = notifications === 'on';
 
     // Group data to be sent in the POST request
-    const groupData = {
-    name,
-    privacy: transformedPrivacy,
-    notifications: transformedNotifications,
-    description
+    const groupData: GroupData = {
+      name,
+      privacy: transformedPrivacy,
+      description
     };
 
     console.log('Group data:', groupData);
 
     try {
-      const response = await fetch('http://localhost:5000/newgroup', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(groupData)
-      });
+      console.log("grant: ", grant)
 
-      if (response.ok) {
-        const data = await response.json();
-        // Access both the 'id' and 'uuid' fields from the response
-        const groupId = data.id;
-        const groupUuid = data.uuid;
+      if (grant != null) {
+        const response = await createGroupWithGrant(groupData, grant)
 
-        // Log or use the groupId and groupUuid
-        console.log('Group created successfully');
-        console.log('Group ID:', groupId);
-        console.log('Group UUID:', groupUuid);
+        if (response.ok) {
+          // Access both the 'id' and 'uuid' fields from the response
+          const groupId = response.id;
+          const groupUuid = response.uuid;
+          setGroupUuid(groupUuid);
+  
+          // Log or use the groupId and groupUuid
+          console.log('Group created successfully');
+          console.log('Group ID:', groupId);
+  
+          const groupMembersData: GroupMembers = {
+            GroupID: groupId,
+            UserEmail: email,
+            Role: "Owner"
+          }
+  
+          console.log('groupMembersData:', groupMembersData);
+          localStorage.setItem("groupID", groupId);
+  
+          try {
+            const response = await addGroupMember(groupMembersData)
+  
+            if (response.ok) {
+              console.log("data: ", response)
+              console.log('Group UUID:', groupUuid);
+            } else {
+              console.error('Failed to add members to group');
+              setError(response.message);
+            }
+          } catch (error) {
+            console.error('Error:', error);
+          }
+          
+          // If no users were added to the group, navigate to the group's page
+          if (users.length == 0) {
+            console.log("groupUuid: ", groupUuid)
+  
+            navigate(`/group/${groupUuid}`);
+          }
+  
+          // Add group members
+          for (let i = 0; i < users.length; i++) {
+            const groupMembersData: GroupMembers = {
+              GroupID: groupId,
+              UserEmail: users[i],
+              Role: "Member"
+            }
+  
+            console.log('groupMembersData', i,  ':, ', groupMembersData);
+  
+            try {
+              const response = await addGroupMember(groupMembersData)
+    
+              if (response.ok) {
+                console.log("data (loop): ", response)
+                console.log("groupUuid: ", groupUuid)
+  
+                // Navigate to the group's page
+                localStorage.setItem("groupID", groupId);
+                navigate(`/group/${groupUuid}`);
+              } else {
+                console.error('Failed to add members to group');
+                setError(response.message);
+              }
+            } catch (error) {
+              console.error('Error:', error);
+            } 
+          }
+        } else {
+          console.error('Failed to add members to group');
+          const getError = await response.json();
+          setError(getError.message);
+        }
       } else {
-        console.error('Failed to create group');
+        const response = await createGroup(groupData)
+
+        if (response.ok) {
+          // Access both the 'id' and 'uuid' fields from the response
+          const groupId = response.id;
+          const groupUuid = response.uuid;
+          setGroupUuid(groupUuid);
+  
+          // Log or use the groupId and groupUuid
+          console.log('Group created successfully');
+          console.log('Group ID:', groupId);
+  
+          const groupMembersData: GroupMembers = {
+            GroupID: groupId,
+            UserEmail: email,
+            Role: "Owner"
+          }
+  
+          console.log('groupMembersData:', groupMembersData);
+          localStorage.setItem("groupID", groupId);
+  
+          try {
+            const response = await addGroupMember(groupMembersData)
+  
+            if (response.ok) {
+              console.log("data: ", response)
+              console.log('Group UUID:', groupUuid);
+            } else {
+              console.error('Failed to add members to group');
+              setError(response.message);
+            }
+          } catch (error) {
+            console.error('Error:', error);
+          }
+          
+          // If no users were added to the group, navigate to the group's page
+          if (users.length == 0) {
+            console.log("groupUuid: ", groupUuid)
+  
+            navigate(`/group/${groupUuid}`);
+          }
+  
+          // Add group members
+          for (let i = 0; i < users.length; i++) {
+            const groupMembersData: GroupMembers = {
+              GroupID: groupId,
+              UserEmail: users[i],
+              Role: "Member"
+            }
+  
+            console.log('groupMembersData', i,  ':, ', groupMembersData);
+  
+            try {
+              const response = await addGroupMember(groupMembersData)
+    
+              if (response.ok) {
+                console.log("data (loop): ", response)
+                console.log("groupUuid: ", groupUuid)
+  
+                // Navigate to the group's page
+                localStorage.setItem("groupID", groupId);
+                navigate(`/group/${groupUuid}`);
+              } else {
+                console.error('Failed to add members to group');
+                setError(response.message);
+              }
+            } catch (error) {
+              console.error('Error:', error);
+            } 
+          }
+        } else {
+          console.error('Failed to add members to group');
+          const getError = await response.json();
+          setError(getError.message);
+        }
       }
     } catch (error) {
       console.error('Error:', error);
-    }
+    }   
   };
 
   const handleAddUser = () => {
@@ -77,6 +260,13 @@ export function CreateGroup() {
       <Container size="sm" mt={30}>
         <Title order={2} ta="center" mt="xl" style={styles.title}>Create Group</Title>
         
+        {error && (
+          <Group>
+            <p style={{ color: 'red' }}>{error}</p>
+            <Link to={`/group/${groupUuid}`}>Go to Your Group Page</Link>
+          </Group>
+        )}
+
         <Paper 
           withBorder 
           shadow="md" 
@@ -94,26 +284,16 @@ export function CreateGroup() {
             styles={{ input: styles.input }}
           />
 
-          <Box mt="md">
-            <TextInput
-              label="Add Users"
-              placeholder="Enter user email"
-              value={newUser}
-              onChange={(event) => setNewUser(event.currentTarget.value)}
-              styles={{ input: styles.input }}
-              rightSection={
-                <Button onClick={handleAddUser} size="xs">Add</Button>
-              }
-            />
-            {users.length > 0 && (
-              <Box mt="xs">
-                <Title order={6}>Added Users:</Title>
-                {users.map((user, index) => (
-                  <Box key={index}>{user}</Box>
-                ))}
-              </Box>
-            )}
-          </Box>
+          <Textarea
+            label="Description"
+            placeholder="Enter group description"
+            required
+            mt="md"
+            minRows={4}
+            value={description}
+            onChange={(event) => setDescription(event.currentTarget.value)}
+            styles={{ input: styles.input }}
+          />
 
           <Group grow mt="md">
             <Stack>
@@ -126,27 +306,44 @@ export function CreateGroup() {
                 <Radio value="public" label="Public" />
               </Radio.Group>
             </Stack>
-
-            <Stack>
-              <Title order={6}>Notifications:</Title>
-              <Radio.Group
-                value={notifications}
-                onChange={setNotifications}
-              >
-                <Radio value="on" label="On" />
-                <Radio value="off" label="Off" />
-              </Radio.Group>
-            </Stack>
           </Group>
 
-          <Textarea
-            label="Description"
-            placeholder="Enter group description"
-            required
+          <Box mt="md">
+            <Text size="sm" style={{ fontWeight: 600, marginBottom: 2 }}>Add Users</Text>
+
+            <Group>
+              <TextInput
+                placeholder="Enter user email"
+                value={newUser}
+                onChange={(event) => setNewUser(event.currentTarget.value)}
+                styles={{ input: styles.input }}
+                style={{ width: 550 }}
+              />
+              
+              <Button onClick={handleAddUser} size="xs">Add</Button>
+            </Group>
+
+            {users.length > 0 && (
+              <Box mt="xs">
+                <Title order={6}>Added Users:</Title>
+                {users.map((user, index) => (
+                  <Box key={index}>{user}</Box>
+                ))}
+              </Box>
+            )}
+          </Box>
+
+          <Select
+            label="Select a research grant opportunity (optional)"
+            placeholder="Enter grant"
+            data={grants.map(grant => ({
+              value: grant.ID.toString(),
+              label: grant.Title
+            }))}
+            searchable
+            value={grant}
+            onChange={(value: string | null) => setGrant(value)}
             mt="md"
-            minRows={4}
-            value={description}
-            onChange={(event) => setDescription(event.currentTarget.value)}
             styles={{ input: styles.input }}
           />
 
@@ -156,7 +353,7 @@ export function CreateGroup() {
             style={styles.primaryButton}
             onClick={handleCreateGroup}
           >
-            Create Group and GroupID
+            Create Group
           </Button>
         </Paper>
       </Container>

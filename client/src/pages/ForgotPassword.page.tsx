@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TextInput, Button, Paper, Container, Title } from '@mantine/core';
 import { useNavigate, Link } from 'react-router-dom';
 import { Layout, useStyles } from '@/components/layout';
+import { base } from '@/api/base';
 
 export function ForgotPasswordPage() {
     const styles = useStyles();
@@ -11,7 +12,7 @@ export function ForgotPasswordPage() {
     const [error, setError] = useState('');
     
     const handleSubmit = async () => {
-        const response = await fetch('http://localhost:5000/request-reset', {
+        const response = await fetch(`http://${base}/request-reset`, {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',

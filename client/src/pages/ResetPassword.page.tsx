@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { TextInput, PasswordInput, Container, Title, Paper, Button } from '@mantine/core';
 import { Layout, useStyles } from '@/components/layout';
+import { base } from '@/api/base';
 
 export function ResetPasswordPage() {
   const styles = useStyles();
@@ -22,10 +23,9 @@ export function ResetPasswordPage() {
   const handleCodeSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const response = await fetch('http://localhost:5000/validate-code', {
+    const response = await fetch(`http://${base}/validate-code`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, tempcode }),
@@ -43,10 +43,9 @@ export function ResetPasswordPage() {
   const handlePasswordSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const response = await fetch('http://localhost:5000/reset-password', {
+    const response = await fetch(`http://${base}/reset-password`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
