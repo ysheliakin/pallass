@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Title, TextInput, Textarea, Select, Text, Button, Paper, Group } from '@mantine/core';
-import { Layout, useStyles } from '@/components/layout';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button, Container, Group, Paper, Select, Text, Textarea, TextInput, Title } from '@mantine/core';
 import { base } from '@/api/base';
+import { Layout, useStyles } from '@/components/layout';
+
 
 interface Grants {
   ID: number,
@@ -25,8 +26,7 @@ export function CreateThread() {
   const [grant, setGrant] = useState<string | null>(null);
   const [grants, setGrants] = useState<Grants[]>([]);
 
-  const token = localStorage.getItem('token')
-  const email = localStorage.getItem('email')
+  const email = localStorage.getItem('email');
   const navigate = useNavigate();
 
   // Runs on initialization of the page
@@ -34,24 +34,22 @@ export function CreateThread() {
     const fetchCategoriesAndGrants = async () => {
       try {
         // Get the threads upvoted by the user
-        const getCategoriesAndGrants = await fetch(`http://${base}/getCategoriesAndGrants`, {
+        const getCategoriesAndGrants = await fetch(`${base}/getCategoriesAndGrants`, {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          }
         });
-  
+
         // Check if the response is ok
         if (!getCategoriesAndGrants.ok) {
           throw new Error('Error in the response');
         }
-  
+
         const getCategoriesAndGrantsData = await getCategoriesAndGrants.json();
-        console.log("getCategoriesAndGrantsData: ", getCategoriesAndGrantsData);
+        console.log('getCategoriesAndGrantsData: ', getCategoriesAndGrantsData);
 
         // Get distinct categories
-        const categoriesSet: Set<string> = new Set(getCategoriesAndGrantsData.map((item: CategoryAndGrantData) => item.Category));
+        const categoriesSet: Set<string> = new Set(
+          getCategoriesAndGrantsData.map((item: CategoryAndGrantData) => item.Category)
+        );
         // Get distinct grant IDs
         //const grantsSet: Set<string> = new Set(getCategoriesAndGrantsData.map((item: CategoryAndGrantData) => item.ID));
 
@@ -60,13 +58,13 @@ export function CreateThread() {
           value: category,
           label: category,
         }));
-        
+
         // Step 1: Ensure that uniqueGrants contains Grants objects
         const uniqueGrants = Array.from(
           new Map(
             getCategoriesAndGrantsData.map((item: CategoryAndGrantData) => [
-              `${item.ID}-${item.Title}`, 
-              item
+              `${item.ID}-${item.Title}`,
+              item,
             ]) // This will now correctly deduplicate based on ID-Title
           ).values()
         );
@@ -79,65 +77,56 @@ export function CreateThread() {
         // Step 3: Set the grants state with the distinct data
         setGrants(grantsData);
 
-
         setCategories(distinctCategories);
-      } catch(error) {
-        console.log("No categories created")
+      } catch (error) {
+        console.log('No categories created');
       }
-    }
+    };
 
     fetchCategoriesAndGrants();
-  }, [])
+  }, []);
 
-  const handleCreateThread =  async () => {
+  const handleCreateThread = async () => {
     // Handle thread creation logic here
     const threadData = {
       Title: title,
       Content: description,
       Category: category,
-      UserEmail: email
+      UserEmail: email,
     };
-  
+
     try {
       if (grant != null) {
         // Send a POST request to the backend
-        const response = await fetch(`http://${base}/postThread/${grant}`, {
+        const response = await fetch(`${base}/postThread/${grant}`, {
           method: 'POST', // POST request
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json', // Specify content type as JSON
-          },
           body: JSON.stringify(threadData), // Convert thread data to JSON
         });
-    
+
         // Check if the response is ok (status code 200-299)
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-    
+
         // Get the response data
         const threadIdentifiers = await response.json();
-        localStorage.setItem("threadID", threadIdentifiers.id);
+        localStorage.setItem('threadID', threadIdentifiers.id);
         navigate(`/thread/${threadIdentifiers.uuid}`);
       } else {
         // Send a POST request to the backend
-        const response = await fetch(`http://${base}/postThread`, {
+        const response = await fetch(`${base}/postThread`, {
           method: 'POST', // POST request
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json', // Specify content type as JSON
-          },
           body: JSON.stringify(threadData), // Convert thread data to JSON
         });
-    
+
         // Check if the response is ok (status code 200-299)
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-    
+
         // Get the response data
         const threadIdentifiers = await response.json();
-        localStorage.setItem("threadID", threadIdentifiers.id);
+        localStorage.setItem('threadID', threadIdentifiers.id);
         navigate(`/thread/${threadIdentifiers.uuid}`);
       }
     } catch (error) {

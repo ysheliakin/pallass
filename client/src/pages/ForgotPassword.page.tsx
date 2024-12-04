@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { TextInput, Button, Paper, Container, Title } from '@mantine/core';
-import { useNavigate, Link } from 'react-router-dom';
-import { Layout, useStyles } from '@/components/layout';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button, Container, Paper, TextInput, Title } from '@mantine/core';
 import { base } from '@/api/base';
+import { Layout, useStyles } from '@/components/layout';
+
 
 export function ForgotPasswordPage() {
     const styles = useStyles();
@@ -12,12 +13,9 @@ export function ForgotPasswordPage() {
     const [error, setError] = useState('');
     
     const handleSubmit = async () => {
-        const response = await fetch(`http://${base}/request-reset`, {
-            method: 'POST',
-            headers: {
-            'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email }),
+        const response = await fetch(`${base}/request-reset`, {
+          method: 'POST',
+          body: JSON.stringify({ email }),
         });
 
         if (response.ok) {

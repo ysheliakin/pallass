@@ -2,7 +2,9 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 
@@ -62,7 +64,7 @@ type GroupMember struct {
 
 type JoinGroupRequest struct {
 	GroupID   string `json:"groupid"`
-	UserEmail string `json:"useremail"`  
+	UserEmail string `json:"useremail"`
 }
 
 type User struct {
@@ -82,6 +84,11 @@ type User struct {
 type LogInUser struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type GetUserPayload struct {
+	Email string `json:"email"`
+	Token string `json:"token"`
 }
 
 type Group struct {
@@ -106,6 +113,12 @@ func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries,
 	dbc = dbContext
 }
 
+type PostPayload struct {
+	UserID  int32  `json:"userId"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
 // FlagController handles flag-related actions
 func FlagController(c echo.Context) error {
 	return c.String(http.StatusOK, "Flag added")
@@ -127,4 +140,51 @@ func GetFundingOpportunities(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, results)
+}
+
+func GetPost(c echo.Context) error {
+	postID, _ := strconv.Atoi(c.Param("postID"))
+	fmt.Println("GetPost: ", postID)
+
+	post, err := sql.GetPost(dbc, int32(postID))
+	if err != nil {
+		if err.Error() == "no rows in result set" {
+			return c.JSON(http.StatusNotFound, "Post not found")
+		}
+		return c.JSON(http.StatusInternalServerError, "Error retrieving the post")
+	}
+	return c.JSON(http.StatusOK, post)
+}
+
+func GetUserPosts(c echo.Context) error {
+	userID, _ := strconv.Atoi(c.Param("userID"))
+	fmt.Println("GetUserPosts: ", userID)
+
+	posts, err := sql.GetUserPosts(dbc, int32(userID))
+	if err != nil {
+		if err.Error() == "no rows in result set" {
+			return c.JSON(http.StatusNotFound, "Post not found")
+		}
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, posts)
+}
+
+func CreatePost(c echo.Context) error {
+	var payload PostPayload
+	if err := c.Bind(&payload); err != nil {
+		e.Logger.Error("invalid body")
+		return c.JSON(http.StatusBadRequest, ErrorPayload{Error: "could not parse body"})
+	}
+	params := queries.InsertPostParams{
+		UserID:  payload.UserID,
+		Title:   payload.Title,
+		Content: payload.Content,
+	}
+	result, err := sql.InsertPost(dbc, params)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
+	}
+	return c.JSON(http.StatusCreated, result)
 }

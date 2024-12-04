@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"os"
 	"sync"
 
@@ -94,10 +92,14 @@ func main() {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	// e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-	// 	AllowOrigins: []string{"http://localhost:5137", "https://ysheliakin.github.io/pallass"},
-	// }))
-	e.Use(middleware.CORS()) // TODO: might want to make this stricter
+	e.Use(middleware.CORS())
+	e.OPTIONS("/*", func(c echo.Context) error {
+		c.Response().Header().Set("Access-Control-Allow-Origin", "https://ysheliakin.github.io")
+		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Response().Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
+		return c.NoContent(http.StatusOK)
+	})
 
 	/* Public routes */
 	// Get handlers
@@ -121,7 +123,9 @@ func main() {
 	/* Private routes requiring bearer token */
 	// Get handlers
 	authGroup.GET("/playlist", controller.PlaylistController)
-	//authGroup.GET("/user", controller.GetUserController)
+	authGroup.GET("/user", controller.GetUser)
+	authGroup.GET("/post/:postID", controller.GetPost)
+	authGroup.GET("/post/user/:userID", controller.GetUserPosts)
 	authGroup.GET("/getThreadsSortedByMostUpvotes", controller.GetThreadsSortedByMostUpvotes)
 	authGroup.GET("/getThreadsSortedByLeastUpvotes", controller.GetThreadsSortedByLeastUpvotes)
 	authGroup.GET("/getUpvotedThreads/:email", controller.GetUpvotedThreadsController)
@@ -147,16 +151,14 @@ func main() {
 	authGroup.POST("/flag", controller.FlagController)
 	authGroup.POST("/threads/upvote/:threadID", controller.UpvoteThread)
 	authGroup.POST("/downvote", controller.DownvoteController)
-	authGroup.POST("/post", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Post created")
-	})
+	authGroup.POST("/post", controller.CreatePost)
 	authGroup.POST("/flag", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Flag added")
 	})
 	authGroup.POST("/downvote", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Downvoted")
 	})
-	authGroup.POST("/user", controller.UserController)
+	authGroup.POST("/user", controller.GetUser)
 	authGroup.POST("/funding", controller.AddFundingOpportunity)
 	authGroup.POST("/getUserName", controller.GetUserName)
 	authGroup.POST("/storeThreadMessage", controller.StoreThreadMessage)
@@ -202,24 +204,6 @@ func main() {
 	e.Logger.Fatal(e.Start(":5000"))
 }
 
-// Reverse Proxy for Angular
-func getOrigin() *url.URL {
-	origin, _ := url.Parse("http://localhost:4200")
-	return origin
-}
-
-var origin = getOrigin()
-
-var director = func(req *http.Request) {
-	req.Header.Add("X-Forwarded-Host", req.Host)
-	req.Header.Add("X-Origin-Host", origin.Host)
-	req.URL.Scheme = "http"
-	req.URL.Host = origin.Host
-}
-
-// AngularHandler loads Angular assets
-var AngularHandler = &httputil.ReverseProxy{Director: director}
-
 func webSocketThread(c echo.Context) error {
 	fmt.Println("webSocketThread")
 
@@ -254,22 +238,22 @@ func webSocketThread(c echo.Context) error {
 				Type:    "EDIT_MESSAGE",
 			}
 
-            // Broadcast the edit message to all clients
-            broadcastThreadMessage <- editMessage
+			// Broadcast the edit message to all clients
+			broadcastThreadMessage <- editMessage
 		} else if msg.Type == "DELETE_MESSAGE" {
 			// If the message is of type DELETE_MESSAGE, create a delete message with the ID and Type fields
 			deleteMessage := Message{
-				ID:   msg.ID,
-				Type: "DELETE_MESSAGE",
+				ID:            msg.ID,
+				Type:          "DELETE_MESSAGE",
 				ReplyingMsgID: msg.ReplyingMsgID,
-            }
+			}
 
-            // Broadcast the delete message to all clients
-            broadcastThreadMessage <- deleteMessage
-        } else {
-            // Broadcast the normal messages
-            broadcastThreadMessage <- msg
-        }
+			// Broadcast the delete message to all clients
+			broadcastThreadMessage <- deleteMessage
+		} else {
+			// Broadcast the normal messages
+			broadcastThreadMessage <- msg
+		}
 	}
 
 	return nil
@@ -304,29 +288,29 @@ func webSocketGroup(c echo.Context) error {
 		// If the message is of type EDIT_MESSAGE, create an edit message with the ID, Content, and Type fields
 		if msg.Type == "EDIT_MESSAGE" {
 			editMessage := GroupMessage{
-                ID: msg.ID,
+				ID:      msg.ID,
 				Content: msg.Content,
-				Type: "EDIT_MESSAGE",
-            }
+				Type:    "EDIT_MESSAGE",
+			}
 
 			fmt.Println("editMessage: ", editMessage)
 
-            // Broadcast the edit message to all clients
-            broadcastGroupMessage <- editMessage
+			// Broadcast the edit message to all clients
+			broadcastGroupMessage <- editMessage
 		} else if msg.Type == "DELETE_MESSAGE" {
 			// If the message is of type DELETE_MESSAGE, create a delete message with the ID and Type fields
-            deleteMessage := GroupMessage{
-                ID: msg.ID,
-				Type: "DELETE_MESSAGE",
+			deleteMessage := GroupMessage{
+				ID:            msg.ID,
+				Type:          "DELETE_MESSAGE",
 				ReplyingMsgID: msg.ReplyingMsgID,
-            }
+			}
 
-            // Broadcast the delete message to all clients
-            broadcastGroupMessage <- deleteMessage
-        } else {
-            // Broadcast the normal messages
-            broadcastGroupMessage <- msg
-        }
+			// Broadcast the delete message to all clients
+			broadcastGroupMessage <- deleteMessage
+		} else {
+			// Broadcast the normal messages
+			broadcastGroupMessage <- msg
+		}
 	}
 
 	return nil
@@ -335,36 +319,34 @@ func webSocketGroup(c echo.Context) error {
 func handleMessages() {
 	for {
 		select {
-			case msg := <-broadcastThreadMessage:
-				mu.Lock()
-				// Go through each connected client and send the message
-				for client := range clients {
-					err := client.WriteJSON(msg)
-					// If an error occurs, close the client connection and remove the client from the list of connected clients
-					if err != nil {
-						client.Close()
-						delete(clients, client)
-					}
+		case msg := <-broadcastThreadMessage:
+			mu.Lock()
+			// Go through each connected client and send the message
+			for client := range clients {
+				err := client.WriteJSON(msg)
+				// If an error occurs, close the client connection and remove the client from the list of connected clients
+				if err != nil {
+					client.Close()
+					delete(clients, client)
 				}
-				mu.Unlock()
+			}
+			mu.Unlock()
 
-			case msg := <-broadcastGroupMessage:
-				mu.Lock()
-				// Go through each connected client and send the message
-				for client := range clients {
-					err := client.WriteJSON(msg)
-					// If an error occurs, close the client connection and remove the client from the list of connected clients
-					if err != nil {
-						client.Close()
-						delete(clients, client)
-					}
+		case msg := <-broadcastGroupMessage:
+			mu.Lock()
+			// Go through each connected client and send the message
+			for client := range clients {
+				err := client.WriteJSON(msg)
+				// If an error occurs, close the client connection and remove the client from the list of connected clients
+				if err != nil {
+					client.Close()
+					delete(clients, client)
 				}
-				mu.Unlock()
+			}
+			mu.Unlock()
 		}
 	}
 }
-
-
 
 // func getNotifications(c echo.Context) error {
 // 	userID := c.Param("user_id")

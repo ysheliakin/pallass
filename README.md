@@ -28,12 +28,6 @@ Then, connect in your database client on localhost:5432 using the credentials.
 ##### To create a new empty SQL migration file
 
 ```bash
-goose -dir migrations postgres [MIGRATION_NAME] sql
-```
-
-For Windows users, use this command instead:
-
-```bash
 goose -dir migrations create [MIGRATION_NAME] sql
 ```
 

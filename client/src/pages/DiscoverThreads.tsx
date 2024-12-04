@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Title, TextInput, Checkbox, Radio, Paper, Grid, Card, Text, Button, Menu } from '@mantine/core';
-import { Layout, useStyles } from '@/components/layout';
-import { Link } from 'react-router-dom';
-import { base } from '@/api/base';
+import React, { useEffect, useState } from 'react';
 import { string } from 'prop-types';
+import { Link } from 'react-router-dom';
+import { Button, Card, Checkbox, Container, Grid, Menu, Paper, Radio, Text, TextInput, Title } from '@mantine/core';
+import { base } from '@/api/base';
+import { Layout, useStyles } from '@/components/layout';
+
 
 interface Threads {
   ID: number, 
@@ -34,18 +35,12 @@ export function DiscoverThreads() {
   const [threadsData, setThreadsData] = useState<Threads[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
 
-  const token = localStorage.getItem('token')
-
   useEffect(() => {
     const fetchThreadData = async () => {
-      const threadsByMostUpvotes = await fetch(`http://${base}/getThreadsSortedByMostUpvotes`, {
+      const threadsByMostUpvotes = await fetch(`${base}/getThreadsSortedByMostUpvotes`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        }
       });
-  
+
       // Check if the response is ok
       if (!threadsByMostUpvotes.ok) {
         throw new Error('Error in the response');
@@ -53,30 +48,32 @@ export function DiscoverThreads() {
 
       const threadsByMostUpvotesData = await threadsByMostUpvotes.json();
       setThreadsData(threadsByMostUpvotesData);
-    }
+    };
 
     fetchThreadData();
-  }, [])
+  }, []);
 
   let categories: string[] = [];
-  
+
   if (threadsData != null) {
     // Get unique categories from threads
-    categories = [...new Set(threadsData.map(thread => thread.Category))];
+    categories = [...new Set(threadsData.map((thread) => thread.Category))];
   } else {
-    categories = []
+    categories = [];
   }
 
-  const handleViewThread = (threadID: number) => {{
-    localStorage.setItem("threadID", threadID.toString());
-  }}
+  const handleViewThread = (threadID: number) => {
+    {
+      localStorage.setItem('threadID', threadID.toString());
+    }
+  };
 
   // Handle category selection
   const handleCategorySelect = async (category: string) => {
     // If "None" is selected, set selectedCategory to an empty string
     // Otherwise, set selectedCategory to the selected category
     if (category === 'None') {
-      setSelectedCategory('');    
+      setSelectedCategory('');
     } else {
       setSelectedCategory(category);
     }
@@ -87,132 +84,108 @@ export function DiscoverThreads() {
     // If "Most upvoted" is chosen, set sortBy to 'mostUpvoted'
     // Otherwise, set sortBy to 'leastUpvoted'
     if (sortByUpvotes == 'mostUpvoted') {
-      setSortBy('mostUpvoted')
+      setSortBy('mostUpvoted');
     } else {
-      setSortBy('leastUpvoted')
+      setSortBy('leastUpvoted');
     }
   };
 
   const handleFilter = async (title: string, category: string, sortByUpvotes: string) => {
-    console.log("threadName: ", threadName)
+    console.log('threadName: ', threadName);
     if (threadName != '') {
       // Display the threads, sorted by the most upvotes, whose title contains the input entered by the user
       if (sortByUpvotes == 'mostUpvoted') {
-        const response = await fetch(`http://${base}/getThreadsByNameSortedByMostUpvotes`, {
+        const response = await fetch(`${base}/getThreadsByNameSortedByMostUpvotes`, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify({ title }),
         });
-    
+
         // Check if the response is ok
         if (!response.ok) {
           throw new Error('Error in the response');
         }
-  
+
         const responseData = await response.json();
-        console.log("responseData: ", responseData)
+        console.log('responseData: ', responseData);
         setThreadsData(responseData);
       } else {
         // Display the threads, sorted by the least upvotes, whose title contains the input entered by the user
-        const response = await fetch(`http://${base}/getThreadsByNameSortedByLeastUpvotes`, {
+        const response = await fetch(`${base}/getThreadsByNameSortedByLeastUpvotes`, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify({ title }),
         });
-    
+
         // Check if the response is ok
         if (!response.ok) {
           throw new Error('Error in the response');
         }
-  
+
         const responseData = await response.json();
-        console.log("responseData: ", responseData)
+        console.log('responseData: ', responseData);
         setThreadsData(responseData);
       }
     } else {
       if (sortByUpvotes == 'mostUpvoted') {
         // Show all of the threads sorted by the most upvotes
         if (category == '') {
-          const response = await fetch(`http://${base}/getThreadsSortedByMostUpvotes`, {
+          const response = await fetch(`${base}/getThreadsSortedByMostUpvotes`, {
             method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            }
           });
-      
+
           // Check if the response is ok
           if (!response.ok) {
             throw new Error('Error in the response');
           }
-    
+
           const responseData = await response.json();
           setThreadsData(responseData);
         } else {
           // Show all of the threads of a chosen category sorted by the most upvotes
-          const response = await fetch(`http://${base}/getThreadsByCategorySortedByMostUpvotes`, {
+          const response = await fetch(`${base}/getThreadsByCategorySortedByMostUpvotes`, {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify({ category }),
           });
-      
+
           // Check if the response is ok
           if (!response.ok) {
             throw new Error('Error in the response');
           }
-    
+
           const responseData = await response.json();
           setThreadsData(responseData);
         }
       } else {
         // Show all of the threads sorted by the least upvotes
         if (category == '') {
-          const response = await fetch(`http://${base}/getThreadsSortedByLeastUpvotes`, {
+          const response = await fetch(`${base}/getThreadsSortedByLeastUpvotes`, {
             method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            }
           });
-      
+
           // Check if the response is ok
           if (!response.ok) {
             throw new Error('Error in the response');
           }
-    
+
           const responseData = await response.json();
           setThreadsData(responseData);
         } else {
           // Show all of the threads of a chosen category sorted by the least upvotes
-          const response = await fetch(`http://${base}/getThreadsByCategorySortedByLeastUpvotes`, {
+          const response = await fetch(`${base}/getThreadsByCategorySortedByLeastUpvotes`, {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify({ category }),
           });
-      
+
           // Check if the response is ok
           if (!response.ok) {
             throw new Error('Error in the response');
           }
-    
+
           const responseData = await response.json();
           setThreadsData(responseData);
         }
       }
     }
-  }
+  };
 
   return (
     <Layout>

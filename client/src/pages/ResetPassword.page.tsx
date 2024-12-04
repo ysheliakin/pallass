@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { TextInput, PasswordInput, Container, Title, Paper, Button } from '@mantine/core';
-import { Layout, useStyles } from '@/components/layout';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button, Container, Paper, PasswordInput, TextInput, Title } from '@mantine/core';
 import { base } from '@/api/base';
+import { Layout, useStyles } from '@/components/layout';
+
 
 export function ResetPasswordPage() {
   const styles = useStyles();
@@ -13,7 +14,6 @@ export function ResetPasswordPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const email = localStorage.getItem('email');
-  const token = localStorage.getItem('token');
 
   if (email == null) {
     console.log("No email retrieved")
@@ -23,42 +23,36 @@ export function ResetPasswordPage() {
   const handleCodeSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const response = await fetch(`http://${base}/validate-code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, tempcode }),
+    const response = await fetch(`${base}/validate-code`, {
+      method: 'POST',
+      body: JSON.stringify({ email, tempcode }),
     });
-    
+
     if (response.ok) {
-        setError('');
-        setDisplay('password');
+      setError('');
+      setDisplay('password');
     } else {
-        const errorData = await response.json();
-        setError(errorData.message)
+      const errorData = await response.json();
+      setError(errorData.message);
     }
-  }
+  };
 
   const handlePasswordSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const response = await fetch(`http://${base}/reset-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+    const response = await fetch(`${base}/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
     });
-    
+
     if (response.ok) {
-        setError('');
-        navigate('/login');
+      setError('');
+      navigate('/login');
     } else {
-        const errorData = await response.json();
-        setError(errorData.message)
+      const errorData = await response.json();
+      setError(errorData.message);
     }
-  }
+  };
 
   const handleBackToLogin = () => {
     navigate('/login')

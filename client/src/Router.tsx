@@ -5,19 +5,20 @@ import { CreateGroup } from './pages/CreateGroup.page';
 import { CreatePostPage } from './pages/CreatePost.page';
 import { CreateThread } from './pages/CreateThread';
 import { DiscoverThreads } from './pages/DiscoverThreads';
+import { EditProfilePage } from './pages/EditProfile.page';
 import { ForgotPasswordPage } from './pages/ForgotPassword.page';
 import { FundingOpportunities } from './pages/FundingOpportunities.page';
+import { GroupView } from './pages/GroupView';
 import { HomePage } from './pages/Home.page';
 import { JoinGroup } from './pages/JoinGroup.page';
 import { LoggedInHomePage } from './pages/LoggedInHome.page';
 import { LoginPage } from './pages/Login.page';
-import { EditProfilePage } from './pages/EditProfile.page'
 import { PostPage } from './pages/Post.page';
 import { ResetPasswordPage } from './pages/ResetPassword.page';
 import { SignUpPage } from './pages/SignUp.page';
 import { ThreadView } from './pages/ThreadView';
-import { GroupView } from './pages/GroupView';
 import ProtectedRoute from './ProtectedRoute';
+
 
 const router = createHashRouter([
   {
@@ -28,23 +29,23 @@ const router = createHashRouter([
         path: '/',
         element: <HomePage />,
       },
-      {
-        path: '/post/create',
-        element: (
-          <ProtectedRoute>
-            <CreatePostPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: '/post/:id',
-        element: (
-          <ProtectedRoute>
-            <PostPage />
-          </ProtectedRoute>
-        ),
-      },
     ],
+  },
+  {
+    path: '/post/create',
+    element: (
+      <ProtectedRoute>
+        <CreatePostPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/post/:id',
+    element: (
+      <ProtectedRoute>
+        <PostPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/signup',

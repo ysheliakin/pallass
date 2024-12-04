@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Container, Title, TextInput, Radio, Button, Paper, Stack, Grid, Card, Text } from '@mantine/core';
-import { Layout, useStyles } from '@/components/layout';
 import { Link, useNavigate } from 'react-router-dom';
+import { Button, Card, Container, Grid, Paper, Radio, Stack, Text, TextInput, Title } from '@mantine/core';
 import { base } from '@/api/base';
+import { Layout, useStyles } from '@/components/layout';
+
 
 interface Group {
   ID: number,
@@ -24,16 +25,11 @@ export function JoinGroup() {
   const [nullResponse, setNullResponse] = useState(false);
   //const [successMessage, setSuccessMessage] = useState("")
 
-  const token = localStorage.getItem('token')
-  const email = localStorage.getItem('email')
+  const email = localStorage.getItem('email');
 
-  const handleSearchGroup = async(name: string) => {
-    const response = await fetch(`http://${base}/getGroupsByInput`, {
+  const handleSearchGroup = async (name: string) => {
+    const response = await fetch(`${base}/getGroupsByInput`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ name }),
     });
 
@@ -43,26 +39,22 @@ export function JoinGroup() {
     }
 
     const responseData = await response.json();
-    console.log("responseData: ", responseData)
+    console.log('responseData: ', responseData);
     setGroups(responseData);
 
-    if (responseData != null) { 
-      setNullResponse(false)
+    if (responseData != null) {
+      setNullResponse(false);
     } else {
-      setNullResponse(true)
+      setNullResponse(true);
     }
-  }
+  };
 
-  const joiningGroup = async(groupID: number, groupUuid: string, useremail: string) => {
+  const joiningGroup = async (groupID: number, groupUuid: string, useremail: string) => {
     const groupid = groupID.toString();
-    const role = "Member"
+    const role = 'Member';
 
-    const response = await fetch(`http://${base}/addgroupmember`, {
+    const response = await fetch(`${base}/addgroupmember`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ groupid, useremail, role }),
     });
 
@@ -71,19 +63,15 @@ export function JoinGroup() {
       throw new Error('Error in the response');
     }
 
-    localStorage.setItem("groupID", groupid);
+    localStorage.setItem('groupID', groupid);
     navigate(`/group/${groupUuid}`);
-  }
+  };
 
-  const requestJoinGroup = async(groupID: number, useremail: string) => {
+  const requestJoinGroup = async (groupID: number, useremail: string) => {
     const groupid = groupID.toString();
 
-    const response = await fetch(`http://${base}/requestJoinGroup`, {
+    const response = await fetch(`${base}/requestJoinGroup`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ groupid, useremail }),
     });
 
@@ -94,8 +82,8 @@ export function JoinGroup() {
     }
 
     //setSuccessMessage(responseMessage)
-    handleSearchGroup(userInput)
-  }
+    handleSearchGroup(userInput);
+  };
 
   return (
     <Layout>
