@@ -124,6 +124,8 @@ func main() {
 	// Get handlers
 	authGroup.GET("/playlist", controller.PlaylistController)
 	authGroup.GET("/user", controller.GetUser)
+	authGroup.GET("/post/:postID", controller.GetPost)
+	authGroup.GET("/post/user/:userID", controller.GetUserPosts)
 	authGroup.GET("/getThreadsSortedByMostUpvotes", controller.GetThreadsSortedByMostUpvotes)
 	authGroup.GET("/getThreadsSortedByLeastUpvotes", controller.GetThreadsSortedByLeastUpvotes)
 	authGroup.GET("/getUpvotedThreads/:email", controller.GetUpvotedThreadsController)
@@ -147,9 +149,7 @@ func main() {
 	authGroup.POST("/flag", controller.FlagController)
 	authGroup.POST("/threads/upvote/:threadID", controller.UpvoteThread)
 	authGroup.POST("/downvote", controller.DownvoteController)
-	authGroup.POST("/post", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Post created")
-	})
+	authGroup.POST("/post", controller.CreatePost)
 	authGroup.POST("/flag", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Flag added")
 	})

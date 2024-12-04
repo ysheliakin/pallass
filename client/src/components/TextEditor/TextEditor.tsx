@@ -54,7 +54,7 @@ export function TextEditor(props: TextEditorProps) {
         </RichTextEditor.ControlsGroup>
       </RichTextEditor.Toolbar>
 
-      <RichTextEditor.Content style={{ minHeight: props.minHeight || '300px' }} />
+      <RichTextEditor.Content style={{ minHeight: props.minHeight || '300px', backgroundColor: "white" }} />
     </RichTextEditor>
   );
 }
