@@ -3,6 +3,7 @@ import { Container, Group, Image, Paper, Stack, Title } from '@mantine/core';
 import logo from '../../logo.svg';
 import { Layout, useStyles } from '../components/layout';
 import fundingImage from '../images/funding_example.png';
+import grantImage from '../images/grant_example.svg';
 import groupImage from '../images/group_example.svg';
 import threadImage from '../images/thread_example.svg';
 
@@ -49,7 +50,7 @@ export function HomePage() {
               <Image
                 src={fundingImage}
                 alt="Funding opportunity example"
-                width={300}
+                width={417}
                 height={200}
               />
             </Group>

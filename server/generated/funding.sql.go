@@ -78,3 +78,165 @@ func (q *Queries) GetAllFundingOpportunities(ctx context.Context) ([]FundingOppo
 	}
 	return items, nil
 }
+
+const getFundingOpportunitiesByNameSortedByHighestAmount = `-- name: GetFundingOpportunitiesByNameSortedByHighestAmount :many
+SELECT id, title, description, target_amount, link, created_on, deadline_date
+FROM funding_opportunities
+WHERE funding_opportunities.title ILIKE $1 AND deadline_date BETWEEN $2 AND $3
+ORDER BY target_amount DESC
+`
+
+type GetFundingOpportunitiesByNameSortedByHighestAmountParams struct {
+	Title          string
+	DeadlineDate   pgtype.Date
+	DeadlineDate_2 pgtype.Date
+}
+
+func (q *Queries) GetFundingOpportunitiesByNameSortedByHighestAmount(ctx context.Context, arg GetFundingOpportunitiesByNameSortedByHighestAmountParams) ([]FundingOpportunity, error) {
+	rows, err := q.db.Query(ctx, getFundingOpportunitiesByNameSortedByHighestAmount, arg.Title, arg.DeadlineDate, arg.DeadlineDate_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FundingOpportunity
+	for rows.Next() {
+		var i FundingOpportunity
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.TargetAmount,
+			&i.Link,
+			&i.CreatedOn,
+			&i.DeadlineDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getFundingOpportunitiesByNameSortedByLowestAmount = `-- name: GetFundingOpportunitiesByNameSortedByLowestAmount :many
+SELECT id, title, description, target_amount, link, created_on, deadline_date
+FROM funding_opportunities
+WHERE funding_opportunities.title ILIKE $1 AND deadline_date BETWEEN $2 AND $3
+ORDER BY target_amount ASC
+`
+
+type GetFundingOpportunitiesByNameSortedByLowestAmountParams struct {
+	Title          string
+	DeadlineDate   pgtype.Date
+	DeadlineDate_2 pgtype.Date
+}
+
+func (q *Queries) GetFundingOpportunitiesByNameSortedByLowestAmount(ctx context.Context, arg GetFundingOpportunitiesByNameSortedByLowestAmountParams) ([]FundingOpportunity, error) {
+	rows, err := q.db.Query(ctx, getFundingOpportunitiesByNameSortedByLowestAmount, arg.Title, arg.DeadlineDate, arg.DeadlineDate_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FundingOpportunity
+	for rows.Next() {
+		var i FundingOpportunity
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.TargetAmount,
+			&i.Link,
+			&i.CreatedOn,
+			&i.DeadlineDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getFundingOpportunitiesSortedByHighestAmount = `-- name: GetFundingOpportunitiesSortedByHighestAmount :many
+SELECT id, title, description, target_amount, link, created_on, deadline_date
+FROM funding_opportunities
+WHERE deadline_date BETWEEN $1 AND $2
+ORDER BY target_amount DESC
+`
+
+type GetFundingOpportunitiesSortedByHighestAmountParams struct {
+	DeadlineDate   pgtype.Date
+	DeadlineDate_2 pgtype.Date
+}
+
+func (q *Queries) GetFundingOpportunitiesSortedByHighestAmount(ctx context.Context, arg GetFundingOpportunitiesSortedByHighestAmountParams) ([]FundingOpportunity, error) {
+	rows, err := q.db.Query(ctx, getFundingOpportunitiesSortedByHighestAmount, arg.DeadlineDate, arg.DeadlineDate_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FundingOpportunity
+	for rows.Next() {
+		var i FundingOpportunity
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.TargetAmount,
+			&i.Link,
+			&i.CreatedOn,
+			&i.DeadlineDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getFundingOpportunitiesSortedByLowestAmount = `-- name: GetFundingOpportunitiesSortedByLowestAmount :many
+SELECT id, title, description, target_amount, link, created_on, deadline_date
+FROM funding_opportunities
+WHERE deadline_date BETWEEN $1 AND $2
+ORDER BY target_amount ASC
+`
+
+type GetFundingOpportunitiesSortedByLowestAmountParams struct {
+	DeadlineDate   pgtype.Date
+	DeadlineDate_2 pgtype.Date
+}
+
+func (q *Queries) GetFundingOpportunitiesSortedByLowestAmount(ctx context.Context, arg GetFundingOpportunitiesSortedByLowestAmountParams) ([]FundingOpportunity, error) {
+	rows, err := q.db.Query(ctx, getFundingOpportunitiesSortedByLowestAmount, arg.DeadlineDate, arg.DeadlineDate_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FundingOpportunity
+	for rows.Next() {
+		var i FundingOpportunity
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.TargetAmount,
+			&i.Link,
+			&i.CreatedOn,
+			&i.DeadlineDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

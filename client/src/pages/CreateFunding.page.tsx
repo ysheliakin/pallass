@@ -38,6 +38,10 @@ export function CreateFunding() {
   if (success) {
     return (
       <Layout>
+        <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+          &lt; Back to Your Dashboard
+        </Link>
+        
         <Alert variant="light" color="green" title="Confirmation" icon={<IconCheck />}>
           Added successfully!
         </Alert>

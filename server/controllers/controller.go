@@ -99,6 +99,14 @@ type Group struct {
 	Notifications bool   `json:"notifications"`
 }
 
+type FundingOpportunity struct {
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	TargetAmount string `json:"target_amount"`
+	Link         string `json:"link"`
+	DeadlineDate string `json:"deadline_date"`
+}
+
 func SetGlobalContext(echoInstance *echo.Echo, queriesInstance *queries.Queries, dbContext context.Context) {
 	e = echoInstance
 	sql = queriesInstance
@@ -124,27 +132,6 @@ func PlaylistController(c echo.Context) error {
 // UpdateMessageController handles message updates
 func UpdateMessageController(c echo.Context) error {
 	return c.String(http.StatusOK, "Message updated")
-}
-
-func AddFundingOpportunity(c echo.Context) error {
-	payload := GetBody(c)
-	if payload == nil {
-		e.Logger.Error("body is nil")
-		return c.JSON(http.StatusBadRequest, ErrorPayload{Error: "could not parse body"})
-	}
-	params := queries.AddFundingOpportunityParams{
-		Title:        payload["title"].(string),
-		Description:  payload["description"].(string),
-		TargetAmount: Numeric(payload["target_amount"].(float64)),
-		Link:         Text(payload["link"].(string)),
-		DeadlineDate: Date(payload["deadline_date"].(string)),
-	}
-	result, err := sql.AddFundingOpportunity(dbc, params)
-	if err != nil {
-		e.Logger.Error(err)
-		return c.JSON(http.StatusInternalServerError, ErrorPayload{Error: err.Error()})
-	}
-	return c.JSON(http.StatusCreated, result)
 }
 
 func GetFundingOpportunities(c echo.Context) error {
