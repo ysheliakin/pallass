@@ -89,17 +89,23 @@ func main() {
 
 	controller.SetGlobalContext(e, sql, dbc)
 
+	origin := os.Getenv("ORIGIN")
+	if origin == "" {
+		origin = "*" // the ORGIN env var is set in Prod
+	}
+	corsConfig := middleware.CORSConfig{
+		AllowOrigins:     []string{origin},
+		AllowMethods:     []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
+		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowCredentials: true,
+		MaxAge:           86400, // Cache preflight response for 1 day
+	}
+	fmt.Println("origin is", origin)
+
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
-	e.OPTIONS("/*", func(c echo.Context) error {
-		c.Response().Header().Set("Access-Control-Allow-Origin", "https://ysheliakin.github.io")
-		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Response().Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
-		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
-		return c.NoContent(http.StatusOK)
-	})
+	e.Use(middleware.CORSWithConfig(corsConfig))
 
 	/* Public routes */
 	// Get handlers
@@ -117,7 +123,7 @@ func main() {
 	authGroup := e.Group("")
 	authGroup.Use(middleware.Logger())
 	authGroup.Use(middleware.Recover())
-	authGroup.Use(middleware.CORS()) // TODO: might want to make this stricter
+	authGroup.Use(middleware.CORSWithConfig(corsConfig))
 	authGroup.Use(controller.Authenticate)
 
 	/* Private routes requiring bearer token */
