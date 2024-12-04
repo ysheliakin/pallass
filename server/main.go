@@ -12,7 +12,6 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5"
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
@@ -62,14 +61,6 @@ type GroupMessage struct {
 
 type RegisterResponse struct {
 	Message string `json:"message"`
-}
-
-func init() {
-	// Load the environment variables
-	err := godotenv.Load()
-	if err != nil {
-		e.Logger.Fatal(err)
-	}
 }
 
 func main() {
