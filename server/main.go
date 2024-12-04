@@ -80,23 +80,10 @@ func main() {
 
 	controller.SetGlobalContext(e, sql, dbc)
 
-	origin := os.Getenv("ORIGIN")
-	if origin == "" {
-		origin = "*" // the ORGIN env var is set in Prod
-	}
-	corsConfig := middleware.CORSConfig{
-		AllowOrigins:     []string{origin},
-		AllowMethods:     []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
-		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
-		AllowCredentials: true,
-		MaxAge:           86400, // Cache preflight response for 1 day
-	}
-	fmt.Println("origin is", origin)
-
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.Use(middleware.CORSWithConfig(corsConfig))
+	e.Use(middleware.CORS())
 
 	/* Public routes */
 	// Get handlers
@@ -114,7 +101,6 @@ func main() {
 	authGroup := e.Group("")
 	authGroup.Use(middleware.Logger())
 	authGroup.Use(middleware.Recover())
-	authGroup.Use(middleware.CORSWithConfig(corsConfig))
 	authGroup.Use(controller.Authenticate)
 
 	/* Private routes requiring bearer token */
