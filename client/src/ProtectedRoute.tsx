@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { Loader } from '@mantine/core';
 import { getUser } from './api/user';
 import { useAppContext } from './app-context';
+import { Layout } from './components/layout';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, setUser } = useAppContext();
@@ -28,7 +30,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }, [user, setUser]);
 
   if (loading) {
-    return <h3>Loading...</h3>;
+    return (
+      <Layout>
+        <Loader />
+      </Layout>
+    );
   }
 
   // Redirect to login if no user is found

@@ -1,11 +1,24 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { EditorConsumer } from '@tiptap/react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Box, Button, Card, Container, Group, Image, Title as MantineTitle, Modal, Paper, Text, Textarea, Title } from '@mantine/core';
+import {
+  Box,
+  Button,
+  Card,
+  Container,
+  Group,
+  Image,
+  Loader,
+  Title as MantineTitle,
+  Modal,
+  Paper,
+  Text,
+  Textarea,
+  Title,
+} from '@mantine/core';
 import { base } from '@/api/base';
 import { Layout, useStyles } from '@/components/layout';
 import { FundingOpportunities } from './FundingOpportunities.page';
-
 
 interface User {
   id: string;
@@ -23,7 +36,7 @@ interface Paper {
   title: string;
   Author: string;
   organization: string;
-  paperLink: string; 
+  paperLink: string;
 }
 
 interface Reply {
@@ -38,40 +51,40 @@ interface Message extends Reply {
 }
 
 interface Message {
-  id: string,
-  sender: string,
-  content: string,
-  date: string,
-  type: string,
-  reply: string,
-  replyingmsgid: string,
-  replyingmsgsender: string,
-  replyingmsgcontent: string,
-  replyingmsgdate: string,
+  id: string;
+  sender: string;
+  content: string;
+  date: string;
+  type: string;
+  reply: string;
+  replyingmsgid: string;
+  replyingmsgsender: string;
+  replyingmsgcontent: string;
+  replyingmsgdate: string;
 }
 
 interface Thread {
-  ThreadID: string,
-  ThreadTitle: string,
-  ThreadContent: string,
-  ThreadCategory: string,
-  UpvoteCount: string,
-  ThreadUuid: string,
-  ThreadCreatedAt: string,
-  ThreadUserEmail: string,
-  MessageID: string,
-  MessageFirstname: string,
-  MessageLastname: string,
-  MessageContent: string,
-  MessageCreatedAt: string,
-  ReplyID: string,
-  ReplyFirstname: string,
-  ReplyLastname: string,
-  ReplyContent: string,
-  ReplyCreatedAt: string,
-  UserFullname: string,
-  UpvoteEmails: Array<String>,
-  FundingOpportunityTitle: string,
+  ThreadID: string;
+  ThreadTitle: string;
+  ThreadContent: string;
+  ThreadCategory: string;
+  UpvoteCount: string;
+  ThreadUuid: string;
+  ThreadCreatedAt: string;
+  ThreadUserEmail: string;
+  MessageID: string;
+  MessageFirstname: string;
+  MessageLastname: string;
+  MessageContent: string;
+  MessageCreatedAt: string;
+  ReplyID: string;
+  ReplyFirstname: string;
+  ReplyLastname: string;
+  ReplyContent: string;
+  ReplyCreatedAt: string;
+  UserFullname: string;
+  UpvoteEmails: Array<String>;
+  FundingOpportunityTitle: string;
 }
 
 export function ThreadView() {
@@ -737,15 +750,18 @@ export function ThreadView() {
 
   // End the reply interface
   const handleCancelReply = () => {
-    setReplyingToMessageId(null)
-    setReplyingToMessageSender(null)
-    setReplyingToMessageContent(null)
-    setReplyingToMessageDate(null)
-  }  
+    setReplyingToMessageId(null);
+    setReplyingToMessageSender(null);
+    setReplyingToMessageContent(null);
+    setReplyingToMessageDate(null);
+  };
 
-  // Handle the loading state
   if (!threadData) {
-    return <div>Loading...</div>;
+    return (
+      <Layout>
+        <Loader />
+      </Layout>
+    );
   }
 
   return (
@@ -760,10 +776,11 @@ export function ThreadView() {
           <MantineTitle order={2} style={styles.title} mb="xs">
             {threadData[0].ThreadTitle}
           </MantineTitle>
-          
+
           <Group justify="space-between" align="center">
             <Text size="sm" color="dimmed">
-              Created on: <strong>{new Date(threadData[0].ThreadCreatedAt).toLocaleDateString()}</strong>
+              Created on:{' '}
+              <strong>{new Date(threadData[0].ThreadCreatedAt).toLocaleDateString()}</strong>
             </Text>
             <Text size="sm" color="dimmed">
               Upvotes: <strong>{threadData[0].UpvoteCount}</strong>
@@ -789,272 +806,426 @@ export function ThreadView() {
         </Paper>
 
         <Box mt="xl">
-  <Title order={3}>Latest News On The Subject</Title>
-  {articles.length > 0 ? (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
-      {articles.map((article, index) => (
-        <Card key={index} shadow="sm" padding="lg" style={{ width: '350px' }} 
-        onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-        onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-        >
-          {article.urlToImage && (
-            <Image src={article.urlToImage} alt={article.title} height={200} fit="cover" />
+          <Title order={3}>Latest News On The Subject</Title>
+          {articles.length > 0 ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+              {articles.map((article, index) => (
+                <Card
+                  key={index}
+                  shadow="sm"
+                  padding="lg"
+                  style={{ width: '350px' }}
+                  onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+                  onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                >
+                  {article.urlToImage && (
+                    <Image src={article.urlToImage} alt={article.title} height={200} fit="cover" />
+                  )}
+                  <Text size="lg" mt="md">
+                    {article.title}
+                  </Text>
+                  <Button
+                    color="blue"
+                    fullWidth
+                    mt="md"
+                    component="a"
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#4DFF00')}
+                    onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#2986CC')}
+                  >
+                    READ MORE
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Text>No articles available.</Text>
           )}
-          <Text size="lg" mt="md">{article.title}</Text>
-          <Button
-            // variant="light"
-            color="blue"
-            fullWidth
-            mt="md"
-            component="a"
-            href={article.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4DFF00'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2986CC'}
-          >
-            READ MORE
-          </Button>
-        </Card>
-      ))}
-    </div>
-  ) : (
-    <Text>No articles available.</Text>
-  )}
-</Box>
+        </Box>
 
-<Box mt="xl">
-<Title order={3}>Interesting Journals In The Field</Title>
+        <Box mt="xl">
+          <Title order={3}>Interesting Journals In The Field</Title>
 
-  {papers.length > 0 ? (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '20px',
-        justifyContent: 'center',
-        marginTop: '20px',
-      }}
-    >
+          {papers.length > 0 ? (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '20px',
+                justifyContent: 'center',
+                marginTop: '20px',
+              }}
+            >
+              {papers.map((paper, index) => (
+                <Card
+                  key={index}
+                  shadow="sm"
+                  padding="lg"
+                  style={{
+                    width: '350px',
+                    borderRadius: '10px',
+                    backgroundColor: '#fff',
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    cursor: 'pointer',
+                    overflow: 'hidden',
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+                  onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                >
+                  <Text
+                    size="lg"
+                    mt="md"
+                    style={{
+                      fontSize: '1.2rem',
+                      fontWeight: 'bold',
+                      color: '#333',
+                      marginBottom: '10px',
+                      lineHeight: '1.5',
+                    }}
+                  >
+                    {paper.title}
+                  </Text>
 
-      {papers.map((paper, index) => (
-        <Card
-          key={index}
-          shadow="sm"
-          padding="lg"
-          style={{
-            width: '350px',
-            borderRadius: '10px',
-            backgroundColor: '#fff',
-            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-            cursor: 'pointer',
-            overflow: 'hidden',
-          }}
-          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-        >
-          <Text
-            size="lg"
-            mt="md"
-            style={{
-              fontSize: '1.2rem',
-              fontWeight: 'bold',
-              color: '#333',
-              marginBottom: '10px',
-              lineHeight: '1.5',
-            }}
-          >
-            {paper.title}
-          </Text>
+                  <Text>{paper.Author}</Text>
 
-          <Text>
-            {paper.Author}
-          </Text>
+                  <Text>{paper.organization}</Text>
 
-          <Text>
-            {paper.organization}
-          </Text>
-          
-          <Button
-            variant="dark"
-            color="red"
-            fullWidth
-            mt="md"
-            component="a"
-            href={paper.paperLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              backgroundColor: '#CC0000',
-              color: '#fff',
-              // fontWeight: 'bold',
-              textTransform: 'uppercase',
-              padding: '12px',
-              borderRadius: '5px',
-              transition: 'background-color 0.3s ease',
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4DFF00'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#CC0000'}
-          >
-            Read more
-          </Button>
-        </Card>
-      ))}
-    </div>
-  ) : (
-    <Text style={{fontSize: '1.2rem', color: '#777' }}>No articles available.</Text>
-  )}
-</Box>
+                  <Button
+                    variant="dark"
+                    color="red"
+                    fullWidth
+                    mt="md"
+                    component="a"
+                    href={paper.paperLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      backgroundColor: '#CC0000',
+                      color: '#fff',
+                      // fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                      padding: '12px',
+                      borderRadius: '5px',
+                      transition: 'background-color 0.3s ease',
+                    }}
+                    onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#4DFF00')}
+                    onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#CC0000')}
+                  >
+                    Read more
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Text style={{ fontSize: '1.2rem', color: '#777' }}>No articles available.</Text>
+          )}
+        </Box>
 
-<Title style={{ marginTop: 50 }} order={3}>Comments</Title>
+        <Title style={{ marginTop: 50 }} order={3}>
+          Comments
+        </Title>
         {/* Messages displayed on page initialization */}
         <div style={{ paddingBottom: replyingToMessageId ? '220px' : '130px' }}>
-          {threadData && threadData[0].MessageID ? (
-            threadData.map((threadMessage) => (
-              <React.Fragment key={threadMessage.MessageID}>
-                {/* If the message is a reply, display the message being replied to */}
-                {threadMessage.ReplyContent && (
-                  <Card shadow="sm" padding="xs" radius="md" style={{ backgroundColor: '#D7C6B4', marginTop: '10px', ...(threadMessage.ReplyContent != '' ? { borderBottomLeftRadius: '0', borderBottomRightRadius: '0' } : {}) }}>
+          {threadData && threadData[0].MessageID
+            ? threadData.map((threadMessage) => (
+                <React.Fragment key={threadMessage.MessageID}>
+                  {/* If the message is a reply, display the message being replied to */}
+                  {threadMessage.ReplyContent && (
+                    <Card
+                      shadow="sm"
+                      padding="xs"
+                      radius="md"
+                      style={{
+                        backgroundColor: '#D7C6B4',
+                        marginTop: '10px',
+                        ...(threadMessage.ReplyContent != ''
+                          ? { borderBottomLeftRadius: '0', borderBottomRightRadius: '0' }
+                          : {}),
+                      }}
+                    >
+                      <Group>
+                        <Box
+                          style={{
+                            width: '100%',
+                            wordWrap: 'break-word',
+                            overflowWrap: 'break-word',
+                          }}
+                        >
+                          <Text>
+                            <span style={{ color: '#BE4BDB', fontWeight: 700, fontSize: 14 }}>
+                              Reply To{' '}
+                            </span>{' '}
+                            |{' '}
+                            <span style={{ fontSize: 12, fontWeight: 700 }}>
+                              {threadMessage.ReplyFirstname} {threadMessage.ReplyLastname}
+                            </span>{' '}
+                            <span style={{ fontSize: 10, float: 'right' }}>
+                              {new Date(threadMessage.ReplyCreatedAt).toLocaleDateString()}{' '}
+                              {new Date(threadMessage.ReplyCreatedAt).toLocaleTimeString(
+                                undefined,
+                                { hour: '2-digit', minute: '2-digit', hour12: true }
+                              )}
+                            </span>
+                          </Text>
+                          <Text style={{ fontSize: 12 }}>{threadMessage.ReplyContent}</Text>
+                        </Box>
+                      </Group>
+                    </Card>
+                  )}
+
+                  <Card
+                    key={threadMessage.MessageID}
+                    shadow="sm"
+                    padding="md"
+                    radius="md"
+                    style={{
+                      backgroundColor: 'transparent',
+                      marginBottom: '10px',
+                      ...(threadMessage.ReplyID != null
+                        ? { borderTopLeftRadius: '0', borderTopRightRadius: '0' }
+                        : { marginTop: '10px' }),
+                    }}
+                  >
                     <Group>
-                      <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                        <Text><span style={{ color: '#BE4BDB', fontWeight: 700, fontSize: 14 }}>Reply To </span> | <span style={{ fontSize: 12, fontWeight: 700 }}>{ threadMessage.ReplyFirstname } { threadMessage.ReplyLastname }</span> <span style={{ fontSize: 10, float: 'right' }}>{new Date(threadMessage.ReplyCreatedAt).toLocaleDateString()} {new Date(threadMessage.ReplyCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
-                        <Text style={{ fontSize: 12 }}>{ threadMessage.ReplyContent }</Text>
-                      </Box>
-                    </Group>
-                  </Card>
-                )}
+                      {/* Display the 'Edit' and 'Delete' buttons if the user is the one who sent the message */}
+                      {threadMessage.MessageFirstname + ' ' + threadMessage.MessageLastname ==
+                      threadData[0].UserFullname ? (
+                        <Box
+                          style={{
+                            width: '100%',
+                            wordWrap: 'break-word',
+                            overflowWrap: 'break-word',
+                          }}
+                        >
+                          <Text>
+                            <span style={{ fontWeight: 700 }}>
+                              {threadMessage.MessageFirstname} {threadMessage.MessageLastname}
+                            </span>{' '}
+                            <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>
+                              {new Date(threadMessage.MessageCreatedAt).toLocaleDateString()}{' '}
+                              {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(
+                                undefined,
+                                { hour: '2-digit', minute: '2-digit', hour12: true }
+                              )}
+                            </span>
+                          </Text>
 
-                <Card key={threadMessage.MessageID} shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', ...(threadMessage.ReplyID != null ? { borderTopLeftRadius: '0', borderTopRightRadius: '0' } : { marginTop: '10px' }) }}>
-                  <Group>
-                    {/* Display the 'Edit' and 'Delete' buttons if the user is the one who sent the message */}
-                    {threadMessage.MessageFirstname + " " + threadMessage.MessageLastname == threadData[0].UserFullname ? (
-                      <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                        <Text><span style={{ fontWeight: 700 }}>{threadMessage.MessageFirstname} {threadMessage.MessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(threadMessage.MessageCreatedAt).toLocaleDateString()} {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
+                          {editingMessageId == threadMessage.MessageID ? (
+                            // In-place edit mode: Display a Textarea
+                            <div style={{ flex: 1 }}>
+                              <Textarea
+                                value={editedContent}
+                                onChange={(e) => setEditedContent(e.target.value)}
+                                placeholder="Edit your message"
+                                autosize
+                                styles={{
+                                  input: { backgroundColor: 'transparent' },
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            // Display message content normally
+                            <Text style={{ flex: 1 }}>{threadMessage.MessageContent}</Text>
+                          )}
 
-                        {editingMessageId == threadMessage.MessageID ? (
-                          // In-place edit mode: Display a Textarea
-                          <div style={{ flex: 1 }}>
-                            <Textarea
-                              value={editedContent}
-                              onChange={(e) => setEditedContent(e.target.value)}
-                              placeholder="Edit your message"
-                              autosize
-                              styles={{
-                                input: { backgroundColor: 'transparent' },
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          // Display message content normally
-                          <Text style={{ flex: 1 }}>
+                          {editingMessageId == threadMessage.MessageID ? (
+                            // Show "Save" and "Cancel" buttons when editing
+                            <>
+                              <Button
+                                onClick={() => handleSaveEdit(editingMessageId, editedContent)}
+                                variant="subtle"
+                                color="green"
+                                size="sm"
+                                mt="sm"
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                onClick={handleCancelEdit}
+                                variant="subtle"
+                                color="gray"
+                                size="sm"
+                                mt="sm"
+                              >
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
+                            // Show "Edit" button when not editing
+                            <>
+                              <Button
+                                onClick={() =>
+                                  handleEditMessage(
+                                    threadMessage.MessageID,
+                                    threadMessage.MessageContent
+                                  )
+                                }
+                                variant="subtle"
+                                color="blue"
+                                size="sm"
+                                mt="sm"
+                              >
+                                Edit
+                              </Button>
+
+                              <Button
+                                onClick={() =>
+                                  handleReply(
+                                    threadMessage.MessageID,
+                                    threadMessage.MessageFirstname +
+                                      ' ' +
+                                      threadMessage.MessageLastname,
+                                    threadMessage.MessageContent,
+                                    threadMessage.MessageCreatedAt
+                                  )
+                                }
+                                variant="subtle"
+                                color="grape"
+                                size="sm"
+                                mt="sm"
+                              >
+                                Reply
+                              </Button>
+
+                              <Button
+                                onClick={() => handleDeleteThreadMessage(threadMessage.MessageID)}
+                                variant="subtle"
+                                color="red"
+                                size="sm"
+                                mt="sm"
+                              >
+                                Delete
+                              </Button>
+                            </>
+                          )}
+                        </Box>
+                      ) : (
+                        // Do not display the 'Edit' and 'Delete' buttons if the user is not the one who sent the message
+                        <Box
+                          style={{
+                            width: '100%',
+                            wordWrap: 'break-word',
+                            overflowWrap: 'break-word',
+                          }}
+                        >
+                          <Text>
+                            <span style={{ fontWeight: 700 }}>
+                              {threadMessage.MessageFirstname} {threadMessage.MessageLastname}
+                            </span>{' '}
+                            <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>
+                              {new Date(threadMessage.MessageCreatedAt).toLocaleDateString()}{' '}
+                              {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(
+                                undefined,
+                                { hour: '2-digit', minute: '2-digit', hour12: true }
+                              )}
+                            </span>
+                          </Text>
+                          <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
                             {threadMessage.MessageContent}
                           </Text>
-                        )}
 
-                        {editingMessageId == threadMessage.MessageID ? (
-                          // Show "Save" and "Cancel" buttons when editing
-                          <>
-                            <Button
-                              onClick={() => handleSaveEdit(editingMessageId, editedContent)} 
-                              variant="subtle" 
-                              color="green" 
-                              size="sm"
-                              mt="sm"
-                            >
-                              Save
-                            </Button>
-                            <Button 
-                              onClick={handleCancelEdit} 
-                              variant="subtle" 
-                              color="gray" 
-                              size="sm"
-                              mt="sm"
-                            >
-                              Cancel
-                            </Button>
-                          </>
-                        ) : (
-                          // Show "Edit" button when not editing
-                          <>
-                            <Button 
-                              onClick={() => handleEditMessage(threadMessage.MessageID, threadMessage.MessageContent)} 
-                              variant="subtle" 
-                              color="blue" 
-                              size="sm"
-                              mt="sm"
-                            >
-                              Edit
-                            </Button>
-
-                            <Button
-                              onClick={() => handleReply(threadMessage.MessageID, threadMessage.MessageFirstname + " " + threadMessage.MessageLastname, threadMessage.MessageContent, threadMessage.MessageCreatedAt)}
-                              variant="subtle" 
-                              color="grape" 
-                              size="sm"
-                              mt="sm"
-                            >
-                              Reply
-                            </Button>
-
-                            <Button 
-                              onClick={() => handleDeleteThreadMessage(threadMessage.MessageID)}
-                              variant="subtle" 
-                              color="red" 
-                              size="sm"
-                              mt="sm"
-                            >
-                              Delete
-                            </Button>
-                          </>
-                        )}
-                      </Box>
-                    ) : (
-                      // Do not display the 'Edit' and 'Delete' buttons if the user is not the one who sent the message
-                      <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                        <Text><span style={{ fontWeight: 700 }}>{threadMessage.MessageFirstname} {threadMessage.MessageLastname}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(threadMessage.MessageCreatedAt).toLocaleDateString()} {new Date(threadMessage.MessageCreatedAt).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
-                        <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{threadMessage.MessageContent}</Text>
-
-                        <Button 
-                          onClick={() => handleReply(threadMessage.MessageID, threadMessage.MessageFirstname + " " + threadMessage.MessageLastname, threadMessage.MessageContent, threadMessage.MessageCreatedAt)}
-                          variant="subtle" 
-                          color="grape" 
-                          size="sm"
-                          mt="sm"
-                        >
-                          Reply
-                        </Button>
-                      </Box>
-                    )}
-                  </Group>
-                </Card>
-              </React.Fragment>
-            ))
-          ) : (
-            null
-          )}
+                          <Button
+                            onClick={() =>
+                              handleReply(
+                                threadMessage.MessageID,
+                                threadMessage.MessageFirstname +
+                                  ' ' +
+                                  threadMessage.MessageLastname,
+                                threadMessage.MessageContent,
+                                threadMessage.MessageCreatedAt
+                              )
+                            }
+                            variant="subtle"
+                            color="grape"
+                            size="sm"
+                            mt="sm"
+                          >
+                            Reply
+                          </Button>
+                        </Box>
+                      )}
+                    </Group>
+                  </Card>
+                </React.Fragment>
+              ))
+            : null}
 
           {/* Messages sent in real-time by a user*/}
           {messages.map((msg) => (
             <React.Fragment key={msg.id}>
               {/* If the message is a reply, display the message being replied to */}
               {msg.reply == 'true' && (
-                <Card shadow="sm" padding="xs" radius="md" style={{ backgroundColor: '#D7C6B4', marginTop: '10px', ...(msg.reply === 'true' ? { borderBottomLeftRadius: '0', borderBottomRightRadius: '0' } : {}) }}>
+                <Card
+                  shadow="sm"
+                  padding="xs"
+                  radius="md"
+                  style={{
+                    backgroundColor: '#D7C6B4',
+                    marginTop: '10px',
+                    ...(msg.reply === 'true'
+                      ? { borderBottomLeftRadius: '0', borderBottomRightRadius: '0' }
+                      : {}),
+                  }}
+                >
                   <Group>
-                    <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                      <Text><span style={{ color: '#BE4BDB', fontWeight: 700, fontSize: 14 }}>Reply To </span> | <span style={{ fontSize: 12, fontWeight: 700 }}>{ msg.replyingmsgsender }</span> <span style={{ fontSize: 10, float: 'right' }}>{new Date(msg.replyingmsgdate).toLocaleDateString()} {new Date(msg.replyingmsgdate).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
-                      <Text style={{ fontSize: 12 }}>{ msg.replyingmsgcontent }</Text>
+                    <Box
+                      style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                    >
+                      <Text>
+                        <span style={{ color: '#BE4BDB', fontWeight: 700, fontSize: 14 }}>
+                          Reply To{' '}
+                        </span>{' '}
+                        |{' '}
+                        <span style={{ fontSize: 12, fontWeight: 700 }}>
+                          {msg.replyingmsgsender}
+                        </span>{' '}
+                        <span style={{ fontSize: 10, float: 'right' }}>
+                          {new Date(msg.replyingmsgdate).toLocaleDateString()}{' '}
+                          {new Date(msg.replyingmsgdate).toLocaleTimeString(undefined, {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true,
+                          })}
+                        </span>
+                      </Text>
+                      <Text style={{ fontSize: 12 }}>{msg.replyingmsgcontent}</Text>
                     </Box>
                   </Group>
                 </Card>
               )}
 
-              <Card shadow="sm" padding="md" radius="md" style={{ backgroundColor: 'transparent', marginBottom: '10px', ...(msg.reply === 'true' ? { borderTopLeftRadius: '0', borderTopRightRadius: '0' } : { marginTop: '10px' }) }}>
+              <Card
+                shadow="sm"
+                padding="md"
+                radius="md"
+                style={{
+                  backgroundColor: 'transparent',
+                  marginBottom: '10px',
+                  ...(msg.reply === 'true'
+                    ? { borderTopLeftRadius: '0', borderTopRightRadius: '0' }
+                    : { marginTop: '10px' }),
+                }}
+              >
                 <Group>
                   {/* Display the 'Edit' and 'Delete' buttons if the user is the one who sent the message */}
                   {msg.sender == userName ? (
-                    <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                      <Text><span style={{ fontWeight: 700 }}>{msg.sender}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(msg.date).toLocaleDateString()} {new Date(msg.date).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
+                    <Box
+                      style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                    >
+                      <Text>
+                        <span style={{ fontWeight: 700 }}>{msg.sender}</span>{' '}
+                        <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>
+                          {new Date(msg.date).toLocaleDateString()}{' '}
+                          {new Date(msg.date).toLocaleTimeString(undefined, {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true,
+                          })}
+                        </span>
+                      </Text>
 
                       {editingMessageId == msg.id ? (
                         // In-place edit mode: Display a Textarea
@@ -1071,25 +1242,23 @@ export function ThreadView() {
                         </div>
                       ) : (
                         // Display message content normally
-                        <Text style={{ flex: 1 }}>
-                          {msg.content}
-                        </Text>
+                        <Text style={{ flex: 1 }}>{msg.content}</Text>
                       )}
 
                       {editingMessageId == msg.id ? (
                         // Show "Save" and "Cancel" buttons when editing
                         <>
                           <Button
-                            onClick={() => handleSaveEdit(editingMessageId, editedContent)} 
-                            variant="subtle" 
-                            color="green" 
+                            onClick={() => handleSaveEdit(editingMessageId, editedContent)}
+                            variant="subtle"
+                            color="green"
                             size="sm"
                             mt="sm"
                           >
                             Save
                           </Button>
 
-                          <Button 
+                          <Button
                             onClick={handleCancelEdit}
                             variant="subtle"
                             color="gray"
@@ -1102,10 +1271,10 @@ export function ThreadView() {
                       ) : (
                         // Show "Edit" button when not editing
                         <>
-                          <Button 
+                          <Button
                             onClick={() => handleEditMessage(msg.id, msg.content)}
-                            variant="subtle" 
-                            color="blue" 
+                            variant="subtle"
+                            color="blue"
                             size="sm"
                             mt="sm"
                           >
@@ -1114,18 +1283,18 @@ export function ThreadView() {
 
                           <Button
                             onClick={() => handleReply(msg.id, msg.sender, msg.content, msg.date)}
-                            variant="subtle" 
-                            color="grape" 
+                            variant="subtle"
+                            color="grape"
                             size="sm"
                             mt="sm"
                           >
                             Reply
                           </Button>
 
-                          <Button 
+                          <Button
                             onClick={() => handleDeleteThreadMessage(msg.id)}
-                            variant="subtle" 
-                            color="red" 
+                            variant="subtle"
+                            color="red"
                             size="sm"
                             mt="sm"
                           >
@@ -1136,14 +1305,28 @@ export function ThreadView() {
                     </Box>
                   ) : (
                     // Do not display the 'Edit' and 'Delete' buttons if the user is not the one who sent the message
-                    <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                      <Text><span style={{ fontWeight: 700 }}>{msg.sender}</span> <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>{new Date(msg.date).toLocaleDateString()} {new Date(msg.date).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
-                      <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>{msg.content}</Text>
+                    <Box
+                      style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                    >
+                      <Text>
+                        <span style={{ fontWeight: 700 }}>{msg.sender}</span>{' '}
+                        <span style={{ fontWeight: 400, fontSize: 13, float: 'right' }}>
+                          {new Date(msg.date).toLocaleDateString()}{' '}
+                          {new Date(msg.date).toLocaleTimeString(undefined, {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true,
+                          })}
+                        </span>
+                      </Text>
+                      <Text style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                        {msg.content}
+                      </Text>
 
-                      <Button 
+                      <Button
                         onClick={() => handleReply(msg.id, msg.sender, msg.content, msg.date)}
-                        variant="subtle" 
-                        color="grape" 
+                        variant="subtle"
+                        color="grape"
                         size="sm"
                         mt="sm"
                       >
@@ -1159,12 +1342,11 @@ export function ThreadView() {
 
         {/* User input for posting */}
         <Paper
-          shadow="sm" 
+          shadow="sm"
           radius="md"
           mt="xl"
           p="md"
           withBorder
-
           style={{
             position: 'fixed',
             bottom: 0,
@@ -1172,13 +1354,44 @@ export function ThreadView() {
             marginTop: 50,
           }}
         >
-          { replyingToMessageId && replyingToMessageDate ? (
+          {replyingToMessageId && replyingToMessageDate ? (
             // If the user is replying to a message, display the message the user is replying to
             <div>
-              <Card shadow="sm" padding="xs" radius="md" style={{ backgroundColor: 'lightgray', marginTop: '10px', borderBottomLeftRadius: '0', borderBottomRightRadius: '0' }}>
+              <Card
+                shadow="sm"
+                padding="xs"
+                radius="md"
+                style={{
+                  backgroundColor: 'lightgray',
+                  marginTop: '10px',
+                  borderBottomLeftRadius: '0',
+                  borderBottomRightRadius: '0',
+                }}
+              >
                 <Group>
-                  <Box style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
-                    <Text><Button color='red' size='compact-xs' onClick={() => handleCancelReply()}>X</Button> <span style={{ color: '#BE4BDB', fontWeight: 700, fontSize: 14 }}>Replying To </span> | <span style={{ fontSize: 12, fontWeight: 700 }}>{replyingToMessageSender}</span> <span style={{ fontSize: 10, float: 'right' }}>{new Date(replyingToMessageDate).toLocaleDateString()} {new Date(replyingToMessageDate).toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit', hour12: true})}</span></Text>
+                  <Box
+                    style={{ width: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                  >
+                    <Text>
+                      <Button color="red" size="compact-xs" onClick={() => handleCancelReply()}>
+                        X
+                      </Button>{' '}
+                      <span style={{ color: '#BE4BDB', fontWeight: 700, fontSize: 14 }}>
+                        Replying To{' '}
+                      </span>{' '}
+                      |{' '}
+                      <span style={{ fontSize: 12, fontWeight: 700 }}>
+                        {replyingToMessageSender}
+                      </span>{' '}
+                      <span style={{ fontSize: 10, float: 'right' }}>
+                        {new Date(replyingToMessageDate).toLocaleDateString()}{' '}
+                        {new Date(replyingToMessageDate).toLocaleTimeString(undefined, {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true,
+                        })}
+                      </span>
+                    </Text>
                     <Text style={{ fontSize: 12 }}>{replyingToMessageContent}</Text>
                   </Box>
                 </Group>
@@ -1193,7 +1406,12 @@ export function ThreadView() {
                 radius="0"
               />
 
-              <Button style={{ marginBottom: '10px' }} onClick={() => handlePostReply(replyingToMessageId)}>Post Message</Button>
+              <Button
+                style={{ marginBottom: '10px' }}
+                onClick={() => handlePostReply(replyingToMessageId)}
+              >
+                Post Message
+              </Button>
             </div>
           ) : (
             <div>
@@ -1204,10 +1422,12 @@ export function ThreadView() {
                 minRows={3}
                 mb="sm"
               />
-              
-              <Button style={{ marginBottom: '10px' }} onClick={sendMessage}>Post Message</Button>
+
+              <Button style={{ marginBottom: '10px' }} onClick={sendMessage}>
+                Post Message
+              </Button>
             </div>
-          ) }
+          )}
         </Paper>
       </Container>
     </Layout>

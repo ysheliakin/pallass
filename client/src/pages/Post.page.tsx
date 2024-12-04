@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Center, Paper, Title } from '@mantine/core';
+import { Button, Center, Loader, Paper, Title } from '@mantine/core';
 import { getPost, Post } from '@/api/post';
 import { Layout } from '@/components/layout';
 
@@ -26,7 +26,11 @@ export function PostPage() {
   }, [id]);
 
   if (post === undefined) {
-    return <h3>Loading...</h3>;
+    return (
+      <Layout>
+        <Loader />
+      </Layout>
+    );
   }
 
   return (

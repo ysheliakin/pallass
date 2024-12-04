@@ -470,9 +470,12 @@ export function GroupView() {
     setReplyingToMessageDate(null)
   }  
 
-  // Handle the loading state
   if (!groupData) {
-    return <div>Loading...</div>;
+    return (
+      <Layout>
+        <Loader />
+      </Layout>
+    );
   }
 
   const openMembersList = async() => {
