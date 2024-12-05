@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { EditorConsumer } from '@tiptap/react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -10,15 +9,14 @@ import {
   Image,
   Loader,
   Title as MantineTitle,
-  Modal,
   Paper,
   Text,
   Textarea,
   Title,
 } from '@mantine/core';
-import { base } from '@/api/base';
+import { base, wsBase } from '@/api/base';
 import { Layout, useStyles } from '@/components/layout';
-import { FundingOpportunities } from './FundingOpportunities.page';
+
 
 interface User {
   id: string;
@@ -359,7 +357,7 @@ export function ThreadView() {
     // fetchArticles();
 
     // Websocket connection
-    ws.current = new WebSocket(`ws://${base}/wsthread/${email}`);
+    ws.current = new WebSocket(`${wsBase}/wsthread/${email}`);
 
     ws.current.onopen = () => {
       console.log('Websocket connected');
