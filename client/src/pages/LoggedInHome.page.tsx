@@ -6,6 +6,7 @@ import { getUserPosts, Post } from '@/api/post';
 import { useAppContext } from '@/app-context';
 import { Layout, useStyles } from '@/components/layout';
 
+
 interface Threads {
   ID: number;
   Firstname: string;
@@ -38,8 +39,6 @@ export function LoggedInHomePage() {
   const [threadsData, setThreadsData] = useState<Threads[]>([]);
   const [groupsData, setGroupsData] = useState<Groups[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
-  // Temporary
-  const [groupUuid, setGroupUuid] = useState('');
 
   const email = localStorage.getItem('email');
 
@@ -48,8 +47,7 @@ export function LoggedInHomePage() {
     const fetchData = async () => {
       try {
         const userPosts = await getUserPosts(user!.id);
-        console.log({ userPosts });
-        if (userPosts.length > 0) {
+        if (userPosts?.length > 0) {
           setPosts(userPosts);
         }
 

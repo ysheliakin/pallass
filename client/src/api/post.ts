@@ -18,9 +18,7 @@ export async function createPost(userId: number, title: string, content: string)
     if (!response.ok) {
         console.error('Request failed: ', response);
     }
-    const result = await response.json();
-    console.log(result);
-    return result;
+    return await response.json();
 }
 
 export async function getUserPosts(userId: number): Promise<Post[]> {
@@ -31,9 +29,7 @@ export async function getUserPosts(userId: number): Promise<Post[]> {
     if (!response.ok) {
         console.error('Request failed: ', response);
     }
-    const result = await response.json();
-    console.log(result);
-    return result;
+    return await response.json();
 }
 
 export async function getPost(postId: number) {
@@ -44,7 +40,5 @@ export async function getPost(postId: number) {
     if (!response.ok) {
         console.error('Request failed: ', response);
     }
-    const result = await response.json();
-    console.log(result);
-    return result;
+    return await response.json();
 }
