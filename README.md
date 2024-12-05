@@ -1,5 +1,7 @@
 # pallass
 
+Pallas’s Hub is an innovative web application designed to serve as a comprehensive platform for researchers and scholars to collaborate, share knowledge, and secure funding opportunities. It addresses the fragmented nature of current tools by offering integrated features tailored to the needs of the scientific community. 
+
 ## Development Set Up
 
 ### Prerequisites
