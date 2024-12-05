@@ -1,4 +1,4 @@
-export const base = import.meta.env.VITE_API_ENDPOINT ?? "localhost:5000";
+export const base = import.meta.env.VITE_API_ENDPOINT ?? "http://localhost:5000";
 
 const originalFetch = fetch;
 
