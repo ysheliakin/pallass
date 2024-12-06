@@ -317,7 +317,7 @@ export function FundingOpportunities() {
                           </Anchor>
                         ) : (
                           <Anchor
-                            href={`http://${filteredItem.Link}`}
+                            href={`${filteredItem.Link}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ color: 'blue' }}
