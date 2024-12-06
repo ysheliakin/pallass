@@ -134,7 +134,7 @@ export function LoggedInHomePage() {
             ))}
           </SimpleGrid>
         ) : (
-          <Text mb="md">You have not upvoted any discussion threads yet.</Text>
+          <Text mb="md">You have not joined any groups yet.</Text>
         )}
 
         <Group mb="xl">
