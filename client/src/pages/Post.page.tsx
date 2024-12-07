@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Button, Center, Loader, Paper, Title } from '@mantine/core';
 import { getPost, Post } from '@/api/post';
 import { Layout } from '@/components/layout';
@@ -35,9 +35,9 @@ export function PostPage() {
 
   return (
     <Layout>
-      <Button onClick={handleBackToDashboard} variant="light">
-        Back to Your Dashboard
-      </Button>
+      <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Your Dashboard
+      </Link>
       <br />
 
       {post?.ID ? (
