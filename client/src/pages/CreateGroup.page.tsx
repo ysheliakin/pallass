@@ -110,7 +110,6 @@ export function CreateGroup() {
               console.log("data: ", response)
               console.log('Group UUID:', groupUuid);
             } else {
-              console.error('Failed to add members to group 1');
               setError(response.message);
               return;
             }
@@ -141,9 +140,7 @@ export function CreateGroup() {
               if (response.ok) {
                 console.log("data (loop): ", response)
                 console.log("groupUuid: ", groupUuid)
-
               } else {
-                console.error('Failed to add members to group 2');
                 setError(response.message);
                 return;
               }
@@ -156,7 +153,6 @@ export function CreateGroup() {
           localStorage.setItem("groupID", groupId);
           navigate(`/group/${groupUuid}`);
         } else {
-          console.error('Failed to add members to group 3');
           const getError = await response.json();
           setError(getError.message);
           return;
@@ -190,7 +186,6 @@ export function CreateGroup() {
               console.log("data: ", response)
               console.log('Group UUID:', groupUuid);
             } else {
-              console.error('Failed to add members to group 4');
               setError(response.message);
               return;
             }
@@ -222,7 +217,6 @@ export function CreateGroup() {
                 console.log("data (loop): ", response)
                 console.log("groupUuid: ", groupUuid)
               } else {
-                console.error('Failed to add members to group 5');
                 setError(response.message);
                 return;
               }
@@ -235,9 +229,8 @@ export function CreateGroup() {
           localStorage.setItem("groupID", groupId);
           navigate(`/group/${groupUuid}`);
         } else {
-          console.error('Failed to add members to group 6');
           const getError = await response.json();
-          setError(getError.message + "6");
+          setError(getError.message);
           return;
         }
       }
