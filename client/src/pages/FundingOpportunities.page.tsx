@@ -96,18 +96,15 @@ export function FundingOpportunities() {
 
         // Check if the response is ok
         if (!response.ok) {
-          throw new Error('Error in the response');
+          const responseData = await response.json();
+          setError(responseData.message);
+          return;
         }
 
         const responseData = await response.json();
         console.log('responseData: ', responseData);
 
-        // Filter the fetched opportunities by minAmount and maxAmount
-        const filteredByAmount = responseData.filter(
-          (item: FundingItem) => item.TargetAmount >= minAmount && item.TargetAmount <= maxAmount
-        );
-
-        setFilteredItems(filteredByAmount);
+        setFilteredItems(responseData);
       } else {
         const formattedStartDate = startDate ? new Date(startDate).toISOString().split('T')[0] : '';
         const formattedEndDate = endDate ? new Date(endDate).toISOString().split('T')[0] : '';
@@ -130,7 +127,9 @@ export function FundingOpportunities() {
 
         // Check if the response is ok
         if (!response.ok) {
-          throw new Error('Error in the response');
+          const responseData = await response.json();
+          setError(responseData.message);
+          return;
         }
 
         const responseData = await response.json();
@@ -206,7 +205,7 @@ export function FundingOpportunities() {
       </Link>
 
       <Container size="xl" mt={30}>
-        <Title order={2} ta="center" mt="xl" style={styles.title}>
+        <Title order={2} ta="left" mt="xl" style={{ color: '#AB4D7C', textDecoration: 'none', marginLeft: 600 }}>
           Discover Funding Opportunities
         </Title>
 
@@ -218,7 +217,7 @@ export function FundingOpportunities() {
               </Title>
 
               <TextInput
-                label="Grant Name (optional)"
+                label="Grant Name"
                 placeholder="Search by name"
                 value={fundingOpportunityName}
                 onChange={(event) => setFundingOpportunityName(event.currentTarget.value)}
@@ -230,6 +229,7 @@ export function FundingOpportunities() {
                 <DateInput
                   label="Earliest Deadline"
                   value={startDate}
+                  required
                   onChange={setStartDate}
                   placeholder="Enter the earliest deadline"
                 />
@@ -237,6 +237,7 @@ export function FundingOpportunities() {
                 <DateInput
                   label="Latest Deadline"
                   value={endDate}
+                  required
                   onChange={setEndDate}
                   placeholder="Enter the latest deadline"
                 />
@@ -320,29 +321,35 @@ export function FundingOpportunities() {
                         {new Date(filteredItem.DeadlineDate).toLocaleDateString()}
                       </Text>
                       <div style={{ marginTop: 30 }}>
-                        <Text fw={350} size="sm" mt="xs" component="span">
-                          Link:{' '}
-                        </Text>
-
                         {filteredItem.Link.startsWith('http://') ||
                         filteredItem.Link.startsWith('https://') ? (
-                          <Anchor
+                          <Button 
+                            component="a"
                             href={filteredItem.Link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            style={{ color: 'blue' }}
+                            color="blue" 
+                            fullWidth 
+                            mt="md" 
+                            radius="md"
+                            style={{ textDecoration: 'none' }}
                           >
-                            {filteredItem.Link}
-                          </Anchor>
+                            View
+                          </Button>
                         ) : (
-                          <Anchor
-                            href={`${filteredItem.Link}`}
+                          <Button 
+                            component="a"
+                            href={`http://${filteredItem.Link}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            style={{ color: 'blue' }}
+                            color="blue" 
+                            fullWidth 
+                            mt="md" 
+                            radius="md"
+                            style={{ textDecoration: 'none' }}
                           >
-                            {filteredItem.Link}
-                          </Anchor>
+                            View
+                          </Button>
                         )}
                       </div>
                     </Card>

@@ -254,7 +254,7 @@ func GetFundingOpportunitiesByNameSortedByHighestAmount(c echo.Context) error {
 
 	fundingOpportunities, err := sql.GetFundingOpportunitiesByNameSortedByHighestAmountWithinDeadlineAndAmountRanges(context.Background(), dataParam)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "No funding opportunities were found."})
 	}
 
 	fmt.Println("fundingOpportunities: ", fundingOpportunities)
@@ -332,7 +332,7 @@ func GetFundingOpportunitiesByNameSortedByLowestAmount(c echo.Context) error {
 
 	fundingOpportunities, err := sql.GetFundingOpportunitiesByNameSortedByLowestAmountWithinDeadlineAndAmountRanges(context.Background(), dataParam)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
+		return c.JSON(http.StatusInternalServerError, RegisterResponse{Message: "No funding opportunities were found."})
 	}
 
 	fmt.Println("fundingOpportunities: ", fundingOpportunities)

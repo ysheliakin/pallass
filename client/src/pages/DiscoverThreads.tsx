@@ -194,7 +194,7 @@ export function DiscoverThreads() {
       </Link>
 
       <Container size="xl" mt={30}>
-        <Title order={2} ta="center" mt="xl" style={styles.title}>Discover Threads</Title>
+        <Title order={2} ta="left" mt="xl" style={{ color: '#AB4D7C', textDecoration: 'none', marginLeft: 700 }}>Discover Threads</Title>
         
         <Grid mt={30}>
           <Grid.Col span={3}>
