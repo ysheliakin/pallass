@@ -85,7 +85,7 @@ export function FundingOpportunities() {
         const min_amount = String(minAmount)
         const max_amount = String(maxAmount)
 
-        // Display the funding oppportunities sorted by the highest amount, whose title contains the input entered by the user, between a minimum and maximum amount and between the earliest and latest deadlines inputted by the user
+        // Display the funding oppportunities sorted by the highest amount, whose title contains the input entered by the user, between the minimum and maximum amounts and between the earliest and latest deadlines inputted by the user
         const response = await fetch(
           `${base}/getFundingOpportunitiesByNameSortedByHighestAmount?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
           {
@@ -115,7 +115,7 @@ export function FundingOpportunities() {
         const min_amount = String(minAmount)
         const max_amount = String(maxAmount)
 
-        // Display the funding oppportunities sorted by the lowest amount, whose title contains the input entered by the user, between a minimum and maximum amount and between the earliest and latest deadlines inputted by the user
+        // Display the funding oppportunities sorted by the lowest amount, whose title contains the input entered by the user, between the minimum and maximum amounts and between the earliest and latest deadlines inputted by the user
         const response = await fetch(
           `${base}/getFundingOpportunitiesByNameSortedByLowestAmount?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
           {
@@ -148,7 +148,7 @@ export function FundingOpportunities() {
         const min_amount = String(minAmount)
         const max_amount = String(maxAmount)
 
-        // Show all of the funding oppportunities sorted by the highest amount between a minimum and maximum amount and between the earliest and latest deadlines inputted by the user
+        // Show all of the funding oppportunities sorted by the highest amount between the minimum and maximum amounts and between the earliest and latest deadlines inputted by the user
         const response = await fetch(
           `${base}/getFundingOpportunitiesSortedByHighestAmount?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
           {
@@ -175,7 +175,7 @@ export function FundingOpportunities() {
         const min_amount = String(minAmount)
         const max_amount = String(maxAmount)
 
-        // Show all of the funding oppportunities sorted by the lowest amount between a minimum and maximum amount and between the earliest and latest deadlines inputted by the user
+        // Show all of the funding oppportunities sorted by the lowest amount between the minimum and maximum amounts and between the earliest and latest deadlines inputted by the user
         const response = await fetch(
           `${base}/getFundingOpportunitiesSortedByLowestAmount?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
           {
