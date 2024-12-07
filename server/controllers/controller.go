@@ -103,6 +103,8 @@ type FundingOpportunity struct {
 	Title        string `json:"title"`
 	Description  string `json:"description"`
 	TargetAmount string `json:"target_amount"`
+	MinAmount string `json:"min_amount"`
+	MaxAmount string `json:"max_amount"`
 	Link         string `json:"link"`
 	DeadlineDate string `json:"deadline_date"`
 }

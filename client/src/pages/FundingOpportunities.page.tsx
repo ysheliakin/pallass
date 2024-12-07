@@ -65,9 +65,6 @@ export function FundingOpportunities() {
   const handleFilter = async (title: string, sortByUpvotes: string) => {
     setError('');
 
-    console.log('startDate: ', startDate);
-    console.log('endDate: ', endDate);
-
     if (!startDate && !endDate) {
       setError('Please enter the earliest and latest deadlines you want.');
       return;
@@ -81,16 +78,19 @@ export function FundingOpportunities() {
 
     console.log('fundingOpportunityName: ', fundingOpportunityName);
     if (fundingOpportunityName != '') {
-      // Display the funding oppportunities, sorted by the most upvotes, whose title contains the input entered by the user
       if (sortByUpvotes == 'highestAmount') {
         const formattedStartDate = startDate ? new Date(startDate).toISOString().split('T')[0] : '';
         const formattedEndDate = endDate ? new Date(endDate).toISOString().split('T')[0] : '';
 
+        const min_amount = String(minAmount)
+        const max_amount = String(maxAmount)
+
+        // Display the funding oppportunities sorted by the highest amount, whose title contains the input entered by the user, between the minimum and maximum amounts and between the earliest and latest deadlines inputted by the user
         const response = await fetch(
           `${base}/getFundingOpportunitiesByNameSortedByHighestAmount?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
           {
             method: 'POST',
-            body: JSON.stringify({ title }),
+            body: JSON.stringify({ title, min_amount, max_amount }),
           }
         );
 
@@ -112,7 +112,10 @@ export function FundingOpportunities() {
         const formattedStartDate = startDate ? new Date(startDate).toISOString().split('T')[0] : '';
         const formattedEndDate = endDate ? new Date(endDate).toISOString().split('T')[0] : '';
 
-        // Display the funding oppportunities, sorted by the least upvotes, whose title contains the input entered by the user
+        const min_amount = String(minAmount)
+        const max_amount = String(maxAmount)
+
+        // Display the funding oppportunities sorted by the lowest amount, whose title contains the input entered by the user, between the minimum and maximum amounts and between the earliest and latest deadlines inputted by the user
         const response = await fetch(
           `${base}/getFundingOpportunitiesByNameSortedByLowestAmount?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
           {
@@ -121,7 +124,7 @@ export function FundingOpportunities() {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ title }),
+            body: JSON.stringify({ title, min_amount, max_amount }),
           }
         );
 
@@ -142,11 +145,19 @@ export function FundingOpportunities() {
         const formattedStartDate = startDate ? new Date(startDate).toISOString().split('T')[0] : '';
         const formattedEndDate = endDate ? new Date(endDate).toISOString().split('T')[0] : '';
 
-        // Show all of the funding oppportunities sorted by the most upvotes
+        const min_amount = String(minAmount)
+        const max_amount = String(maxAmount)
+
+        // Show all of the funding oppportunities sorted by the highest amount between the minimum and maximum amounts and between the earliest and latest deadlines inputted by the user
         const response = await fetch(
           `${base}/getFundingOpportunitiesSortedByHighestAmount?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
           {
-            method: 'GET',
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ min_amount, max_amount }),
           }
         );
 
@@ -161,11 +172,19 @@ export function FundingOpportunities() {
         const formattedStartDate = startDate ? new Date(startDate).toISOString().split('T')[0] : '';
         const formattedEndDate = endDate ? new Date(endDate).toISOString().split('T')[0] : '';
 
-        // Show all of the funding oppportunities sorted by the least upvotes
+        const min_amount = String(minAmount)
+        const max_amount = String(maxAmount)
+
+        // Show all of the funding oppportunities sorted by the lowest amount between the minimum and maximum amounts and between the earliest and latest deadlines inputted by the user
         const response = await fetch(
           `${base}/getFundingOpportunitiesSortedByLowestAmount?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
           {
-            method: 'GET',
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ min_amount, max_amount }),
           }
         );
 

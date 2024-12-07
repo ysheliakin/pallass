@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 	"net/http"
-	//"strconv"
+	"strconv"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
@@ -34,18 +34,26 @@ func AddFundingOpportunity(c echo.Context) error {
 	return c.JSON(http.StatusCreated, result)
 }
 
-// Get all of the funding opportunities sorted by the highest amount
+// Get all of the funding opportunities, sorted by the highest amount, between the minimum and maximum amounts and between the earliest and latest deadlines inputted by the user
 func GetFundingOpportunitiesSortedByHighestAmount(c echo.Context) error {
+	var fundingOpportunity FundingOpportunity
+
 	fmt.Println()
 	fmt.Println("GetFundingOpportunitiesSortedByHighestAmount")
 
+	// Decode the incoming JSON request body
+	err := c.Bind(&fundingOpportunity)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
 	startDate := c.QueryParam("startDate")
 	endDate := c.QueryParam("endDate")
 
 	// YYYY-MM-DD format
 	layout := "2006-01-02"
 	var parsedStartDate, parsedEndDate time.Time
-	var err error
 
 	if startDate != "" {
 		parsedStartDate, err = time.Parse(layout, startDate)
@@ -71,13 +79,27 @@ func GetFundingOpportunitiesSortedByHighestAmount(c echo.Context) error {
 	pgEndDate.Time = parsedEndDate
 	pgEndDate.Valid = true
 
-	datesParam := queries.GetFundingOpportunitiesSortedByHighestAmountParams{
+	minAmountFloat, err := strconv.ParseFloat(fundingOpportunity.MinAmount, 64)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")	
+	}
+
+	maxAmountFloat, err := strconv.ParseFloat(fundingOpportunity.MaxAmount, 64)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	dataParam := queries.GetFundingOpportunitiesSortedByHighestAmountWithinDeadlineAndAmountRangesParams{
 		DeadlineDate: pgStartDate,
 		DeadlineDate_2: pgEndDate,
+		TargetAmount: Numeric(minAmountFloat),
+		TargetAmount_2: Numeric(maxAmountFloat),
 	}
 
 	// Query the database to retrieve information from all of the funding opportunities
-	fundingOpportunities, err := sql.GetFundingOpportunitiesSortedByHighestAmount(context.Background(), datesParam)
+	fundingOpportunities, err := sql.GetFundingOpportunitiesSortedByHighestAmountWithinDeadlineAndAmountRanges(context.Background(), dataParam)
 	if err != nil {
 		if err.Error() == "no rows in result set" {
 			return c.JSON(http.StatusNotFound, "No funding opportunities were found")
@@ -87,16 +109,26 @@ func GetFundingOpportunitiesSortedByHighestAmount(c echo.Context) error {
 	return c.JSON(http.StatusOK, fundingOpportunities)
 }
 
+// Get all of the funding opportunities, sorted by the lowest amount, between the minimum and maximum amounts and between the earliest and latest deadlines inputted by the user
 func GetFundingOpportunitiesSortedByLowestAmount(c echo.Context) error {
+	var fundingOpportunity FundingOpportunity
+
+	fmt.Println()
 	fmt.Println("GetFundingOpportunitiesSortedByLowestAmount")
 
+	// Decode the incoming JSON request body
+	err := c.Bind(&fundingOpportunity)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
 	startDate := c.QueryParam("startDate")
 	endDate := c.QueryParam("endDate")
 
 	// YYYY-MM-DD format
 	layout := "2006-01-02"
 	var parsedStartDate, parsedEndDate time.Time
-	var err error
 
 	if startDate != "" {
 		parsedStartDate, err = time.Parse(layout, startDate)
@@ -122,13 +154,27 @@ func GetFundingOpportunitiesSortedByLowestAmount(c echo.Context) error {
 	pgEndDate.Time = parsedEndDate
 	pgEndDate.Valid = true
 
-	datesParam := queries.GetFundingOpportunitiesSortedByLowestAmountParams{
+	minAmountFloat, err := strconv.ParseFloat(fundingOpportunity.MinAmount, 64)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")	
+	}
+
+	maxAmountFloat, err := strconv.ParseFloat(fundingOpportunity.MaxAmount, 64)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	dataParam := queries.GetFundingOpportunitiesSortedByLowestAmountWithinDeadlineAndAmountRangesParams{
 		DeadlineDate: pgStartDate,
 		DeadlineDate_2: pgEndDate,
+		TargetAmount: Numeric(minAmountFloat),
+		TargetAmount_2: Numeric(maxAmountFloat),
 	}
 
 	// Query the database to retrieve information from all of the funding opportunities
-	fundingOpportunities, err := sql.GetFundingOpportunitiesSortedByLowestAmount(context.Background(), datesParam)
+	fundingOpportunities, err := sql.GetFundingOpportunitiesSortedByLowestAmountWithinDeadlineAndAmountRanges(context.Background(), dataParam)
 	if err != nil {
 		if err.Error() == "no rows in result set" {
 			return c.JSON(http.StatusNotFound, "No funding opportunities were found")
@@ -138,6 +184,7 @@ func GetFundingOpportunitiesSortedByLowestAmount(c echo.Context) error {
 	return c.JSON(http.StatusOK, fundingOpportunities)
 }
 
+// Get all of the funding opportunities with titles that include the name/keywords inputted by the user, sorted by the highest amount, between the minimum and maximum amounts and between the earliest and latest deadlines inputted
 func GetFundingOpportunitiesByNameSortedByHighestAmount(c echo.Context) error {
 	var fundingOpportunity FundingOpportunity
 
@@ -185,13 +232,27 @@ func GetFundingOpportunitiesByNameSortedByHighestAmount(c echo.Context) error {
 	pgEndDate.Time = parsedEndDate
 	pgEndDate.Valid = true
 
-	dataParam := queries.GetFundingOpportunitiesByNameSortedByHighestAmountParams{
+	minAmountFloat, err := strconv.ParseFloat(fundingOpportunity.MinAmount, 64)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")	
+	}
+
+	maxAmountFloat, err := strconv.ParseFloat(fundingOpportunity.MaxAmount, 64)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	dataParam := queries.GetFundingOpportunitiesByNameSortedByHighestAmountWithinDeadlineAndAmountRangesParams{
 		Title: fundingOpportunityTitle,
 		DeadlineDate: pgStartDate,
 		DeadlineDate_2: pgEndDate,
+		TargetAmount: Numeric(minAmountFloat),
+		TargetAmount_2: Numeric(maxAmountFloat),
 	}
 
-	fundingOpportunities, err := sql.GetFundingOpportunitiesByNameSortedByHighestAmount(context.Background(), dataParam)
+	fundingOpportunities, err := sql.GetFundingOpportunitiesByNameSortedByHighestAmountWithinDeadlineAndAmountRanges(context.Background(), dataParam)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
 	}
@@ -201,6 +262,7 @@ func GetFundingOpportunitiesByNameSortedByHighestAmount(c echo.Context) error {
 	return c.JSON(http.StatusOK, fundingOpportunities)
 }
 
+// Get all of the funding opportunities with titles that include the name/keywords inputted by the user, sorted by the lowest amount, between the minimum and maximum amounts and between the earliest and latest deadlines inputted
 func GetFundingOpportunitiesByNameSortedByLowestAmount(c echo.Context) error {
 	var fundingOpportunity FundingOpportunity
 
@@ -248,13 +310,27 @@ func GetFundingOpportunitiesByNameSortedByLowestAmount(c echo.Context) error {
 	pgEndDate.Time = parsedEndDate
 	pgEndDate.Valid = true
 
-	dataParam := queries.GetFundingOpportunitiesByNameSortedByLowestAmountParams{
+	minAmountFloat, err := strconv.ParseFloat(fundingOpportunity.MinAmount, 64)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")	
+	}
+
+	maxAmountFloat, err := strconv.ParseFloat(fundingOpportunity.MaxAmount, 64)
+	if err != nil {
+		e.Logger.Error(err)
+		return c.JSON(http.StatusInternalServerError, "Error decoding the incoming JSON request body")
+	}
+
+	dataParam := queries.GetFundingOpportunitiesByNameSortedByLowestAmountWithinDeadlineAndAmountRangesParams{
 		Title: fundingOpportunityTitle,
 		DeadlineDate: pgStartDate,
 		DeadlineDate_2: pgEndDate,
+		TargetAmount: Numeric(minAmountFloat),
+		TargetAmount_2: Numeric(maxAmountFloat),
 	}
 
-	fundingOpportunities, err := sql.GetFundingOpportunitiesByNameSortedByLowestAmount(context.Background(), dataParam)
+	fundingOpportunities, err := sql.GetFundingOpportunitiesByNameSortedByLowestAmountWithinDeadlineAndAmountRanges(context.Background(), dataParam)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Failed to upvote thread")
 	}

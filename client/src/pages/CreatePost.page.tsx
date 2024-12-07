@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button, Center, Group, TextInput, Title } from '@mantine/core';
 import { createPost } from '@/api/post';
 import { useAppContext } from '@/app-context';
@@ -26,6 +26,10 @@ export function CreatePostPage() {
 
   return (
     <Layout>
+      <Link to="/dashboard" style={{ textDecoration: 'none', fontWeight: 'bold', color: 'black' }}>
+        &lt; Back to Your Dashboard
+      </Link>
+
       <Center>
         <div style={{ maxWidth: '800px' }}>
           <Center>
@@ -41,9 +45,6 @@ export function CreatePostPage() {
           <TextEditor editor={editor} />
           <br />
           <Group>
-            <Button onClick={handleBackToDashboard} variant="light">
-              Back to Your Dashboard
-            </Button>
             <Button fullWidth variant="secondary" onClick={submit}>
               Submit
             </Button>
