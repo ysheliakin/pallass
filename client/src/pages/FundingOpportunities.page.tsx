@@ -65,9 +65,6 @@ export function FundingOpportunities() {
   const handleFilter = async (title: string, sortByUpvotes: string) => {
     setError('');
 
-    console.log('startDate: ', startDate);
-    console.log('endDate: ', endDate);
-
     if (!startDate && !endDate) {
       setError('Please enter the earliest and latest deadlines you want.');
       return;
