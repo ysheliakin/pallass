@@ -318,7 +318,7 @@ export function FundingOpportunities() {
                       </Text>
                       <Text size="sm" mt="xs">
                         <span style={{ fontWeight: 350 }}>Deadline:</span>{' '}
-                        {new Date(filteredItem.DeadlineDate).toLocaleDateString()}
+                        {new Date(filteredItem.DeadlineDate + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC' })}
                       </Text>
                       <div style={{ marginTop: 30 }}>
                         {filteredItem.Link.startsWith('http://') ||
