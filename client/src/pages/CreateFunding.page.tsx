@@ -11,7 +11,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
-import { DateTimePicker } from '@mantine/dates';
+import { DateInput } from '@mantine/dates';
 import { createFundingOpportunity } from '@/api/funding';
 import { Layout, useStyles } from '@/components/layout';
 import { Link } from 'react-router-dom';
@@ -114,7 +114,7 @@ export function CreateFunding() {
             required
           />
 
-          <DateTimePicker
+          <DateInput
             label="Submission deadline"
             placeholder="Enter the date and time (optional)"
             value={deadline}
